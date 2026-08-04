@@ -373,6 +373,9 @@ export const StateEditor = ({
     motionScale: 1,
   });
   const previewImage = resolveStateImage(previewState, simulation.speaking, blinking);
+  const hasPreviewImage = Boolean(
+    draft.openClosed || draft.openOpen || draft.closedClosed || draft.closedOpen,
+  );
 
   return (
     <div className="dialog-backdrop" role="presentation">
@@ -470,7 +473,7 @@ export const StateEditor = ({
 
           <aside className="effect-preview" aria-label="Vista previa de efectos">
             <div className="effect-preview-stage">
-              {previewImage ? (
+              {hasPreviewImage && previewImage ? (
                 <img
                   src={previewImage}
                   alt="Vista previa del estado"
@@ -481,7 +484,20 @@ export const StateEditor = ({
                   }}
                 />
               ) : (
-                <span>Sube la imagen base</span>
+                <span
+                  className="preview-guide-avatar"
+                  role="img"
+                  aria-label="Ejemplo visual del estado"
+                  style={{
+                    filter: `brightness(${transform.brightness})`,
+                    transform: `translate(${transform.translateX}px, ${transform.translateY}px) rotate(${transform.rotation}deg) scale(${transform.scaleX}, ${transform.scaleY})`,
+                  }}
+                >
+                  <FaceGuide
+                    eyes={blinking ? "closed" : "open"}
+                    mouth={simulation.speaking ? "open" : "closed"}
+                  />
+                </span>
               )}
             </div>
             <div className="automatic-preview" aria-live="polite">

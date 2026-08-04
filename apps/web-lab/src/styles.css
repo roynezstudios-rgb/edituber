@@ -1111,6 +1111,16 @@ input[type="range"]::-webkit-slider-thumb {
   max-width: 82%;
   max-height: 82%;
 }
+.effect-preview-stage .preview-guide-avatar {
+  width: 130px;
+  height: 105px;
+  display: grid;
+  place-items: center;
+  transform-origin: center;
+}
+.preview-guide-avatar .face-guide {
+  transform: scale(2.35);
+}
 .effect-preview-stage span,
 .effect-preview small {
   color: #7190a4;
