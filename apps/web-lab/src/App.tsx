@@ -53,6 +53,7 @@ import {
 } from "./project-state";
 import { chooseRecordingMimeType, recordingErrorMessage, recordingFileName } from "./recording";
 import { draftFromState, type StateDraft, StateEditor, stateFromDraft } from "./StateEditor";
+import { resolveTimelineClick, type TimelineTool } from "./timeline-interaction";
 
 const MAX_AUDIO_BYTES = WEB_LAB_AUDIO_POLICY.maxBytes;
 const MAX_DURATION_SECONDS = WEB_LAB_AUDIO_POLICY.maxDurationSeconds;
@@ -321,6 +322,7 @@ export const App = () => {
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [selectionStartFrame, setSelectionStartFrame] = useState<number | null>(null);
   const [selectionEndFrame, setSelectionEndFrame] = useState<number | null>(null);
+  const [timelineTool, setTimelineTool] = useState<TimelineTool>("emotions");
   const [timelineZoom, setTimelineZoom] = useState(1);
   const [editingAudio, setEditingAudio] = useState(false);
   const [audioEditUndo, setAudioEditUndo] = useState<AudioEditSnapshot | null>(null);
@@ -1699,13 +1701,28 @@ export const App = () => {
               <p className="eyebrow">PROYECTO JSON</p>
               <h2>Timeline de audio y estados</h2>
               <small>
-                Marca A y B para recortar; los estados posteriores se sincronizan solos.
+                {timelineTool === "emotions"
+                  ? "Haz clic en la pista para colocar o cambiar una emoción."
+                  : "Mueve el cursor, marca A y B, y elimina ese fragmento de audio."}
               </small>
             </div>
             <div className="timeline-heading-actions">
-              <button type="button" className="timeline-help" onClick={() => setPickerFrame(frame)}>
-                Estado en F{frame}
-              </button>
+              <fieldset className="timeline-tool-switch" aria-label="Herramienta de la timeline">
+                <button
+                  type="button"
+                  aria-pressed={timelineTool === "emotions"}
+                  onClick={() => setTimelineTool("emotions")}
+                >
+                  Emociones
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={timelineTool === "cut"}
+                  onClick={() => setTimelineTool("cut")}
+                >
+                  Cortar audio
+                </button>
+              </fieldset>
               <fieldset className="zoom-control" aria-label="Zoom de la timeline">
                 <button
                   type="button"
@@ -1727,33 +1744,39 @@ export const App = () => {
               </fieldset>
             </div>
           </div>
-          <fieldset className="audio-edit-toolbar" aria-label="Herramientas de edición de audio">
-            <span>
-              Selección:{" "}
-              {selectionBounds
-                ? `${formatTime(selectionBounds.start / project.fps)} – ${formatTime(selectionBounds.end / project.fps)}`
-                : "sin marcar"}
-            </span>
-            <button type="button" onClick={() => setSelectionStartFrame(frame)}>
-              Marcar inicio A
-            </button>
-            <button type="button" onClick={() => setSelectionEndFrame(frame)}>
-              Marcar fin B
-            </button>
-            <button
-              type="button"
-              className="delete-audio-selection"
-              disabled={
-                !selectionBounds || selectionBounds.end <= selectionBounds.start || editingAudio
-              }
-              onClick={() => void deleteSelectedAudio()}
-            >
-              {editingAudio ? "Procesando…" : "Eliminar A–B"}
-            </button>
-            <button type="button" disabled={!audioEditUndo || editingAudio} onClick={undoAudioEdit}>
-              Deshacer
-            </button>
-          </fieldset>
+          {timelineTool === "cut" ? (
+            <fieldset className="audio-edit-toolbar" aria-label="Herramientas de edición de audio">
+              <span>
+                Selección:{" "}
+                {selectionBounds
+                  ? `${formatTime(selectionBounds.start / project.fps)} – ${formatTime(selectionBounds.end / project.fps)}`
+                  : "sin marcar"}
+              </span>
+              <button type="button" onClick={() => setSelectionStartFrame(frame)}>
+                Marcar inicio A
+              </button>
+              <button type="button" onClick={() => setSelectionEndFrame(frame)}>
+                Marcar fin B
+              </button>
+              <button
+                type="button"
+                className="delete-audio-selection"
+                disabled={
+                  !selectionBounds || selectionBounds.end <= selectionBounds.start || editingAudio
+                }
+                onClick={() => void deleteSelectedAudio()}
+              >
+                {editingAudio ? "Procesando…" : "Eliminar A–B"}
+              </button>
+              <button
+                type="button"
+                disabled={!audioEditUndo || editingAudio}
+                onClick={undoAudioEdit}
+              >
+                Deshacer
+              </button>
+            </fieldset>
+          ) : null}
           <div className="timeline-viewport" ref={timelineViewportRef}>
             <div className="timeline-canvas" style={{ width: `${timelineZoom * 100}%` }}>
               <div className="ruler">
@@ -1766,11 +1789,15 @@ export const App = () => {
                   </span>
                 ))}
               </div>
-              <div className="timeline-track">
+              <div className={`timeline-track tool-${timelineTool}`}>
                 <button
                   type="button"
                   className="timeline-hit-area"
-                  aria-label={`Mover cursor de audio desde el frame ${frame}`}
+                  aria-label={
+                    timelineTool === "emotions"
+                      ? `Elegir emoción en la timeline desde el frame ${frame}`
+                      : `Mover cursor de audio desde el frame ${frame}`
+                  }
                   onClick={(event) => {
                     const rect = event.currentTarget.getBoundingClientRect();
                     const target =
@@ -1782,7 +1809,9 @@ export const App = () => {
                             rect.width,
                             project.durationInFrames,
                           );
-                    seekToFrame(target);
+                    const action = resolveTimelineClick(timelineTool, target);
+                    seekToFrame(action.frame);
+                    setPickerFrame(action.pickerFrame);
                   }}
                 />
                 <div className="timeline-waveform" aria-hidden="true">
