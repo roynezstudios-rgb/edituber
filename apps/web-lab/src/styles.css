@@ -2023,8 +2023,6 @@ select:focus-visible,
   }
 
   .control-panel {
-    position: sticky;
-    top: 18px;
     max-height: calc(100vh - 36px);
     overflow-y: auto;
     scrollbar-gutter: stable;
