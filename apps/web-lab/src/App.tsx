@@ -108,6 +108,59 @@ interface AudioEditSnapshot {
   audioSource: string;
 }
 
+const MouthLoopPreview = ({ settings }: { settings: MouthLoopSettings }) => {
+  const [mouthOpen, setMouthOpen] = useState(false);
+
+  useEffect(() => {
+    if (!settings.enabled) {
+      setMouthOpen(false);
+      return;
+    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setMouthOpen(true);
+      return;
+    }
+
+    let timeout = 0;
+    let cancelled = false;
+    const show = (open: boolean) => {
+      if (cancelled) return;
+      setMouthOpen(open);
+      const duration = open ? settings.openMilliseconds : settings.closedMilliseconds;
+      timeout = window.setTimeout(() => show(!open), Math.max(40, duration));
+    };
+    show(true);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [settings.enabled, settings.openMilliseconds, settings.closedMilliseconds]);
+
+  return (
+    <div
+      className={`mouth-loop-preview${settings.enabled ? " is-active" : ""}`}
+      role="img"
+      aria-label={
+        settings.enabled
+          ? "Vista previa: la boca se abre y se cierra mientras hay voz"
+          : "Vista previa del ciclo de boca desactivado"
+      }
+    >
+      <span className={`face-guide eyes-open ${mouthOpen ? "mouth-open" : ""}`} aria-hidden="true">
+        <span className="guide-eyes">
+          <i />
+          <i />
+        </span>
+        <i className="guide-mouth" />
+      </span>
+      <span>
+        <b>{settings.enabled ? (mouthOpen ? "Hablando" : "Pausa breve") : "Desactivado"}</b>
+        <small>Vista del ciclo</small>
+      </span>
+    </div>
+  );
+};
+
 export const App = () => {
   const mouthSensitivityId = useId();
   const stockTitleId = useId();
@@ -915,7 +968,12 @@ export const App = () => {
           </div>
           <fieldset className="blink-settings mouth-loop-settings">
             <legend>Ciclo de boca</legend>
-            <p>Alterna abierta y cerrada mientras detecta voz continua.</p>
+            <div className="mouth-loop-intro">
+              <p>Alterna abierta y cerrada mientras detecta voz continua.</p>
+              <MouthLoopPreview
+                settings={project.settings.mouthLoop ?? defaultMouthLoopSettings()}
+              />
+            </div>
             <label className="mouth-loop-toggle">
               <input
                 type="checkbox"

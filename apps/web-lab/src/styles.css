@@ -1206,14 +1206,74 @@ input[type="range"]::-webkit-slider-thumb {
   grid-template-columns: 1fr 1fr;
   margin: 0 20px 16px;
 }
-.mouth-loop-settings > p,
+.mouth-loop-settings .mouth-loop-intro,
 .mouth-loop-settings .mouth-loop-toggle {
   grid-column: 1 / -1;
 }
-.mouth-loop-settings > p {
+.mouth-loop-settings .mouth-loop-intro {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+.mouth-loop-intro > p {
   margin: 0;
   color: #6f8ca0;
   font-size: 9px;
+}
+.mouth-loop-preview {
+  min-width: 132px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 9px;
+  border: 1px solid #24475a;
+  border-radius: 10px;
+  color: #7895a7;
+  background: #06131d;
+  opacity: 0.7;
+}
+.mouth-loop-preview.is-active {
+  border-color: #23748a;
+  color: #bdeff2;
+  opacity: 1;
+}
+.mouth-loop-preview .face-guide {
+  width: 36px;
+  height: 29px;
+  flex: 0 0 36px;
+  border-width: 1px;
+}
+.mouth-loop-preview .guide-eyes {
+  top: 6px;
+  left: 7px;
+  right: 7px;
+}
+.mouth-loop-preview .guide-eyes i {
+  width: 5px;
+  height: 5px;
+}
+.mouth-loop-preview .guide-mouth {
+  bottom: 6px;
+  width: 13px;
+  height: 2px;
+}
+.mouth-loop-preview .mouth-open .guide-mouth {
+  width: 8px;
+  height: 7px;
+  border-width: 1px;
+}
+.mouth-loop-preview > span:last-child {
+  display: grid;
+  gap: 2px;
+}
+.mouth-loop-preview b {
+  color: inherit;
+  font-size: 9px;
+}
+.mouth-loop-preview small {
+  color: #6f8ca0;
+  font-size: 8px;
 }
 .mouth-loop-settings .mouth-loop-toggle {
   grid-template-columns: auto 1fr;
