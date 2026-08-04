@@ -161,6 +161,72 @@ const MouthLoopPreview = ({ settings }: { settings: MouthLoopSettings }) => {
   );
 };
 
+const BlinkLoopPreview = ({ enabled, settings }: { enabled: boolean; settings: BlinkSettings }) => {
+  const [eyesClosed, setEyesClosed] = useState(false);
+
+  useEffect(() => {
+    if (!enabled || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setEyesClosed(false);
+      return;
+    }
+
+    let timeout = 0;
+    let cancelled = false;
+    const waitToBlink = () => {
+      const intervalSeconds = (settings.intervalMinSeconds + settings.intervalMaxSeconds) / 2;
+      timeout = window.setTimeout(
+        () => {
+          if (cancelled) return;
+          setEyesClosed(true);
+          timeout = window.setTimeout(
+            () => {
+              if (cancelled) return;
+              setEyesClosed(false);
+              waitToBlink();
+            },
+            Math.max(60, settings.durationMilliseconds),
+          );
+        },
+        Math.min(2000, Math.max(800, intervalSeconds * 1000)),
+      );
+    };
+    waitToBlink();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [
+    enabled,
+    settings.durationMilliseconds,
+    settings.intervalMaxSeconds,
+    settings.intervalMinSeconds,
+  ]);
+
+  return (
+    <div
+      className={`mouth-loop-preview blink-loop-preview${enabled ? " is-active" : ""}`}
+      role="img"
+      aria-label={
+        enabled
+          ? "Vista previa: el personaje parpadea con la configuración general"
+          : "Vista previa del parpadeo desactivado"
+      }
+    >
+      <span className={`face-guide ${eyesClosed ? "eyes-closed" : "eyes-open"}`} aria-hidden="true">
+        <span className="guide-eyes">
+          <i />
+          <i />
+        </span>
+        <i className="guide-mouth" />
+      </span>
+      <span>
+        <b>{enabled ? (eyesClosed ? "Parpadeando" : "Mirando") : "Desactivado"}</b>
+        <small>Vista rápida del parpadeo</small>
+      </span>
+    </div>
+  );
+};
+
 export const App = () => {
   const mouthSensitivityId = useId();
   const stockTitleId = useId();
@@ -966,53 +1032,6 @@ export const App = () => {
               }
             />
           </div>
-          <fieldset className="blink-settings mouth-loop-settings">
-            <legend>Ciclo de boca</legend>
-            <div className="mouth-loop-intro">
-              <p>Alterna abierta y cerrada mientras detecta voz continua.</p>
-              <MouthLoopPreview
-                settings={project.settings.mouthLoop ?? defaultMouthLoopSettings()}
-              />
-            </div>
-            <label className="mouth-loop-toggle">
-              <input
-                type="checkbox"
-                checked={(project.settings.mouthLoop ?? defaultMouthLoopSettings()).enabled}
-                onChange={(event) => updateMouthLoopSetting("enabled", event.currentTarget.checked)}
-              />
-              Activar ciclo durante la voz
-            </label>
-            <label>
-              Boca abierta (ms)
-              <input
-                type="number"
-                min="50"
-                max="1000"
-                step="10"
-                disabled={!(project.settings.mouthLoop ?? defaultMouthLoopSettings()).enabled}
-                value={(project.settings.mouthLoop ?? defaultMouthLoopSettings()).openMilliseconds}
-                onChange={(event) =>
-                  updateMouthLoopSetting("openMilliseconds", Number(event.currentTarget.value))
-                }
-              />
-            </label>
-            <label>
-              Boca cerrada (ms)
-              <input
-                type="number"
-                min="40"
-                max="1000"
-                step="10"
-                disabled={!(project.settings.mouthLoop ?? defaultMouthLoopSettings()).enabled}
-                value={
-                  (project.settings.mouthLoop ?? defaultMouthLoopSettings()).closedMilliseconds
-                }
-                onChange={(event) =>
-                  updateMouthLoopSetting("closedMilliseconds", Number(event.currentTarget.value))
-                }
-              />
-            </label>
-          </fieldset>
           <div className="compact-controls">
             <label>
               Movimiento <b>{(project.settings.motionScale ?? 1).toFixed(2)}</b>
@@ -1139,17 +1158,6 @@ export const App = () => {
             </label>
             <label>
               <span>
-                Parpadeo<small>Semilla {project.seed}</small>
-              </span>
-              <input
-                aria-label="Activar parpadeo"
-                type="checkbox"
-                checked={project.settings.blinkEnabled}
-                onChange={(event) => updateSetting("blinkEnabled", event.currentTarget.checked)}
-              />
-            </label>
-            <label>
-              <span>
                 TalkBounce<small>Contenedor padre</small>
               </span>
               <input
@@ -1162,74 +1170,143 @@ export const App = () => {
               />
             </label>
           </div>
-          <fieldset className="blink-settings global-blink-settings">
-            <legend>Parpadeo general</legend>
-            <p>Una sola configuración para todos los estados durante toda la grabación.</p>
-            <label>
-              Intervalo mínimo (s)
-              <input
-                type="number"
-                min="0.8"
-                max="30"
-                step="0.1"
-                disabled={!project.settings.blinkEnabled}
-                value={(project.settings.blink ?? defaultBlinkSettings()).intervalMinSeconds}
-                onChange={(event) =>
-                  updateBlinkSetting("intervalMinSeconds", Number(event.currentTarget.value))
-                }
-              />
-            </label>
-            <label>
-              Intervalo máximo (s)
-              <input
-                type="number"
-                min="0.8"
-                max="60"
-                step="0.1"
-                disabled={!project.settings.blinkEnabled}
-                value={(project.settings.blink ?? defaultBlinkSettings()).intervalMaxSeconds}
-                onChange={(event) =>
-                  updateBlinkSetting("intervalMaxSeconds", Number(event.currentTarget.value))
-                }
-              />
-            </label>
-            <label>
-              Duración (ms)
-              <input
-                type="number"
-                min="60"
-                max="1000"
-                step="10"
-                disabled={!project.settings.blinkEnabled}
-                value={(project.settings.blink ?? defaultBlinkSettings()).durationMilliseconds}
-                onChange={(event) =>
-                  updateBlinkSetting("durationMilliseconds", Number(event.currentTarget.value))
-                }
-              />
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                disabled={!project.settings.blinkEnabled}
-                checked={(project.settings.blink ?? defaultBlinkSettings()).syncAnimatedImages}
-                onChange={(event) =>
-                  updateBlinkSetting("syncAnimatedImages", event.currentTarget.checked)
-                }
-              />
-              Sincronizar imágenes animadas
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                disabled={!project.settings.blinkEnabled}
-                checked={(project.settings.blink ?? defaultBlinkSettings()).playAnimationToEnd}
-                onChange={(event) =>
-                  updateBlinkSetting("playAnimationToEnd", event.currentTarget.checked)
-                }
-              />
-              Reproducir animación hasta el final
-            </label>
-          </fieldset>
+          <div className="facial-animation-settings">
+            <fieldset className="blink-settings mouth-loop-settings">
+              <legend>Movimiento de boca</legend>
+              <div className="mouth-loop-intro">
+                <p>Mientras detecta voz.</p>
+                <MouthLoopPreview
+                  settings={project.settings.mouthLoop ?? defaultMouthLoopSettings()}
+                />
+              </div>
+              <label className="mouth-loop-toggle">
+                <input
+                  type="checkbox"
+                  checked={(project.settings.mouthLoop ?? defaultMouthLoopSettings()).enabled}
+                  onChange={(event) =>
+                    updateMouthLoopSetting("enabled", event.currentTarget.checked)
+                  }
+                />
+                Activar movimiento durante la voz
+              </label>
+              <label>
+                Tiempo abierta (ms)
+                <input
+                  type="number"
+                  min="50"
+                  max="1000"
+                  step="10"
+                  disabled={!(project.settings.mouthLoop ?? defaultMouthLoopSettings()).enabled}
+                  value={
+                    (project.settings.mouthLoop ?? defaultMouthLoopSettings()).openMilliseconds
+                  }
+                  onChange={(event) =>
+                    updateMouthLoopSetting("openMilliseconds", Number(event.currentTarget.value))
+                  }
+                />
+              </label>
+              <label>
+                Tiempo cerrada (ms)
+                <input
+                  type="number"
+                  min="40"
+                  max="1000"
+                  step="10"
+                  disabled={!(project.settings.mouthLoop ?? defaultMouthLoopSettings()).enabled}
+                  value={
+                    (project.settings.mouthLoop ?? defaultMouthLoopSettings()).closedMilliseconds
+                  }
+                  onChange={(event) =>
+                    updateMouthLoopSetting("closedMilliseconds", Number(event.currentTarget.value))
+                  }
+                />
+              </label>
+            </fieldset>
+
+            <fieldset className="blink-settings global-blink-settings">
+              <legend>Parpadeo</legend>
+              <div className="blink-loop-intro">
+                <p>Durante toda la grabación.</p>
+                <BlinkLoopPreview
+                  enabled={project.settings.blinkEnabled}
+                  settings={project.settings.blink ?? defaultBlinkSettings()}
+                />
+              </div>
+              <label className="blink-loop-toggle">
+                <input
+                  aria-label="Activar parpadeo"
+                  type="checkbox"
+                  checked={project.settings.blinkEnabled}
+                  onChange={(event) => updateSetting("blinkEnabled", event.currentTarget.checked)}
+                />
+                Activar parpadeo
+              </label>
+              <label>
+                Pausa mínima (s)
+                <input
+                  type="number"
+                  min="0.8"
+                  max="30"
+                  step="0.1"
+                  disabled={!project.settings.blinkEnabled}
+                  value={(project.settings.blink ?? defaultBlinkSettings()).intervalMinSeconds}
+                  onChange={(event) =>
+                    updateBlinkSetting("intervalMinSeconds", Number(event.currentTarget.value))
+                  }
+                />
+              </label>
+              <label>
+                Pausa máxima (s)
+                <input
+                  type="number"
+                  min="0.8"
+                  max="60"
+                  step="0.1"
+                  disabled={!project.settings.blinkEnabled}
+                  value={(project.settings.blink ?? defaultBlinkSettings()).intervalMaxSeconds}
+                  onChange={(event) =>
+                    updateBlinkSetting("intervalMaxSeconds", Number(event.currentTarget.value))
+                  }
+                />
+              </label>
+              <label>
+                Ojos cerrados (ms)
+                <input
+                  type="number"
+                  min="60"
+                  max="1000"
+                  step="10"
+                  disabled={!project.settings.blinkEnabled}
+                  value={(project.settings.blink ?? defaultBlinkSettings()).durationMilliseconds}
+                  onChange={(event) =>
+                    updateBlinkSetting("durationMilliseconds", Number(event.currentTarget.value))
+                  }
+                />
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  disabled={!project.settings.blinkEnabled}
+                  checked={(project.settings.blink ?? defaultBlinkSettings()).syncAnimatedImages}
+                  onChange={(event) =>
+                    updateBlinkSetting("syncAnimatedImages", event.currentTarget.checked)
+                  }
+                />
+                Sincronizar imágenes animadas
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  disabled={!project.settings.blinkEnabled}
+                  checked={(project.settings.blink ?? defaultBlinkSettings()).playAnimationToEnd}
+                  onChange={(event) =>
+                    updateBlinkSetting("playAnimationToEnd", event.currentTarget.checked)
+                  }
+                />
+                Reproducir animación hasta el final
+              </label>
+            </fieldset>
+          </div>
 
           <section className="state-stock" aria-labelledby={stockTitleId}>
             <div className="stock-heading">
