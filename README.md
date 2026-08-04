@@ -9,7 +9,7 @@ Motor determinista para convertir audio, un avatar 2D y eventos de estado en una
 - Stock ilimitado de estados con UUID estable, nombre, emoji y exactamente 1, 2 o 4 imágenes.
 - Efectos globales para toda la grabación, con grupos de silencio, voz, apertura, cierre y entrada desde timeline; composición y parpadeo deterministas.
 - Timeline por `stateId` con waveform, corte A–B, eliminación de audio, resincronización automática, deshacer y zoom.
-- Web Lab con importación/exportación portable, carga local de audio, grabación directa desde el micrófono, visibilidad del personaje, fondo, sensibilidad y ciclo global de boca configurable.
+- Web Lab con importación/exportación portable, carga local de audio, grabación directa desde el micrófono, fondo, sensibilidad y ciclo global de boca configurable.
 - CLI por proyecto o en modo directo `audio + avatar`.
 - MP4 H.264/AAC a 1080 × 1080 y 30 FPS mediante Remotion.
 
@@ -40,6 +40,19 @@ El editor crece por bloques y la única imagen obligatoria es la base:
 Tres imágenes, cero imágenes y más de cuatro se rechazan. Los modos de una y dos imágenes no inventan parpadeo. El parpadeo y el ciclo de boca se configuran una sola vez para el proyecto completo; durante voz continua, el ciclo alterna las imágenes de boca abierta/cerrada y se reinicia después de cada pausa. Cada estado solo aporta sus imágenes y su render suave o pixel. Las listas ordenadas de `randomMove`, `waveMove`, `jump`, `waveRotate`, `darken`, `squashStretch` y `emphasis` también pertenecen al proyecto completo, por lo que continúan activas al cambiar de estado. El emoji es solo una etiqueta visual; timeline y motor usan el UUID `stateId`.
 
 GIF, APNG y WebP animado se aceptan como assets portables. La sincronización y reinicio deterministas de sus frames internos todavía no están implementados en Remotion; esas opciones se conservan en el contrato sin bloquear PNG/JPEG/SVG/WebP estático.
+
+### Preparar emociones sueltas con una IA
+
+Si una IA ya tiene las imágenes sueltas de un personaje, debe organizarlas antes de entregarlas a EDITuber. Cada paquete representa **un personaje completo** y cada emoción puede contener 1, 2 o 4 imágenes. Para el modo completo de boca y parpadeo se usan estos nombres, conservando la extensión original:
+
+1. `1-base`: ojos abiertos y boca cerrada.
+2. `2-habla`: ojos abiertos y boca abierta.
+3. `3-parpadeo`: ojos cerrados y boca cerrada.
+4. `4-parpadeo-habla`: ojos cerrados y boca abierta.
+
+Los nombres de carpetas usan identificadores breves sin espacios, como `neutral`, `feliz` o `triste`. El nombre visible y el emoji se guardan en `personaje.json`; el emoji no se usa como nombre de archivo. Una IA nunca debe adivinar una asignación dudosa ni modificar, recortar o comprimir las imágenes para completar el paquete.
+
+El formato ZIP y su importador todavía están planeados y no forman parte del Web Lab actual. El archivo [PROMPT-ORGANIZAR-IMAGENES-AVATAR.txt](docs/PROMPT-ORGANIZAR-IMAGENES-AVATAR.txt) contiene las instrucciones completas y un prompt listo para entregar a una IA.
 
 La escena admite fondo `solid`, `transparent` o `image`. Posición, escala del avatar y
 `motionScale` se guardan en el proyecto y se aplican igual en Web Lab y Remotion; `motionScale`

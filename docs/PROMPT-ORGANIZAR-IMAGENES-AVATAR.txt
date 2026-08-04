@@ -1,0 +1,131 @@
+PROMPT PARA ORGANIZAR IMÁGENES SUELTAS DE UN PERSONAJE PARA EDITUBER
+===================================================================
+
+OBJETIVO
+
+Organiza las imágenes adjuntas como un paquete de un solo personaje para EDITuber.
+El resultado debe contener todas las emociones disponibles y quedar preparado para
+el futuro importador ZIP de personajes.
+
+REGLAS OBLIGATORIAS
+
+1. No redibujes, recortes, escales, comprimas, conviertas ni alteres las imágenes.
+2. Conserva la transparencia, resolución, proporciones y formato original de cada archivo.
+3. No inventes imágenes faltantes y no dupliques una imagen para completar otro puesto.
+4. No adivines cuando una asignación sea dudosa. Detén esa emoción y repórtala para revisión.
+5. Todas las imágenes de una misma emoción deben representar el mismo personaje, encuadre y emoción.
+6. El emoji se escribe únicamente en personaje.json. No lo uses en nombres de archivos o carpetas.
+7. Los identificadores usan minúsculas, números y guiones, sin espacios ni acentos.
+8. Cada paquete ZIP representa un personaje completo, no una sola emoción.
+
+ORDEN DE LAS CUATRO IMÁGENES
+
+1-base.<extensión>
+Ojos abiertos y boca cerrada. Es la imagen normal durante el silencio.
+
+2-habla.<extensión>
+Ojos abiertos y boca abierta. Se muestra mientras EDITuber detecta voz.
+
+3-parpadeo.<extensión>
+Ojos cerrados y boca cerrada. Se usa para parpadear durante el silencio.
+
+4-parpadeo-habla.<extensión>
+Ojos cerrados y boca abierta. Se usa para parpadear mientras detecta voz.
+
+No cambies la extensión original. Por ejemplo, una imagen WebP debe conservar un nombre
+como 1-base.webp y una imagen PNG debe conservar un nombre como 2-habla.png.
+
+MODOS VÁLIDOS
+
+- Una imagen: únicamente 1-base.
+- Dos imágenes: 1-base y 2-habla.
+- Cuatro imágenes: 1-base, 2-habla, 3-parpadeo y 4-parpadeo-habla.
+- Cero o tres imágenes no forman un estado válido.
+- Si se proporciona una pareja de parpadeo, deben existir también las dos imágenes de boca.
+
+ESTRUCTURA DE SALIDA
+
+[id-personaje]/
+|-- personaje.json
+|-- [id-emoción-1]/
+|   |-- 1-base.<extensión>
+|   |-- 2-habla.<extensión>
+|   |-- 3-parpadeo.<extensión>
+|   `-- 4-parpadeo-habla.<extensión>
+|-- [id-emoción-2]/
+|   `-- ...
+`-- [id-emoción-n]/
+    `-- ...
+
+CONTENIDO DE PERSONAJE.JSON
+
+{
+  "format": "edituber-character",
+  "version": 1,
+  "id": "[id-personaje]",
+  "name": "[nombre visible del personaje]",
+  "emotions": [
+    {
+      "id": "neutral",
+      "name": "Neutral",
+      "emoji": "😐"
+    },
+    {
+      "id": "feliz",
+      "name": "Feliz",
+      "emoji": "🙂"
+    }
+  ]
+}
+
+DATOS QUE DEBES SOLICITAR SI NO FUERON PROPORCIONADOS
+
+- Nombre visible del personaje.
+- Identificador breve del personaje.
+- Nombre visible de cada emoción.
+- Identificador breve de cada emoción.
+- Emoji que representa cada emoción.
+
+PROCEDIMIENTO
+
+1. Agrupa las imágenes por emoción.
+2. Identifica visualmente ojos abiertos/cerrados y boca abierta/cerrada.
+3. Prepara una tabla provisional con el archivo original y el nombre de destino.
+4. Marca como dudosa cualquier imagen que no pueda identificarse con seguridad.
+5. Comprueba dimensiones, formato y transparencia.
+6. Presenta el reporte previo y espera aprobación si existe cualquier advertencia.
+7. Solo cuando no haya errores, crea las carpetas, personaje.json y el archivo ZIP.
+
+REPORTE OBLIGATORIO ANTES DEL ZIP
+
+Entrega una tabla con estas columnas:
+
+- Emoción.
+- Emoji.
+- Archivo original.
+- Nombre de destino.
+- Dimensiones.
+- Transparencia detectada: sí, no o desconocida.
+- Estado: correcto, faltante, duplicado o requiere revisión.
+
+Después indica:
+
+- Cuántas emociones completas encontraste.
+- Qué emociones tienen 1, 2 o 4 imágenes válidas.
+- Qué archivos faltan, sobran o parecen duplicados.
+- Si existen diferencias de dimensiones o encuadre.
+- Si el paquete está listo para generarse.
+
+SALIDA FINAL
+
+Cuando todo esté correcto, genera:
+
+[id-personaje].zip
+
+No afirmes que el ZIP es válido si falta 1-base, si una emoción contiene tres imágenes,
+si reutilizaste una imagen para dos puestos o si existe una asignación sin confirmar.
+
+NOTA DE COMPATIBILIDAD
+
+Este documento define el formato de preparación acordado para el futuro importador ZIP.
+La versión actual del Web Lab todavía requiere agregar los estados desde la interfaz.
