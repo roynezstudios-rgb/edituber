@@ -1,0 +1,14 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/contracts" },
+    { "path": "packages/timeline-engine" },
+    { "path": "packages/audio-engine" },
+    { "path": "packages/avatar-engine" },
+    { "path": "packages/core" },
+    { "path": "packages/renderer-contract" },
+    { "path": "packages/renderer-remotion" },
+    { "path": "apps/cli" },
+    { "path": "apps/web-lab" }
+  ]
+}

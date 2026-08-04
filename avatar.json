@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "avatarId": "9223eae6-96a7-4cab-8906-e5cf35cf0f19",
+  "name": "Robot Cyan Fixture",
+  "canvas": { "width": 800, "height": 800 },
+  "shell": "shell.svg",
+  "defaultExpression": "🙂",
+  "expressions": [
+    {
+      "id": "2522cfb9-01e1-47c6-9e61-e6e5a4ae3ef0",
+      "emoji": "🙂",
+      "blinkPolicy": "auto",
+      "states": {
+        "eyesOpenMouthClosed": "faces/smile-open-eyes-closed-mouth.svg",
+        "eyesOpenMouthOpen": "faces/smile-open-eyes-open-mouth.svg",
+        "eyesClosedMouthClosed": "faces/smile-closed-eyes-closed-mouth.svg",
+        "eyesClosedMouthOpen": "faces/smile-closed-eyes-open-mouth.svg"
+      }
+    },
+    {
+      "id": "c114b68a-1653-4186-ad11-f380d2ea9379",
+      "emoji": "🤔",
+      "blinkPolicy": "auto",
+      "states": {
+        "eyesOpenMouthClosed": "faces/think-open-eyes-closed-mouth.svg",
+        "eyesOpenMouthOpen": "faces/think-open-eyes-open-mouth.svg",
+        "eyesClosedMouthClosed": "faces/think-closed-eyes-closed-mouth.svg",
+        "eyesClosedMouthOpen": "faces/think-closed-eyes-open-mouth.svg"
+      }
+    },
+    {
+      "id": "041731df-94b8-492b-a8cc-9e4300c4dc2f",
+      "emoji": "😮",
+      "blinkPolicy": "auto",
+      "states": {
+        "eyesOpenMouthClosed": "faces/surprise-open-eyes-closed-mouth.svg",
+        "eyesOpenMouthOpen": "faces/surprise-open-eyes-open-mouth.svg",
+        "eyesClosedMouthClosed": "faces/surprise-closed-eyes-closed-mouth.svg",
+        "eyesClosedMouthOpen": "faces/surprise-closed-eyes-open-mouth.svg"
+      }
+    }
+  ]
+}

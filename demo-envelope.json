@@ -1,0 +1,1628 @@
+{
+  "version": 1,
+  "fps": 30,
+  "sampleRate": 48000,
+  "sourceHash": "e3b3500b1390f111bc3d97ff0edcae79112f8669b05d655f29915bc0ae8e85a6",
+  "frames": [
+    {
+      "frame": 0,
+      "amplitudeRaw": 0.831464,
+      "amplitudeSmoothed": 0.515508,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.495058,
+      "emphasisPulse": 1,
+      "bounceAmount": 1
+    },
+    {
+      "frame": 1,
+      "amplitudeRaw": 1,
+      "amplitudeSmoothed": 0.815893,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.808122,
+      "emphasisPulse": 0.58,
+      "bounceAmount": 0.58
+    },
+    {
+      "frame": 2,
+      "amplitudeRaw": 0.950553,
+      "amplitudeSmoothed": 0.899382,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.895135,
+      "emphasisPulse": 0.3364,
+      "bounceAmount": 0.3364
+    },
+    {
+      "frame": 3,
+      "amplitudeRaw": 0.718071,
+      "amplitudeSmoothed": 0.855867,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.849784,
+      "emphasisPulse": 0.195112,
+      "bounceAmount": 0.195112
+    },
+    {
+      "frame": 4,
+      "amplitudeRaw": 0.466627,
+      "amplitudeSmoothed": 0.76245,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.752423,
+      "emphasisPulse": 0.113165,
+      "bounceAmount": 0.113165
+    },
+    {
+      "frame": 5,
+      "amplitudeRaw": 0.380339,
+      "amplitudeSmoothed": 0.670743,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.656846,
+      "emphasisPulse": 0.065636,
+      "bounceAmount": 0.065636
+    },
+    {
+      "frame": 6,
+      "amplitudeRaw": 0.528784,
+      "amplitudeSmoothed": 0.636673,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.621337,
+      "emphasisPulse": 0.038069,
+      "bounceAmount": 0.038069
+    },
+    {
+      "frame": 7,
+      "amplitudeRaw": 0.795066,
+      "amplitudeSmoothed": 0.734877,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.723686,
+      "emphasisPulse": 0.02208,
+      "bounceAmount": 0.02208
+    },
+    {
+      "frame": 8,
+      "amplitudeRaw": 0.987982,
+      "amplitudeSmoothed": 0.891802,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.887235,
+      "emphasisPulse": 0.92662,
+      "bounceAmount": 0.92662
+    },
+    {
+      "frame": 9,
+      "amplitudeRaw": 0.971414,
+      "amplitudeSmoothed": 0.941161,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.938678,
+      "emphasisPulse": 0.53744,
+      "bounceAmount": 0.53744
+    },
+    {
+      "frame": 10,
+      "amplitudeRaw": 0.757074,
+      "amplitudeSmoothed": 0.89698,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.892632,
+      "emphasisPulse": 0.311715,
+      "bounceAmount": 0.311715
+    },
+    {
+      "frame": 11,
+      "amplitudeRaw": 0.496182,
+      "amplitudeSmoothed": 0.800789,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.79238,
+      "emphasisPulse": 0.180795,
+      "bounceAmount": 0.180795
+    },
+    {
+      "frame": 12,
+      "amplitudeRaw": 0.377711,
+      "amplitudeSmoothed": 0.69925,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.686556,
+      "emphasisPulse": 0.104861,
+      "bounceAmount": 0.104861
+    },
+    {
+      "frame": 13,
+      "amplitudeRaw": 0.496182,
+      "amplitudeSmoothed": 0.650514,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.635762,
+      "emphasisPulse": 0.060819,
+      "bounceAmount": 0.060819
+    },
+    {
+      "frame": 14,
+      "amplitudeRaw": 0.757074,
+      "amplitudeSmoothed": 0.716581,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.704618,
+      "emphasisPulse": 0.035275,
+      "bounceAmount": 0.035275
+    },
+    {
+      "frame": 15,
+      "amplitudeRaw": 0.971414,
+      "amplitudeSmoothed": 0.874577,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.869283,
+      "emphasisPulse": 0.92919,
+      "bounceAmount": 0.92919
+    },
+    {
+      "frame": 16,
+      "amplitudeRaw": 0.987982,
+      "amplitudeSmoothed": 0.944888,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.942562,
+      "emphasisPulse": 0.53893,
+      "bounceAmount": 0.53893
+    },
+    {
+      "frame": 17,
+      "amplitudeRaw": 0.795066,
+      "amplitudeSmoothed": 0.908931,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.905087,
+      "emphasisPulse": 0.31258,
+      "bounceAmount": 0.31258
+    },
+    {
+      "frame": 18,
+      "amplitudeRaw": 0.528784,
+      "amplitudeSmoothed": 0.817696,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.810001,
+      "emphasisPulse": 0.181296,
+      "bounceAmount": 0.181296
+    },
+    {
+      "frame": 19,
+      "amplitudeRaw": 0.380339,
+      "amplitudeSmoothed": 0.71273,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.700605,
+      "emphasisPulse": 0.105152,
+      "bounceAmount": 0.105152
+    },
+    {
+      "frame": 20,
+      "amplitudeRaw": 0.466627,
+      "amplitudeSmoothed": 0.653665,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.639047,
+      "emphasisPulse": 0.060988,
+      "bounceAmount": 0.060988
+    },
+    {
+      "frame": 21,
+      "amplitudeRaw": 0.718071,
+      "amplitudeSmoothed": 0.693597,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.680664,
+      "emphasisPulse": 0.035373,
+      "bounceAmount": 0.035373
+    },
+    {
+      "frame": 22,
+      "amplitudeRaw": 0.841361,
+      "amplitudeSmoothed": 0.785211,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.776145,
+      "emphasisPulse": 0.020516,
+      "bounceAmount": 0.020516
+    },
+    {
+      "frame": 23,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.59676,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.57974,
+      "emphasisPulse": 0.011899,
+      "bounceAmount": 0.011899
+    },
+    {
+      "frame": 24,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.453538,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.430472,
+      "emphasisPulse": 0.006902,
+      "bounceAmount": 0.006902
+    },
+    {
+      "frame": 25,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.344689,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.317028,
+      "emphasisPulse": 0.004003,
+      "bounceAmount": 0.004003
+    },
+    {
+      "frame": 26,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.261963,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.230811,
+      "emphasisPulse": 0.002322,
+      "bounceAmount": 0.002322
+    },
+    {
+      "frame": 27,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.199092,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.165286,
+      "emphasisPulse": 0.001347,
+      "bounceAmount": 0.001347
+    },
+    {
+      "frame": 28,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.15131,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.115487,
+      "emphasisPulse": 0.000781,
+      "bounceAmount": 0.000781
+    },
+    {
+      "frame": 29,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.114996,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.07764,
+      "emphasisPulse": 0.000453,
+      "bounceAmount": 0.000453
+    },
+    {
+      "frame": 30,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.087397,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.048876,
+      "emphasisPulse": 0.000263,
+      "bounceAmount": 0.000263
+    },
+    {
+      "frame": 31,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.066421,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.027016,
+      "emphasisPulse": 0.000152,
+      "bounceAmount": 0.000152
+    },
+    {
+      "frame": 32,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.05048,
+      "voiceActive": false,
+      "mouthOpenAmount": 0,
+      "emphasisPulse": 0.000088,
+      "bounceAmount": 0
+    },
+    {
+      "frame": 33,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.038365,
+      "voiceActive": false,
+      "mouthOpenAmount": 0,
+      "emphasisPulse": 0.000051,
+      "bounceAmount": 0
+    },
+    {
+      "frame": 34,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.029157,
+      "voiceActive": false,
+      "mouthOpenAmount": 0,
+      "emphasisPulse": 0.00003,
+      "bounceAmount": 0
+    },
+    {
+      "frame": 35,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.02216,
+      "voiceActive": false,
+      "mouthOpenAmount": 0,
+      "emphasisPulse": 0.000017,
+      "bounceAmount": 0
+    },
+    {
+      "frame": 36,
+      "amplitudeRaw": 0.897299,
+      "amplitudeSmoothed": 0.564746,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.546374,
+      "emphasisPulse": 1,
+      "bounceAmount": 1
+    },
+    {
+      "frame": 37,
+      "amplitudeRaw": 1,
+      "amplitudeSmoothed": 0.834604,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.827622,
+      "emphasisPulse": 0.58,
+      "bounceAmount": 0.58
+    },
+    {
+      "frame": 38,
+      "amplitudeRaw": 0.897299,
+      "amplitudeSmoothed": 0.873475,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.868134,
+      "emphasisPulse": 0.3364,
+      "bounceAmount": 0.3364
+    },
+    {
+      "frame": 39,
+      "amplitudeRaw": 0.639416,
+      "amplitudeSmoothed": 0.817301,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.809589,
+      "emphasisPulse": 0.195112,
+      "bounceAmount": 0.195112
+    },
+    {
+      "frame": 40,
+      "amplitudeRaw": 0.418603,
+      "amplitudeSmoothed": 0.721613,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.709863,
+      "emphasisPulse": 0.113165,
+      "bounceAmount": 0.113165
+    },
+    {
+      "frame": 41,
+      "amplitudeRaw": 0.401004,
+      "amplitudeSmoothed": 0.644667,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.629669,
+      "emphasisPulse": 0.065636,
+      "bounceAmount": 0.065636
+    },
+    {
+      "frame": 42,
+      "amplitudeRaw": 0.600968,
+      "amplitudeSmoothed": 0.634179,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.618738,
+      "emphasisPulse": 0.038069,
+      "bounceAmount": 0.038069
+    },
+    {
+      "frame": 43,
+      "amplitudeRaw": 0.865717,
+      "amplitudeSmoothed": 0.777733,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.768351,
+      "emphasisPulse": 0.894528,
+      "bounceAmount": 0.894528
+    },
+    {
+      "frame": 44,
+      "amplitudeRaw": 1,
+      "amplitudeSmoothed": 0.915538,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.911973,
+      "emphasisPulse": 0.518826,
+      "bounceAmount": 0.518826
+    },
+    {
+      "frame": 45,
+      "amplitudeRaw": 0.925719,
+      "amplitudeSmoothed": 0.92185,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.918551,
+      "emphasisPulse": 0.300919,
+      "bounceAmount": 0.300919
+    },
+    {
+      "frame": 46,
+      "amplitudeRaw": 0.678651,
+      "amplitudeSmoothed": 0.863482,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.85772,
+      "emphasisPulse": 0.174533,
+      "bounceAmount": 0.174533
+    },
+    {
+      "frame": 47,
+      "amplitudeRaw": 0.440615,
+      "amplitudeSmoothed": 0.761994,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.751948,
+      "emphasisPulse": 0.101229,
+      "bounceAmount": 0.101229
+    },
+    {
+      "frame": 48,
+      "amplitudeRaw": 0.388158,
+      "amplitudeSmoothed": 0.672274,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.658441,
+      "emphasisPulse": 0.058713,
+      "bounceAmount": 0.058713
+    },
+    {
+      "frame": 49,
+      "amplitudeRaw": 0.563891,
+      "amplitudeSmoothed": 0.646262,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.631331,
+      "emphasisPulse": 0.034054,
+      "bounceAmount": 0.034054
+    },
+    {
+      "frame": 50,
+      "amplitudeRaw": 0.831464,
+      "amplitudeSmoothed": 0.761087,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.751003,
+      "emphasisPulse": 0.019751,
+      "bounceAmount": 0.019751
+    },
+    {
+      "frame": 51,
+      "amplitudeRaw": 1,
+      "amplitudeSmoothed": 0.909213,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.905381,
+      "emphasisPulse": 0.905502,
+      "bounceAmount": 0.905502
+    },
+    {
+      "frame": 52,
+      "amplitudeRaw": 0.950553,
+      "amplitudeSmoothed": 0.934844,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.932093,
+      "emphasisPulse": 0.525191,
+      "bounceAmount": 0.525191
+    },
+    {
+      "frame": 53,
+      "amplitudeRaw": 0.718071,
+      "amplitudeSmoothed": 0.882818,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.877872,
+      "emphasisPulse": 0.304611,
+      "bounceAmount": 0.304611
+    },
+    {
+      "frame": 54,
+      "amplitudeRaw": 0.466627,
+      "amplitudeSmoothed": 0.782932,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.77377,
+      "emphasisPulse": 0.176674,
+      "bounceAmount": 0.176674
+    },
+    {
+      "frame": 55,
+      "amplitudeRaw": 0.380339,
+      "amplitudeSmoothed": 0.68631,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.673069,
+      "emphasisPulse": 0.102471,
+      "bounceAmount": 0.102471
+    },
+    {
+      "frame": 56,
+      "amplitudeRaw": 0.528784,
+      "amplitudeSmoothed": 0.648504,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.633667,
+      "emphasisPulse": 0.059433,
+      "bounceAmount": 0.059433
+    },
+    {
+      "frame": 57,
+      "amplitudeRaw": 0.795066,
+      "amplitudeSmoothed": 0.739373,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.728372,
+      "emphasisPulse": 0.034471,
+      "bounceAmount": 0.034471
+    },
+    {
+      "frame": 58,
+      "amplitudeRaw": 0.880743,
+      "amplitudeSmoothed": 0.827022,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.819721,
+      "emphasisPulse": 0.019993,
+      "bounceAmount": 0.019993
+    },
+    {
+      "frame": 59,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.628537,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.612858,
+      "emphasisPulse": 0.011596,
+      "bounceAmount": 0.011596
+    },
+    {
+      "frame": 60,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.477688,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.455642,
+      "emphasisPulse": 0.006726,
+      "bounceAmount": 0.006726
+    },
+    {
+      "frame": 61,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.363043,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.336157,
+      "emphasisPulse": 0.003901,
+      "bounceAmount": 0.003901
+    },
+    {
+      "frame": 62,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.275913,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.245349,
+      "emphasisPulse": 0.002263,
+      "bounceAmount": 0.002263
+    },
+    {
+      "frame": 63,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.209694,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.176335,
+      "emphasisPulse": 0.001312,
+      "bounceAmount": 0.001312
+    },
+    {
+      "frame": 64,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.159367,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.123884,
+      "emphasisPulse": 0.000761,
+      "bounceAmount": 0.000761
+    },
+    {
+      "frame": 65,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.121119,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.084022,
+      "emphasisPulse": 0.000441,
+      "bounceAmount": 0.000441
+    },
+    {
+      "frame": 66,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.09205,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.053726,
+      "emphasisPulse": 0.000256,
+      "bounceAmount": 0.000256
+    },
+    {
+      "frame": 67,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.069958,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.030702,
+      "emphasisPulse": 0.000149,
+      "bounceAmount": 0.000149
+    },
+    {
+      "frame": 68,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.053168,
+      "voiceActive": false,
+      "mouthOpenAmount": 0,
+      "emphasisPulse": 0.000086,
+      "bounceAmount": 0
+    },
+    {
+      "frame": 69,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.040408,
+      "voiceActive": false,
+      "mouthOpenAmount": 0,
+      "emphasisPulse": 0.00005,
+      "bounceAmount": 0
+    },
+    {
+      "frame": 70,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.03071,
+      "voiceActive": false,
+      "mouthOpenAmount": 0,
+      "emphasisPulse": 0.000029,
+      "bounceAmount": 0
+    },
+    {
+      "frame": 71,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.02334,
+      "voiceActive": false,
+      "mouthOpenAmount": 0,
+      "emphasisPulse": 0.000017,
+      "bounceAmount": 0
+    },
+    {
+      "frame": 72,
+      "amplitudeRaw": 0.950553,
+      "amplitudeSmoothed": 0.598212,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.581252,
+      "emphasisPulse": 1,
+      "bounceAmount": 1
+    },
+    {
+      "frame": 73,
+      "amplitudeRaw": 1,
+      "amplitudeSmoothed": 0.84732,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.840876,
+      "emphasisPulse": 0.58,
+      "bounceAmount": 0.58
+    },
+    {
+      "frame": 74,
+      "amplitudeRaw": 0.831464,
+      "amplitudeSmoothed": 0.843515,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.83691,
+      "emphasisPulse": 0.3364,
+      "bounceAmount": 0.3364
+    },
+    {
+      "frame": 75,
+      "amplitudeRaw": 0.563891,
+      "amplitudeSmoothed": 0.776405,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.766967,
+      "emphasisPulse": 0.195112,
+      "bounceAmount": 0.195112
+    },
+    {
+      "frame": 76,
+      "amplitudeRaw": 0.388158,
+      "amplitudeSmoothed": 0.683226,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.669855,
+      "emphasisPulse": 0.113165,
+      "bounceAmount": 0.113165
+    },
+    {
+      "frame": 77,
+      "amplitudeRaw": 0.440615,
+      "amplitudeSmoothed": 0.624999,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.609171,
+      "emphasisPulse": 0.065636,
+      "bounceAmount": 0.065636
+    },
+    {
+      "frame": 78,
+      "amplitudeRaw": 0.678651,
+      "amplitudeSmoothed": 0.658264,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.643839,
+      "emphasisPulse": 0.038069,
+      "bounceAmount": 0.038069
+    },
+    {
+      "frame": 79,
+      "amplitudeRaw": 0.925719,
+      "amplitudeSmoothed": 0.824086,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.81666,
+      "emphasisPulse": 0.947973,
+      "bounceAmount": 0.947973
+    },
+    {
+      "frame": 80,
+      "amplitudeRaw": 1,
+      "amplitudeSmoothed": 0.933153,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.930331,
+      "emphasisPulse": 0.549824,
+      "bounceAmount": 0.549824
+    },
+    {
+      "frame": 81,
+      "amplitudeRaw": 0.865717,
+      "amplitudeSmoothed": 0.916968,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.913463,
+      "emphasisPulse": 0.318898,
+      "bounceAmount": 0.318898
+    },
+    {
+      "frame": 82,
+      "amplitudeRaw": 0.600968,
+      "amplitudeSmoothed": 0.841128,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.834422,
+      "emphasisPulse": 0.184961,
+      "bounceAmount": 0.184961
+    },
+    {
+      "frame": 83,
+      "amplitudeRaw": 0.401004,
+      "amplitudeSmoothed": 0.735498,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.724334,
+      "emphasisPulse": 0.107277,
+      "bounceAmount": 0.107277
+    },
+    {
+      "frame": 84,
+      "amplitudeRaw": 0.418603,
+      "amplitudeSmoothed": 0.659443,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.645069,
+      "emphasisPulse": 0.062221,
+      "bounceAmount": 0.062221
+    },
+    {
+      "frame": 85,
+      "amplitudeRaw": 0.639416,
+      "amplitudeSmoothed": 0.654637,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.640059,
+      "emphasisPulse": 0.036088,
+      "bounceAmount": 0.036088
+    },
+    {
+      "frame": 86,
+      "amplitudeRaw": 0.897299,
+      "amplitudeSmoothed": 0.805088,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.79686,
+      "emphasisPulse": 0.911082,
+      "bounceAmount": 0.911082
+    },
+    {
+      "frame": 87,
+      "amplitudeRaw": 1,
+      "amplitudeSmoothed": 0.925933,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.922807,
+      "emphasisPulse": 0.528427,
+      "bounceAmount": 0.528427
+    },
+    {
+      "frame": 88,
+      "amplitudeRaw": 0.897299,
+      "amplitudeSmoothed": 0.919061,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.915645,
+      "emphasisPulse": 0.306488,
+      "bounceAmount": 0.306488
+    },
+    {
+      "frame": 89,
+      "amplitudeRaw": 0.639416,
+      "amplitudeSmoothed": 0.851946,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.845697,
+      "emphasisPulse": 0.177763,
+      "bounceAmount": 0.177763
+    },
+    {
+      "frame": 90,
+      "amplitudeRaw": 0.418603,
+      "amplitudeSmoothed": 0.747944,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.737305,
+      "emphasisPulse": 0.103103,
+      "bounceAmount": 0.103103
+    },
+    {
+      "frame": 91,
+      "amplitudeRaw": 0.401004,
+      "amplitudeSmoothed": 0.664678,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.650525,
+      "emphasisPulse": 0.059799,
+      "bounceAmount": 0.059799
+    },
+    {
+      "frame": 92,
+      "amplitudeRaw": 0.600968,
+      "amplitudeSmoothed": 0.649388,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.634589,
+      "emphasisPulse": 0.034684,
+      "bounceAmount": 0.034684
+    },
+    {
+      "frame": 93,
+      "amplitudeRaw": 0.865717,
+      "amplitudeSmoothed": 0.783512,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.774374,
+      "emphasisPulse": 0.871897,
+      "bounceAmount": 0.871897
+    },
+    {
+      "frame": 94,
+      "amplitudeRaw": 0.904153,
+      "amplitudeSmoothed": 0.858309,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.852328,
+      "emphasisPulse": 0.505701,
+      "bounceAmount": 0.505701
+    },
+    {
+      "frame": 95,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.652315,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.637639,
+      "emphasisPulse": 0.293306,
+      "bounceAmount": 0.293306
+    },
+    {
+      "frame": 96,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.495759,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.474476,
+      "emphasisPulse": 0.170118,
+      "bounceAmount": 0.170118
+    },
+    {
+      "frame": 97,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.376777,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.350471,
+      "emphasisPulse": 0.098668,
+      "bounceAmount": 0.098668
+    },
+    {
+      "frame": 98,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.286351,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.256228,
+      "emphasisPulse": 0.057228,
+      "bounceAmount": 0.057228
+    },
+    {
+      "frame": 99,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.217626,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.184603,
+      "emphasisPulse": 0.033192,
+      "bounceAmount": 0.033192
+    },
+    {
+      "frame": 100,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.165396,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.130168,
+      "emphasisPulse": 0.019251,
+      "bounceAmount": 0.019251
+    },
+    {
+      "frame": 101,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.125701,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.088797,
+      "emphasisPulse": 0.011166,
+      "bounceAmount": 0.011166
+    },
+    {
+      "frame": 102,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.095533,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.057356,
+      "emphasisPulse": 0.006476,
+      "bounceAmount": 0.006476
+    },
+    {
+      "frame": 103,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.072605,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.03346,
+      "emphasisPulse": 0.003756,
+      "bounceAmount": 0.003756
+    },
+    {
+      "frame": 104,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.05518,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.015299,
+      "emphasisPulse": 0.002179,
+      "bounceAmount": 0.002179
+    },
+    {
+      "frame": 105,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.041937,
+      "voiceActive": false,
+      "mouthOpenAmount": 0,
+      "emphasisPulse": 0.001264,
+      "bounceAmount": 0
+    },
+    {
+      "frame": 106,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.031872,
+      "voiceActive": false,
+      "mouthOpenAmount": 0,
+      "emphasisPulse": 0.000733,
+      "bounceAmount": 0
+    },
+    {
+      "frame": 107,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.024223,
+      "voiceActive": false,
+      "mouthOpenAmount": 0,
+      "emphasisPulse": 0.000425,
+      "bounceAmount": 0
+    },
+    {
+      "frame": 108,
+      "amplitudeRaw": 0.987982,
+      "amplitudeSmoothed": 0.621753,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.605788,
+      "emphasisPulse": 1,
+      "bounceAmount": 1
+    },
+    {
+      "frame": 109,
+      "amplitudeRaw": 0.971414,
+      "amplitudeSmoothed": 0.838543,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.831728,
+      "emphasisPulse": 0.58,
+      "bounceAmount": 0.58
+    },
+    {
+      "frame": 110,
+      "amplitudeRaw": 0.757074,
+      "amplitudeSmoothed": 0.81899,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.81135,
+      "emphasisPulse": 0.3364,
+      "bounceAmount": 0.3364
+    },
+    {
+      "frame": 111,
+      "amplitudeRaw": 0.496182,
+      "amplitudeSmoothed": 0.741516,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.730606,
+      "emphasisPulse": 0.195112,
+      "bounceAmount": 0.195112
+    },
+    {
+      "frame": 112,
+      "amplitudeRaw": 0.377711,
+      "amplitudeSmoothed": 0.654203,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.639607,
+      "emphasisPulse": 0.113165,
+      "bounceAmount": 0.113165
+    },
+    {
+      "frame": 113,
+      "amplitudeRaw": 0.496182,
+      "amplitudeSmoothed": 0.616278,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.600081,
+      "emphasisPulse": 0.065636,
+      "bounceAmount": 0.065636
+    },
+    {
+      "frame": 114,
+      "amplitudeRaw": 0.757074,
+      "amplitudeSmoothed": 0.703572,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.69106,
+      "emphasisPulse": 0.038069,
+      "bounceAmount": 0.038069
+    },
+    {
+      "frame": 115,
+      "amplitudeRaw": 0.971414,
+      "amplitudeSmoothed": 0.869634,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.864131,
+      "emphasisPulse": 0.948549,
+      "bounceAmount": 0.948549
+    },
+    {
+      "frame": 116,
+      "amplitudeRaw": 0.987982,
+      "amplitudeSmoothed": 0.94301,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.940604,
+      "emphasisPulse": 0.550158,
+      "bounceAmount": 0.550158
+    },
+    {
+      "frame": 117,
+      "amplitudeRaw": 0.795066,
+      "amplitudeSmoothed": 0.907503,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.903599,
+      "emphasisPulse": 0.319092,
+      "bounceAmount": 0.319092
+    },
+    {
+      "frame": 118,
+      "amplitudeRaw": 0.528784,
+      "amplitudeSmoothed": 0.816611,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.80887,
+      "emphasisPulse": 0.185073,
+      "bounceAmount": 0.185073
+    },
+    {
+      "frame": 119,
+      "amplitudeRaw": 0.380339,
+      "amplitudeSmoothed": 0.711905,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.699745,
+      "emphasisPulse": 0.107342,
+      "bounceAmount": 0.107342
+    },
+    {
+      "frame": 120,
+      "amplitudeRaw": 0.466627,
+      "amplitudeSmoothed": 0.653039,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.638394,
+      "emphasisPulse": 0.062259,
+      "bounceAmount": 0.062259
+    },
+    {
+      "frame": 121,
+      "amplitudeRaw": 0.718071,
+      "amplitudeSmoothed": 0.693359,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.680416,
+      "emphasisPulse": 0.03611,
+      "bounceAmount": 0.03611
+    },
+    {
+      "frame": 122,
+      "amplitudeRaw": 0.950553,
+      "amplitudeSmoothed": 0.852819,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.846607,
+      "emphasisPulse": 0.932704,
+      "bounceAmount": 0.932704
+    },
+    {
+      "frame": 123,
+      "amplitudeRaw": 1,
+      "amplitudeSmoothed": 0.944071,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.94171,
+      "emphasisPulse": 0.540968,
+      "bounceAmount": 0.540968
+    },
+    {
+      "frame": 124,
+      "amplitudeRaw": 0.831464,
+      "amplitudeSmoothed": 0.917046,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.913544,
+      "emphasisPulse": 0.313762,
+      "bounceAmount": 0.313762
+    },
+    {
+      "frame": 125,
+      "amplitudeRaw": 0.563891,
+      "amplitudeSmoothed": 0.832288,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.825209,
+      "emphasisPulse": 0.181982,
+      "bounceAmount": 0.181982
+    },
+    {
+      "frame": 126,
+      "amplitudeRaw": 0.388158,
+      "amplitudeSmoothed": 0.725697,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.714119,
+      "emphasisPulse": 0.105549,
+      "bounceAmount": 0.105549
+    },
+    {
+      "frame": 127,
+      "amplitudeRaw": 0.440615,
+      "amplitudeSmoothed": 0.657278,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.642811,
+      "emphasisPulse": 0.061219,
+      "bounceAmount": 0.061219
+    },
+    {
+      "frame": 128,
+      "amplitudeRaw": 0.678651,
+      "amplitudeSmoothed": 0.670529,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.656623,
+      "emphasisPulse": 0.035507,
+      "bounceAmount": 0.035507
+    },
+    {
+      "frame": 129,
+      "amplitudeRaw": 0.925719,
+      "amplitudeSmoothed": 0.828747,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.821518,
+      "emphasisPulse": 0.929722,
+      "bounceAmount": 0.929722
+    },
+    {
+      "frame": 130,
+      "amplitudeRaw": 0.910147,
+      "amplitudeSmoothed": 0.879215,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.874116,
+      "emphasisPulse": 0.539239,
+      "bounceAmount": 0.539239
+    },
+    {
+      "frame": 131,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.668203,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.654198,
+      "emphasisPulse": 0.312758,
+      "bounceAmount": 0.312758
+    },
+    {
+      "frame": 132,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.507834,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.48706,
+      "emphasisPulse": 0.1814,
+      "bounceAmount": 0.1814
+    },
+    {
+      "frame": 133,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.385954,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.360036,
+      "emphasisPulse": 0.105212,
+      "bounceAmount": 0.105212
+    },
+    {
+      "frame": 134,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.293325,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.263497,
+      "emphasisPulse": 0.061023,
+      "bounceAmount": 0.061023
+    },
+    {
+      "frame": 135,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.222927,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.190127,
+      "emphasisPulse": 0.035393,
+      "bounceAmount": 0.035393
+    },
+    {
+      "frame": 136,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.169425,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.134366,
+      "emphasisPulse": 0.020528,
+      "bounceAmount": 0.020528
+    },
+    {
+      "frame": 137,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.128763,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.091988,
+      "emphasisPulse": 0.011906,
+      "bounceAmount": 0.011906
+    },
+    {
+      "frame": 138,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.09786,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.059781,
+      "emphasisPulse": 0.006906,
+      "bounceAmount": 0.006906
+    },
+    {
+      "frame": 139,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.074373,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.035303,
+      "emphasisPulse": 0.004005,
+      "bounceAmount": 0.004005
+    },
+    {
+      "frame": 140,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.056524,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.0167,
+      "emphasisPulse": 0.002323,
+      "bounceAmount": 0.002323
+    },
+    {
+      "frame": 141,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.042958,
+      "voiceActive": false,
+      "mouthOpenAmount": 0,
+      "emphasisPulse": 0.001347,
+      "bounceAmount": 0
+    },
+    {
+      "frame": 142,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.032648,
+      "voiceActive": false,
+      "mouthOpenAmount": 0,
+      "emphasisPulse": 0.000781,
+      "bounceAmount": 0
+    },
+    {
+      "frame": 143,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.024813,
+      "voiceActive": false,
+      "mouthOpenAmount": 0,
+      "emphasisPulse": 0.000453,
+      "bounceAmount": 0
+    },
+    {
+      "frame": 144,
+      "amplitudeRaw": 1,
+      "amplitudeSmoothed": 0.629429,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.613787,
+      "emphasisPulse": 1,
+      "bounceAmount": 1
+    },
+    {
+      "frame": 145,
+      "amplitudeRaw": 0.925719,
+      "amplitudeSmoothed": 0.813128,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.805241,
+      "emphasisPulse": 0.58,
+      "bounceAmount": 0.58
+    },
+    {
+      "frame": 146,
+      "amplitudeRaw": 0.678651,
+      "amplitudeSmoothed": 0.780854,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.771604,
+      "emphasisPulse": 0.3364,
+      "bounceAmount": 0.3364
+    },
+    {
+      "frame": 147,
+      "amplitudeRaw": 0.440615,
+      "amplitudeSmoothed": 0.699197,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.6865,
+      "emphasisPulse": 0.195112,
+      "bounceAmount": 0.195112
+    },
+    {
+      "frame": 148,
+      "amplitudeRaw": 0.388158,
+      "amplitudeSmoothed": 0.624547,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.6087,
+      "emphasisPulse": 0.113165,
+      "bounceAmount": 0.113165
+    },
+    {
+      "frame": 149,
+      "amplitudeRaw": 0.563891,
+      "amplitudeSmoothed": 0.60999,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.593528,
+      "emphasisPulse": 0.065636,
+      "bounceAmount": 0.065636
+    },
+    {
+      "frame": 150,
+      "amplitudeRaw": 0.831464,
+      "amplitudeSmoothed": 0.747304,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.736638,
+      "emphasisPulse": 0.038069,
+      "bounceAmount": 0.038069
+    },
+    {
+      "frame": 151,
+      "amplitudeRaw": 1,
+      "amplitudeSmoothed": 0.903976,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.899922,
+      "emphasisPulse": 0.926012,
+      "bounceAmount": 0.926012
+    },
+    {
+      "frame": 152,
+      "amplitudeRaw": 0.950553,
+      "amplitudeSmoothed": 0.932853,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.930019,
+      "emphasisPulse": 0.537087,
+      "bounceAmount": 0.537087
+    },
+    {
+      "frame": 153,
+      "amplitudeRaw": 0.718071,
+      "amplitudeSmoothed": 0.881306,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.876296,
+      "emphasisPulse": 0.31151,
+      "bounceAmount": 0.31151
+    },
+    {
+      "frame": 154,
+      "amplitudeRaw": 0.466627,
+      "amplitudeSmoothed": 0.781783,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.772572,
+      "emphasisPulse": 0.180676,
+      "bounceAmount": 0.180676
+    },
+    {
+      "frame": 155,
+      "amplitudeRaw": 0.380339,
+      "amplitudeSmoothed": 0.685436,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.672159,
+      "emphasisPulse": 0.104792,
+      "bounceAmount": 0.104792
+    },
+    {
+      "frame": 156,
+      "amplitudeRaw": 0.528784,
+      "amplitudeSmoothed": 0.64784,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.632975,
+      "emphasisPulse": 0.060779,
+      "bounceAmount": 0.060779
+    },
+    {
+      "frame": 157,
+      "amplitudeRaw": 0.795066,
+      "amplitudeSmoothed": 0.73912,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.728109,
+      "emphasisPulse": 0.035252,
+      "bounceAmount": 0.035252
+    },
+    {
+      "frame": 158,
+      "amplitudeRaw": 0.987982,
+      "amplitudeSmoothed": 0.893414,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.888916,
+      "emphasisPulse": 0.920306,
+      "bounceAmount": 0.920306
+    },
+    {
+      "frame": 159,
+      "amplitudeRaw": 0.971414,
+      "amplitudeSmoothed": 0.941774,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.939316,
+      "emphasisPulse": 0.533778,
+      "bounceAmount": 0.533778
+    },
+    {
+      "frame": 160,
+      "amplitudeRaw": 0.757074,
+      "amplitudeSmoothed": 0.897446,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.893117,
+      "emphasisPulse": 0.309591,
+      "bounceAmount": 0.309591
+    },
+    {
+      "frame": 161,
+      "amplitudeRaw": 0.496182,
+      "amplitudeSmoothed": 0.801143,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.792749,
+      "emphasisPulse": 0.179563,
+      "bounceAmount": 0.179563
+    },
+    {
+      "frame": 162,
+      "amplitudeRaw": 0.377711,
+      "amplitudeSmoothed": 0.699519,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.686836,
+      "emphasisPulse": 0.104146,
+      "bounceAmount": 0.104146
+    },
+    {
+      "frame": 163,
+      "amplitudeRaw": 0.496182,
+      "amplitudeSmoothed": 0.650718,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.635975,
+      "emphasisPulse": 0.060405,
+      "bounceAmount": 0.060405
+    },
+    {
+      "frame": 164,
+      "amplitudeRaw": 0.757074,
+      "amplitudeSmoothed": 0.716659,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.704699,
+      "emphasisPulse": 0.035035,
+      "bounceAmount": 0.035035
+    },
+    {
+      "frame": 165,
+      "amplitudeRaw": 0.971414,
+      "amplitudeSmoothed": 0.874607,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.869314,
+      "emphasisPulse": 0.929075,
+      "bounceAmount": 0.929075
+    },
+    {
+      "frame": 166,
+      "amplitudeRaw": 0.898928,
+      "amplitudeSmoothed": 0.889686,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.88503,
+      "emphasisPulse": 0.538863,
+      "bounceAmount": 0.538863
+    },
+    {
+      "frame": 167,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.676161,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.662492,
+      "emphasisPulse": 0.312541,
+      "bounceAmount": 0.312541
+    },
+    {
+      "frame": 168,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.513883,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.493364,
+      "emphasisPulse": 0.181274,
+      "bounceAmount": 0.181274
+    },
+    {
+      "frame": 169,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.390551,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.364826,
+      "emphasisPulse": 0.105139,
+      "bounceAmount": 0.105139
+    },
+    {
+      "frame": 170,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.296819,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.267138,
+      "emphasisPulse": 0.06098,
+      "bounceAmount": 0.06098
+    },
+    {
+      "frame": 171,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.225582,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.192894,
+      "emphasisPulse": 0.035369,
+      "bounceAmount": 0.035369
+    },
+    {
+      "frame": 172,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.171442,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.136469,
+      "emphasisPulse": 0.020514,
+      "bounceAmount": 0.020514
+    },
+    {
+      "frame": 173,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.130296,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.093586,
+      "emphasisPulse": 0.011898,
+      "bounceAmount": 0.011898
+    },
+    {
+      "frame": 174,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.099025,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.060995,
+      "emphasisPulse": 0.006901,
+      "bounceAmount": 0.006901
+    },
+    {
+      "frame": 175,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.075259,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.036226,
+      "emphasisPulse": 0.004002,
+      "bounceAmount": 0.004002
+    },
+    {
+      "frame": 176,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.057197,
+      "voiceActive": true,
+      "mouthOpenAmount": 0.017402,
+      "emphasisPulse": 0.002321,
+      "bounceAmount": 0.002321
+    },
+    {
+      "frame": 177,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.04347,
+      "voiceActive": false,
+      "mouthOpenAmount": 0,
+      "emphasisPulse": 0.001346,
+      "bounceAmount": 0
+    },
+    {
+      "frame": 178,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.033037,
+      "voiceActive": false,
+      "mouthOpenAmount": 0,
+      "emphasisPulse": 0.000781,
+      "bounceAmount": 0
+    },
+    {
+      "frame": 179,
+      "amplitudeRaw": 0,
+      "amplitudeSmoothed": 0.025108,
+      "voiceActive": false,
+      "mouthOpenAmount": 0,
+      "emphasisPulse": 0.000453,
+      "bounceAmount": 0
+    }
+  ]
+}

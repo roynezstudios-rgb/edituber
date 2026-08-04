@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://edituber.dev/schemas/edituber-project-v1.json",
+  "title": "EDITuber Project v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "projectId",
+    "title",
+    "fps",
+    "width",
+    "height",
+    "durationInFrames",
+    "seed",
+    "audio",
+    "stage",
+    "avatar",
+    "expressionEvents",
+    "settings"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "projectId": { "type": "string", "format": "uuid" },
+    "title": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "fps": { "type": "integer", "minimum": 12, "maximum": 120 },
+    "width": { "type": "integer", "minimum": 64, "maximum": 7680 },
+    "height": { "type": "integer", "minimum": 64, "maximum": 7680 },
+    "durationInFrames": { "type": "integer", "minimum": 1 },
+    "seed": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "audio": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "durationSeconds", "envelope"],
+      "properties": {
+        "source": { "type": "string", "minLength": 1 },
+        "durationSeconds": { "type": "number", "exclusiveMinimum": 0 },
+        "envelope": { "type": "string", "minLength": 1 }
+      }
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backgroundType", "backgroundColor"],
+      "properties": {
+        "backgroundType": { "const": "solid" },
+        "backgroundColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+      }
+    },
+    "avatar": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest", "defaultExpression", "positionX", "positionY", "scale"],
+      "properties": {
+        "manifest": { "type": "string", "minLength": 1 },
+        "defaultExpression": { "type": "string", "minLength": 1 },
+        "positionX": { "type": "number", "minimum": 0, "maximum": 1 },
+        "positionY": { "type": "number", "minimum": 0, "maximum": 1 },
+        "scale": { "type": "number", "exclusiveMinimum": 0, "maximum": 4 }
+      }
+    },
+    "expressionEvents": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["frame", "emoji"],
+        "properties": {
+          "frame": { "type": "integer", "minimum": 0 },
+          "emoji": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "blinkEnabled",
+        "talkBounceEnabled",
+        "mouthSensitivity",
+        "transitionFrames",
+        "bouncePreset"
+      ],
+      "properties": {
+        "blinkEnabled": { "type": "boolean" },
+        "talkBounceEnabled": { "type": "boolean" },
+        "mouthSensitivity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "transitionFrames": { "type": "integer", "minimum": 0, "maximum": 60 },
+        "bouncePreset": { "enum": ["soft", "normal", "emphasis"] }
+      }
+    }
+  }
+}

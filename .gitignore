@@ -1,0 +1,11 @@
+node_modules/
+.pnpm-home/
+.pnpm-store/
+dist/
+.vite/
+.remotion/
+outputs/*.mp4
+outputs/*.json
+*.log
+*.tsbuildinfo
+.DS_Store
