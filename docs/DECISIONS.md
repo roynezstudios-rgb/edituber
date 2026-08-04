@@ -22,8 +22,8 @@ composición y exportación. Ninguno se filtra al contrato del proyecto.
 
 ## ADR-005 — Flutter aplazado
 
-No se añade un cascarón móvil vacío. La prueba Flutter comenzará cuando el contrato v1 y los casos
-dorados del motor estén estables.
+No se añade un cascarón móvil vacío. La prueba Flutter comenzará cuando el contrato v2 y los casos
+dorados del motor compartido estén estables.
 
 ## ADR-006 — Estado estable por UUID
 

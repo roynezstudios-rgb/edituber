@@ -39,6 +39,10 @@ Tres imágenes, cero imágenes y más de cuatro se rechazan. Los modos de una y 
 
 GIF, APNG y WebP animado se aceptan como assets portables. La sincronización y reinicio deterministas de sus frames internos todavía no están implementados en Remotion; esas opciones se conservan en el contrato sin bloquear PNG/JPEG/SVG/WebP estático.
 
+La escena admite fondo `solid`, `transparent` o `image`. Posición, escala del avatar y
+`motionScale` se guardan en el proyecto y se aplican igual en Web Lab y Remotion; `motionScale`
+reduce o amplifica todos los efectos sin alterar la posición base.
+
 El JSON portable incluye proyecto, manifiesto y envolvente. Conserva la referencia al audio, pero no incrusta el archivo: al importarlo se vuelve a seleccionar el audio local. Los archivos subidos no salen del navegador.
 
 ## Calidad
@@ -98,4 +102,6 @@ fixtures                   avatar, audio y proyecto de demostración
 
 No se inventaron tiempos a partir de un video de referencia: los marcadores del fixture existente permanecen en los frames 0, 60 y 120. Una calibración visual contra material externo requiere que ese video se adjunte o se enlace explícitamente.
 
-Consulta [Arquitectura](docs/ARCHITECTURE.md), [Decisiones](docs/DECISIONS.md) e [Inventario](docs/FILES.md).
+Consulta [Arquitectura](docs/ARCHITECTURE.md), [Decisiones](docs/DECISIONS.md),
+[PRD](docs/PRD.md), [Roadmap](docs/ROADMAP.md), [revisión de licencias](docs/LICENSE-REVIEW.md) e
+[Inventario](docs/FILES.md).
