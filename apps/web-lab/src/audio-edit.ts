@@ -66,6 +66,49 @@ export const encodePcm16Wave = (audio: PcmAudio): ArrayBuffer => {
   return buffer;
 };
 
+export const appendPcmAudio = (first: PcmAudio, second: PcmAudio): PcmAudio => {
+  if (first.sampleRate !== second.sampleRate)
+    throw new Error("Los fragmentos deben tener la misma frecuencia de muestreo");
+  const channelCount = Math.max(1, first.channels.length, second.channels.length);
+  const firstLength = first.channels[0]?.length ?? 0;
+  const secondLength = second.channels[0]?.length ?? 0;
+  return {
+    sampleRate: first.sampleRate,
+    channels: Array.from({ length: channelCount }, (_, channel) => {
+      const joined = new Float32Array(firstLength + secondLength);
+      joined.set(first.channels[channel] ?? first.channels[0] ?? new Float32Array(firstLength));
+      joined.set(
+        second.channels[channel] ?? second.channels[0] ?? new Float32Array(secondLength),
+        firstLength,
+      );
+      return joined;
+    }),
+  };
+};
+
+const audioBufferAsPcm = (audio: AudioBuffer): PcmAudio => ({
+  sampleRate: audio.sampleRate,
+  channels: Array.from({ length: audio.numberOfChannels }, (_, channel) =>
+    audio.getChannelData(channel).slice(),
+  ),
+});
+
+export const decodeAndAppendAudio = async (
+  firstSource: ArrayBuffer,
+  secondSource: ArrayBuffer,
+): Promise<ArrayBuffer> => {
+  const context = new AudioContext();
+  try {
+    const [first, second] = await Promise.all([
+      context.decodeAudioData(firstSource.slice(0)),
+      context.decodeAudioData(secondSource.slice(0)),
+    ]);
+    return encodePcm16Wave(appendPcmAudio(audioBufferAsPcm(first), audioBufferAsPcm(second)));
+  } finally {
+    await context.close();
+  }
+};
+
 export const decodeAndRemoveAudioRange = async (
   source: ArrayBuffer,
   startSeconds: number,
@@ -74,16 +117,7 @@ export const decodeAndRemoveAudioRange = async (
   const context = new AudioContext();
   try {
     const decoded = await context.decodeAudioData(source.slice(0));
-    const pcm = removePcmRange(
-      {
-        sampleRate: decoded.sampleRate,
-        channels: Array.from({ length: decoded.numberOfChannels }, (_, channel) =>
-          decoded.getChannelData(channel).slice(),
-        ),
-      },
-      startSeconds,
-      endSeconds,
-    );
+    const pcm = removePcmRange(audioBufferAsPcm(decoded), startSeconds, endSeconds);
     return encodePcm16Wave(pcm);
   } finally {
     await context.close();

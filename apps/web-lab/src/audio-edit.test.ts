@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { encodePcm16Wave, remapStateTimelineAfterDelete, removePcmRange } from "./audio-edit";
+import {
+  appendPcmAudio,
+  encodePcm16Wave,
+  remapStateTimelineAfterDelete,
+  removePcmRange,
+} from "./audio-edit";
 
 describe("audio timeline editing", () => {
   it("removes the selected samples and creates a valid wave file", () => {
@@ -34,6 +39,22 @@ describe("audio timeline editing", () => {
         { frame: 60, stateId: "D" },
       ],
     });
+  });
+
+  it("appends a new fragment and preserves the existing samples", () => {
+    const joined = appendPcmAudio(
+      { sampleRate: 2, channels: [Float32Array.from([0.1, 0.2])] },
+      {
+        sampleRate: 2,
+        channels: [Float32Array.from([0.3]), Float32Array.from([0.4])],
+      },
+    );
+    expect([...(joined.channels[0] ?? [])].map((value) => Number(value.toFixed(2)))).toEqual([
+      0.1, 0.2, 0.3,
+    ]);
+    expect([...(joined.channels[1] ?? [])].map((value) => Number(value.toFixed(2)))).toEqual([
+      0.1, 0.2, 0.4,
+    ]);
   });
 
   it("updates the default state when the beginning is removed", () => {

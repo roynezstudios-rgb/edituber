@@ -19,7 +19,11 @@ import {
   upsertStateEvent,
 } from "@edituber/timeline-engine";
 import { type ChangeEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import { decodeAndRemoveAudioRange, remapStateTimelineAfterDelete } from "./audio-edit";
+import {
+  decodeAndAppendAudio,
+  decodeAndRemoveAudioRange,
+  remapStateTimelineAfterDelete,
+} from "./audio-edit";
 import { EffectEditor } from "./EffectEditor";
 import { fixtureBundle } from "./fixture";
 import { loadLocalProject, saveLocalProject } from "./local-project";
@@ -284,6 +288,7 @@ export const App = () => {
 
   const canRecord =
     typeof MediaRecorder !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
+  const hasUserAudio = Boolean(audioSource) && audioSource !== fixtureBundle.audioSource;
 
   useEffect(() => {
     const media = matchMedia("(prefers-reduced-motion: reduce)");
@@ -565,29 +570,58 @@ export const App = () => {
         setStatus("El audio supera 10 minutos y no fue analizado");
         return;
       }
-      setStatus("Analizando audio localmente…");
-      const [buffer, dataUrl] = await Promise.all([file.arrayBuffer(), fileAsDataUrl(file)]);
+      if (hasUserAudio && durationSeconds + metadataDuration > MAX_DURATION_SECONDS) {
+        setStatus("El audio acumulado superaría el límite de 10 minutos");
+        return;
+      }
+      setStatus(hasUserAudio ? "Agregando el fragmento al final…" : "Analizando audio localmente…");
+      const fragmentBuffer = await file.arrayBuffer();
+      const appendAtFrame = hasUserAudio ? project.durationInFrames : 0;
+      const nextBuffer = hasUserAudio
+        ? await fetch(audioSource)
+            .then((response) => {
+              if (!response.ok) throw new Error("No se pudo leer el audio anterior");
+              return response.arrayBuffer();
+            })
+            .then((currentBuffer) => decodeAndAppendAudio(currentBuffer, fragmentBuffer))
+        : fragmentBuffer;
       const nextEnvelope = await analyzeAudioBuffer(
-        buffer,
+        nextBuffer,
         project.fps,
-        `upload:${file.name}:${file.size}`,
+        `${hasUserAudio ? "append" : "upload"}:${file.name}:${file.size}`,
       );
       const nextDuration = nextEnvelope.frames.length / project.fps;
+      if (nextDuration > MAX_DURATION_SECONDS + 0.05) {
+        setStatus("El audio acumulado supera el límite de 10 minutos");
+        return;
+      }
+      const outputName = hasUserAudio ? "audio-acumulado.wav" : file.name;
+      const dataUrl = await fileAsDataUrl(
+        new File([nextBuffer], outputName, {
+          type: hasUserAudio ? "audio/wav" : file.type,
+        }),
+      );
+      if (hasUserAudio)
+        setAudioEditUndo({ project: clone(project), envelope: clone(envelope), audioSource });
+      else setAudioEditUndo(null);
       setAudioSource(dataUrl);
       setEnvelope(nextEnvelope);
       setProject((current) => ({
         ...current,
         durationInFrames: nextEnvelope.frames.length,
-        audio: { ...current.audio, source: file.name, durationSeconds: nextDuration },
-        stateEvents: current.stateEvents.filter(
-          (event) => event.frame < nextEnvelope.frames.length,
-        ),
+        audio: { ...current.audio, source: outputName, durationSeconds: nextDuration },
+        stateEvents: hasUserAudio
+          ? current.stateEvents
+          : current.stateEvents.filter((event) => event.frame < nextEnvelope.frames.length),
       }));
-      setFrame(0);
+      setFrame(appendAtFrame);
       setSelectionStartFrame(null);
       setSelectionEndFrame(null);
-      setAudioEditUndo(null);
-      setStatus(`${file.name} · ${nextDuration.toFixed(1)} s · análisis local terminado`);
+      setStatus(
+        hasUserAudio
+          ? `${metadataDuration.toFixed(1)} s agregados · total ${nextDuration.toFixed(1)} s`
+          : `${file.name} · ${nextDuration.toFixed(1)} s · análisis local terminado`,
+      );
     } catch (error) {
       setStatus(`No se pudo analizar el audio: ${String(error)}`);
     }
@@ -669,7 +703,7 @@ export const App = () => {
     setSelectionStartFrame(null);
     setSelectionEndFrame(null);
     setAudioEditUndo(null);
-    setStatus("Último corte deshecho");
+    setStatus("Última edición de audio deshecha");
   };
 
   const startRecording = async () => {
@@ -1011,8 +1045,12 @@ export const App = () => {
                   ↑
                 </span>
                 <span>
-                  <b>Subir audio</b>
-                  <small>Web Lab / guía · máximo 100 MB / 10 min</small>
+                  <b>{hasUserAudio ? "Agregar audio al final" : "Subir audio"}</b>
+                  <small>
+                    {hasUserAudio
+                      ? "Conserva lo anterior · total máximo 10 min"
+                      : "Web Lab / guía · máximo 100 MB / 10 min"}
+                  </small>
                 </span>
               </label>
               <button
@@ -1024,8 +1062,12 @@ export const App = () => {
               >
                 <span className="record-icon" aria-hidden="true" />
                 <span>
-                  <b>Grabar voz</b>
-                  <small>Micrófono · el audio no sale de tu navegador</small>
+                  <b>{hasUserAudio ? "Agregar voz al final" : "Grabar voz"}</b>
+                  <small>
+                    {hasUserAudio
+                      ? "La nueva toma se añade después del audio actual"
+                      : "Micrófono · el audio no sale de tu navegador"}
+                  </small>
                 </span>
               </button>
             </div>
