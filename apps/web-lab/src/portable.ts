@@ -7,8 +7,9 @@ import {
 export const serializePortableDocument = (document: PortableEdituberDocumentV1): string =>
   `${JSON.stringify(document, null, 2)}\n`;
 
-export const parsePortableDocument = (source: string): PortableEdituberDocumentV1 => {
-  const document = JSON.parse(source) as PortableEdituberDocumentV1;
+export const validatePortableDocument = (
+  document: PortableEdituberDocumentV1,
+): PortableEdituberDocumentV1 => {
   if (document.format !== "edituber-portable" || document.version !== 1)
     throw new Error("Formato portable no compatible");
   const projectResult = validateProject(document.project);
@@ -23,3 +24,6 @@ export const parsePortableDocument = (source: string): PortableEdituberDocumentV
     throw new Error("El envelope no cubre la duración del proyecto");
   return document;
 };
+
+export const parsePortableDocument = (source: string): PortableEdituberDocumentV1 =>
+  validatePortableDocument(JSON.parse(source) as PortableEdituberDocumentV1);

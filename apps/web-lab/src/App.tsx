@@ -22,6 +22,7 @@ import { type ChangeEvent, useCallback, useEffect, useId, useMemo, useRef, useSt
 import { decodeAndRemoveAudioRange, remapStateTimelineAfterDelete } from "./audio-edit";
 import { EffectEditor } from "./EffectEditor";
 import { fixtureBundle } from "./fixture";
+import { loadLocalProject, saveLocalProject } from "./local-project";
 import { parsePortableDocument, serializePortableDocument } from "./portable";
 import { WEB_LAB_AUDIO_POLICY } from "./product-policy";
 import { chooseRecordingMimeType, recordingErrorMessage, recordingFileName } from "./recording";
@@ -101,6 +102,14 @@ const probeAudioDuration = (file: File): Promise<number> =>
   });
 
 type RecordingState = "idle" | "requesting" | "recording" | "paused" | "processing";
+type LocalSaveState = "loading" | "saving" | "saved" | "error";
+
+const localSaveLabels: Record<LocalSaveState, string> = {
+  loading: "Buscando un proyecto guardado…",
+  saving: "Guardando cambios en este dispositivo…",
+  saved: "Guardado en este dispositivo",
+  error: "No se pudo guardar · exporta el JSON como respaldo",
+};
 
 interface AudioEditSnapshot {
   project: EdituberProjectV2;
@@ -270,6 +279,8 @@ export const App = () => {
   const [timelineZoom, setTimelineZoom] = useState(1);
   const [editingAudio, setEditingAudio] = useState(false);
   const [audioEditUndo, setAudioEditUndo] = useState<AudioEditSnapshot | null>(null);
+  const [localSaveReady, setLocalSaveReady] = useState(false);
+  const [localSaveState, setLocalSaveState] = useState<LocalSaveState>("loading");
 
   const canRecord =
     typeof MediaRecorder !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
@@ -281,6 +292,51 @@ export const App = () => {
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (navigator.storage?.persist) void navigator.storage.persist().catch(() => undefined);
+    void loadLocalProject()
+      .then((document) => {
+        if (cancelled) return;
+        if (document) {
+          setProject(withRecordingEffects(document.project, document.avatar));
+          setAvatar(withoutPerStateBlinkSettings(document.avatar));
+          setEnvelope(document.envelope);
+          setAudioSource(document.audioSource ?? "");
+          setFrame(0);
+          setStatus("Proyecto recuperado de este dispositivo");
+        }
+        setLocalSaveReady(true);
+        setLocalSaveState(document ? "saved" : "saving");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setLocalSaveReady(true);
+        setLocalSaveState("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!localSaveReady) return;
+    setLocalSaveState("saving");
+    const timeout = window.setTimeout(() => {
+      void saveLocalProject({
+        format: "edituber-portable",
+        version: 1,
+        project,
+        avatar,
+        envelope,
+        audioSource: audioSource || undefined,
+      })
+        .then(() => setLocalSaveState("saved"))
+        .catch(() => setLocalSaveState("error"));
+    }, 600);
+    return () => window.clearTimeout(timeout);
+  }, [audioSource, avatar, envelope, localSaveReady, project]);
 
   const bundle: EdituberBundle = useMemo(
     () => ({ project, avatar, envelope, audioSource }),
@@ -1403,6 +1459,9 @@ export const App = () => {
                 : "MP4 mediante CLI local"}
             </button>
           </div>
+          <p className={`local-save-line ${localSaveState}`} aria-live="polite">
+            <i aria-hidden="true" /> {localSaveLabels[localSaveState]}
+          </p>
           <p className="status-line" aria-live="polite">
             <i /> {status}
           </p>
