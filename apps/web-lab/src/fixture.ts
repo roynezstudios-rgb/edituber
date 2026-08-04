@@ -58,6 +58,66 @@ const avatar: AvatarManifestV2 = {
         eyesClosed: { mouthClosed: surpriseClosedClosed, mouthOpen: surpriseClosedOpen },
       },
     },
+    {
+      id: "ba1ef770-0f9c-4a62-a358-c39653e9ec42",
+      emoji: "✨",
+      name: "Simple reactivo",
+      blinkPolicy: "disabled",
+      blink: {
+        intervalMinSeconds: 2.3,
+        intervalMaxSeconds: 5,
+        durationMilliseconds: 130,
+        syncAnimatedImages: true,
+        playAnimationToEnd: false,
+      },
+      imageMode: "smooth",
+      resetAnimationOnEnter: true,
+      effects: {
+        mouthClosed: [
+          {
+            id: "18518776-1336-4e22-85fa-6784945ae28c",
+            type: "waveMove",
+            enabled: true,
+            preset: "breathing",
+            amountX: 0,
+            amountY: 4,
+            periodSeconds: 2.4,
+            phaseOffset: 0,
+          },
+        ],
+        mouthOpen: [
+          {
+            id: "02a21d60-704f-411a-93e6-5c86ea9a36e8",
+            type: "jump",
+            enabled: true,
+            preset: "happy",
+            amountX: 2,
+            amountY: 24,
+            frequencyHz: 2.4,
+          },
+        ],
+        closedToOpen: [
+          {
+            id: "5be1f67b-8ae1-47b7-b3ce-c49f297bff8a",
+            type: "jump",
+            enabled: true,
+            amount: 18,
+            durationMilliseconds: 180,
+          },
+        ],
+        openToClosed: [],
+        stateEnter: [
+          {
+            id: "7d935dc7-a1ae-4337-92ef-f1c4e90aa6e8",
+            type: "stateEnter",
+            enabled: true,
+            amount: 20,
+            durationMilliseconds: 280,
+          },
+        ],
+      },
+      images: { eyesOpen: { mouthClosed: smileOpenClosed } },
+    },
   ],
 };
 

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@edituber/audio-engine": "workspace:*",
+    "@edituber/avatar-engine": "workspace:*",
     "@edituber/contracts": "workspace:*",
     "@edituber/core": "workspace:*",
     "@edituber/timeline-engine": "workspace:*",

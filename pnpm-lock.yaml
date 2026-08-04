@@ -96,6 +96,9 @@ importers:
       '@edituber/audio-engine':
         specifier: workspace:*
         version: link:../../packages/audio-engine
+      '@edituber/avatar-engine':
+        specifier: workspace:*
+        version: link:../../packages/avatar-engine
       '@edituber/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts

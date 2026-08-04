@@ -3,7 +3,6 @@ import type {
   AvatarManifestV2,
   AvatarState,
   EdituberProjectV2,
-  MotionPreset,
   PortableEdituberDocumentV1,
 } from "@edituber/contracts";
 import { type EdituberBundle, resolveFrameState } from "@edituber/core";
@@ -15,12 +14,19 @@ import {
 import { type ChangeEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { fixtureBundle } from "./fixture";
 import { parsePortableDocument, serializePortableDocument } from "./portable";
+import { draftFromState, type StateDraft, StateEditor, stateFromDraft } from "./StateEditor";
 
 const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
 const MAX_DURATION_SECONDS = 600;
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_PROJECT_BYTES = 64 * 1024 * 1024;
-const IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/svg+xml"]);
+const MAX_BACKGROUND_BYTES = 5 * 1024 * 1024;
+const BACKGROUND_IMAGE_TYPES = new Set([
+  "image/png",
+  "image/apng",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+]);
 const localRenderAvailable = import.meta.env.DEV;
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 const formatTime = (seconds: number) =>
@@ -51,167 +57,6 @@ const probeAudioDuration = (file: File): Promise<number> =>
     };
     audio.src = url;
   });
-
-type StateDraft = Omit<AvatarState, "id" | "images"> & {
-  id?: string;
-  openClosed: string;
-  openOpen: string;
-  closedClosed: string;
-  closedOpen: string;
-};
-
-const draftFromState = (state?: AvatarState): StateDraft => ({
-  id: state?.id,
-  name: state?.name ?? "Nuevo estado",
-  emoji: state?.emoji ?? "🙂",
-  blinkPolicy: state?.blinkPolicy ?? "disabled",
-  motionPreset: state?.motionPreset ?? "idle",
-  openClosed: state?.images.eyesOpen.mouthClosed ?? "",
-  openOpen: state?.images.eyesOpen.mouthOpen ?? "",
-  closedClosed: state?.images.eyesClosed?.mouthClosed ?? "",
-  closedOpen: state?.images.eyesClosed?.mouthOpen ?? "",
-});
-
-const StateEditor = ({
-  draft,
-  onChange,
-  onCancel,
-  onSave,
-}: {
-  draft: StateDraft;
-  onChange: (draft: StateDraft) => void;
-  onCancel: () => void;
-  onSave: () => void;
-}) => {
-  const titleId = useId();
-  const [assetError, setAssetError] = useState("");
-  const setImage = async (
-    key: "openClosed" | "openOpen" | "closedClosed" | "closedOpen",
-    file?: File,
-  ) => {
-    if (!file) return;
-    if (!IMAGE_TYPES.has(file.type)) {
-      setAssetError("Usa PNG, JPEG, WebP o SVG.");
-      return;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      setAssetError("Cada imagen debe pesar 5 MB o menos.");
-      return;
-    }
-    onChange({ ...draft, [key]: await fileAsDataUrl(file) });
-    setAssetError("");
-  };
-  const imageInput = (
-    key: "openClosed" | "openOpen" | "closedClosed" | "closedOpen",
-    label: string,
-    required = false,
-  ) => (
-    <label className="asset-field">
-      <span>
-        {label}
-        {required ? " *" : ""}
-      </span>
-      <input
-        type="file"
-        accept="image/png,image/jpeg,image/webp,image/svg+xml"
-        onChange={(event) => void setImage(key, event.currentTarget.files?.[0])}
-      />
-      {draft[key] ? (
-        <img src={draft[key]} alt={`Vista previa: ${label}`} />
-      ) : (
-        <i aria-hidden="true">+</i>
-      )}
-    </label>
-  );
-  const hasBlinkPair = Boolean(draft.closedClosed && draft.closedOpen);
-  const partialBlink = Boolean(draft.closedClosed) !== Boolean(draft.closedOpen);
-  const canSave =
-    draft.name.trim() && draft.emoji.trim() && draft.openClosed && draft.openOpen && !partialBlink;
-  return (
-    <div className="dialog-backdrop" role="presentation">
-      <section className="state-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId}>
-        <div className="dialog-heading">
-          <div>
-            <p className="eyebrow">STOCK DE AVATAR</p>
-            <h2 id={titleId}>{draft.id ? "Editar estado" : "Añadir estado"}</h2>
-          </div>
-          <button type="button" className="icon-button" aria-label="Cerrar" onClick={onCancel}>
-            ×
-          </button>
-        </div>
-        <div className="state-form-grid">
-          <label>
-            Nombre
-            <input
-              value={draft.name}
-              maxLength={80}
-              onChange={(event) => onChange({ ...draft, name: event.currentTarget.value })}
-            />
-          </label>
-          <label>
-            Emoji o icono
-            <input
-              value={draft.emoji}
-              onChange={(event) => onChange({ ...draft, emoji: event.currentTarget.value })}
-            />
-          </label>
-          <label>
-            Parpadeo
-            <select
-              value={hasBlinkPair ? draft.blinkPolicy : "disabled"}
-              disabled={!hasBlinkPair}
-              onChange={(event) =>
-                onChange({
-                  ...draft,
-                  blinkPolicy: event.currentTarget.value as "auto" | "disabled",
-                })
-              }
-            >
-              <option value="auto">Automático</option>
-              <option value="disabled">Desactivado</option>
-            </select>
-          </label>
-          <label>
-            Movimiento
-            <select
-              value={draft.motionPreset}
-              onChange={(event) =>
-                onChange({ ...draft, motionPreset: event.currentTarget.value as MotionPreset })
-              }
-            >
-              <option value="idle">Idle sutil</option>
-              <option value="surprise">Sorpresa</option>
-              <option value="emphasis">Énfasis</option>
-              <option value="kiss">Beso</option>
-            </select>
-          </label>
-        </div>
-        <p className="field-help">
-          Dos imágenes son obligatorias. Añade ambas imágenes de ojos cerrados para habilitar
-          parpadeo.
-        </p>
-        <div className="asset-grid">
-          {imageInput("openClosed", "Ojos abiertos · boca cerrada", true)}
-          {imageInput("openOpen", "Ojos abiertos · boca abierta", true)}
-          {imageInput("closedClosed", "Ojos cerrados · boca cerrada")}
-          {imageInput("closedOpen", "Ojos cerrados · boca abierta")}
-        </div>
-        {partialBlink ? (
-          <p className="form-error">El parpadeo necesita las dos imágenes de ojos cerrados.</p>
-        ) : null}
-        {assetError ? <p className="form-error">{assetError}</p> : null}
-        <div className="dialog-actions">
-          <button type="button" className="secondary-action" onClick={onCancel}>
-            Cancelar
-          </button>
-          <button type="button" className="primary-action" disabled={!canSave} onClick={onSave}>
-            Guardar estado
-          </button>
-        </div>
-      </section>
-    </div>
-  );
-};
 
 export const App = () => {
   const mouthSensitivityId = useId();
@@ -319,25 +164,7 @@ export const App = () => {
   const saveState = () => {
     if (!stateDraft) return;
     const id = stateDraft.id ?? crypto.randomUUID();
-    const next: AvatarState = {
-      id,
-      name: stateDraft.name.trim(),
-      emoji: stateDraft.emoji.trim(),
-      blinkPolicy:
-        stateDraft.closedClosed && stateDraft.closedOpen ? stateDraft.blinkPolicy : "disabled",
-      motionPreset: stateDraft.motionPreset,
-      images: {
-        eyesOpen: { mouthClosed: stateDraft.openClosed, mouthOpen: stateDraft.openOpen },
-        ...(stateDraft.closedClosed && stateDraft.closedOpen
-          ? {
-              eyesClosed: {
-                mouthClosed: stateDraft.closedClosed,
-                mouthOpen: stateDraft.closedOpen,
-              },
-            }
-          : {}),
-      },
-    };
+    const next = stateFromDraft(stateDraft, id);
     setAvatar((current) => ({
       ...current,
       states: stateDraft.id
@@ -499,7 +326,7 @@ export const App = () => {
     [durationSeconds],
   );
   const motion = reducedMotion
-    ? { translateY: 0, rotation: 0, scaleX: 1, scaleY: 1 }
+    ? { translateX: 0, translateY: 0, rotation: 0, scaleX: 1, scaleY: 1, brightness: 1 }
     : state.avatar.transform;
   return (
     <main className="app-shell">
@@ -537,7 +364,19 @@ export const App = () => {
             <div className="frame-readout">F{String(frame).padStart(3, "0")}</div>
           </div>
           <div className="stage-wrap">
-            <div className="stage" style={{ backgroundColor: state.backgroundColor }}>
+            <div
+              className={`stage ${state.backgroundType === "transparent" ? "transparent" : ""}`}
+              style={{
+                backgroundColor:
+                  state.backgroundType === "transparent" ? "transparent" : state.backgroundColor,
+                backgroundImage:
+                  state.backgroundType === "image" && state.backgroundImage
+                    ? `url(${state.backgroundImage})`
+                    : undefined,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            >
               <div className="safe-area" />
               <div
                 className="avatar-parent"
@@ -545,7 +384,9 @@ export const App = () => {
                   left: `${state.positionX * 100}%`,
                   top: `${state.positionY * 100}%`,
                   width: `${(visualSize / project.width) * 100}%`,
-                  transform: `translate(-50%, -50%) translateY(${motion.translateY}px) rotate(${motion.rotation}deg) scale(${state.scale * motion.scaleX}, ${state.scale * motion.scaleY})`,
+                  transform: `translate(-50%, -50%) translate(${motion.translateX}px, ${motion.translateY}px) rotate(${motion.rotation}deg) scale(${state.scale * motion.scaleX}, ${state.scale * motion.scaleY})`,
+                  filter: `brightness(${motion.brightness})`,
+                  imageRendering: state.avatar.imageMode === "pixel" ? "pixelated" : "auto",
                 }}
               >
                 <img src={state.avatar.shell} alt="" />
@@ -637,12 +478,95 @@ export const App = () => {
               }
             />
           </div>
+          <div className="compact-controls">
+            <label>
+              Movimiento <b>{(project.settings.motionScale ?? 1).toFixed(2)}</b>
+              <input
+                type="range"
+                min="0"
+                max="2"
+                step="0.05"
+                value={project.settings.motionScale ?? 1}
+                onChange={(event) =>
+                  updateSetting("motionScale", Number(event.currentTarget.value))
+                }
+              />
+            </label>
+            <label>
+              Escala <b>{project.avatar.scale.toFixed(2)}</b>
+              <input
+                type="range"
+                min="0.1"
+                max="4"
+                step="0.05"
+                value={project.avatar.scale}
+                onChange={(event) =>
+                  setProject((current) => ({
+                    ...current,
+                    avatar: { ...current.avatar, scale: Number(event.currentTarget.value) },
+                  }))
+                }
+              />
+            </label>
+            <label>
+              Posición X <b>{project.avatar.positionX.toFixed(2)}</b>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={project.avatar.positionX}
+                onChange={(event) =>
+                  setProject((current) => ({
+                    ...current,
+                    avatar: { ...current.avatar, positionX: Number(event.currentTarget.value) },
+                  }))
+                }
+              />
+            </label>
+            <label>
+              Posición Y <b>{project.avatar.positionY.toFixed(2)}</b>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={project.avatar.positionY}
+                onChange={(event) =>
+                  setProject((current) => ({
+                    ...current,
+                    avatar: { ...current.avatar, positionY: Number(event.currentTarget.value) },
+                  }))
+                }
+              />
+            </label>
+          </div>
           <div className="control-group row-control">
             <div>
-              <span>Fondo sólido</span>
-              <small>Chroma personalizable</small>
+              <span>Fondo</span>
+              <small>Sólido, transparente o imagen</small>
             </div>
-            <label className="color-input">
+            <select
+              aria-label="Tipo de fondo"
+              value={project.stage.backgroundType}
+              onChange={(event) =>
+                setProject((current) => ({
+                  ...current,
+                  stage: {
+                    ...current.stage,
+                    backgroundType: event.currentTarget
+                      .value as EdituberProjectV2["stage"]["backgroundType"],
+                  },
+                }))
+              }
+            >
+              <option value="solid">Sólido</option>
+              <option value="transparent">Transparente</option>
+              <option value="image">Imagen</option>
+            </select>
+          </div>
+          {project.stage.backgroundType === "solid" ? (
+            <label className="color-input background-control">
               <i style={{ backgroundColor: project.stage.backgroundColor }} />
               <input
                 aria-label="Color de fondo"
@@ -660,7 +584,37 @@ export const App = () => {
               />
               <code>{project.stage.backgroundColor}</code>
             </label>
-          </div>
+          ) : null}
+          {project.stage.backgroundType === "image" ? (
+            <label className="background-upload">
+              Imagen de fondo
+              <input
+                type="file"
+                accept="image/png,image/apng,image/jpeg,image/webp,image/gif"
+                onChange={(event) => {
+                  const file = event.currentTarget.files?.[0];
+                  if (!file) return;
+                  if (!BACKGROUND_IMAGE_TYPES.has(file.type)) {
+                    setStatus("Fondo rechazado: usa PNG, APNG, JPEG, WebP o GIF");
+                    return;
+                  }
+                  if (file.size > MAX_BACKGROUND_BYTES) {
+                    setStatus("Fondo rechazado: la imagen debe pesar 5 MB o menos");
+                    return;
+                  }
+                  void fileAsDataUrl(file)
+                    .then((backgroundImage) => {
+                      setProject((current) => ({
+                        ...current,
+                        stage: { ...current.stage, backgroundImage },
+                      }));
+                      setStatus("Imagen de fondo lista");
+                    })
+                    .catch(() => setStatus("No se pudo leer la imagen de fondo"));
+                }}
+              />
+            </label>
+          ) : null}
           <div className="switch-grid">
             <label>
               <span>
@@ -711,7 +665,13 @@ export const App = () => {
                   <div className="state-main">
                     <span>{item.emoji}</span>
                     <b>{item.name}</b>
-                    <small>{item.images.eyesClosed ? "4 imágenes" : "2 imágenes"}</small>
+                    <small>
+                      {item.images.eyesClosed
+                        ? "Boca y parpadeo · 4"
+                        : item.images.eyesOpen.mouthOpen
+                          ? "Boca sincronizada · 2"
+                          : "Modo simple · 1"}
+                    </small>
                   </div>
                   <div className="state-actions">
                     <button
