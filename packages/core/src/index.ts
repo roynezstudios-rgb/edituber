@@ -2,6 +2,7 @@ import {
   type AvatarLayerState,
   isSpeakingAtFrame,
   resolveAvatarAtFrame,
+  resolveMouthAtFrame,
 } from "@edituber/avatar-engine";
 import type {
   AudioEnvelopeV1,
@@ -57,7 +58,7 @@ export const validateBundle = (bundle: EdituberBundle): ValidationResult => {
 
 export const resolveFrameState = (bundle: EdituberBundle, frame: number): EdituberFrameState => {
   const safeFrame = Math.max(0, Math.min(bundle.project.durationInFrames - 1, Math.floor(frame)));
-  const isSpeaking = isSpeakingAtFrame(
+  const voiceDetected = isSpeakingAtFrame(
     bundle.envelope.frames[safeFrame],
     bundle.project.settings.mouthSensitivity,
   );
@@ -67,9 +68,17 @@ export const resolveFrameState = (bundle: EdituberBundle, frame: number): Editub
     isSpeakingAtFrame(
       bundle.envelope.frames[voiceChangeFrame - 1],
       bundle.project.settings.mouthSensitivity,
-    ) === isSpeaking
+    ) === voiceDetected
   )
     voiceChangeFrame -= 1;
+  const mouth = resolveMouthAtFrame(
+    bundle.envelope.frames[safeFrame],
+    bundle.project.settings.mouthSensitivity,
+    safeFrame,
+    bundle.project.fps,
+    bundle.project.settings.mouthLoop,
+    voiceChangeFrame,
+  );
   const emphasisFrames: number[] = [];
   const emphasisWindowStart = Math.max(0, safeFrame - bundle.project.fps * 12);
   for (let index = emphasisWindowStart; index <= safeFrame; index += 1) {
@@ -93,13 +102,14 @@ export const resolveFrameState = (bundle: EdituberBundle, frame: number): Editub
       safeFrame,
       {
         previousEnvelopeFrame: bundle.envelope.frames[safeFrame - 1],
+        voiceSegmentStartFrame: voiceChangeFrame,
         voiceChange:
-          voiceChangeFrame === 0 && !isSpeaking
+          mouth.changeFrame === 0 && !mouth.open
             ? null
-            : isSpeaking
+            : mouth.open
               ? "closedToOpen"
               : "openToClosed",
-        voiceChangeFrame,
+        voiceChangeFrame: mouth.changeFrame,
         emphasisFrames,
       },
     ),

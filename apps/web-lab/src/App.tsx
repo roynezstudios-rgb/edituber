@@ -6,8 +6,10 @@ import {
   type AvatarState,
   type BlinkSettings,
   defaultBlinkSettings,
+  defaultMouthLoopSettings,
   type EdituberProjectV2,
   emptyAvatarEffects,
+  type MouthLoopSettings,
   type PortableEdituberDocumentV1,
 } from "@edituber/contracts";
 import { type EdituberBundle, resolveFrameState } from "@edituber/core";
@@ -66,6 +68,7 @@ const withRecordingEffects = (
         avatar.states.find((state) => state.blink)?.blink ??
         defaultBlinkSettings(),
     ),
+    mouthLoop: clone(project.settings.mouthLoop ?? defaultMouthLoopSettings()),
   },
 });
 const formatTime = (seconds: number) =>
@@ -280,6 +283,20 @@ export const App = () => {
       settings: {
         ...current.settings,
         blink: { ...(current.settings.blink ?? defaultBlinkSettings()), [key]: value },
+      },
+    }));
+  const updateMouthLoopSetting = <K extends keyof MouthLoopSettings>(
+    key: K,
+    value: MouthLoopSettings[K],
+  ) =>
+    setProject((current) => ({
+      ...current,
+      settings: {
+        ...current.settings,
+        mouthLoop: {
+          ...(current.settings.mouthLoop ?? defaultMouthLoopSettings()),
+          [key]: value,
+        },
       },
     }));
 
@@ -896,6 +913,48 @@ export const App = () => {
               }
             />
           </div>
+          <fieldset className="blink-settings mouth-loop-settings">
+            <legend>Ciclo de boca</legend>
+            <p>Alterna abierta y cerrada mientras detecta voz continua.</p>
+            <label className="mouth-loop-toggle">
+              <input
+                type="checkbox"
+                checked={(project.settings.mouthLoop ?? defaultMouthLoopSettings()).enabled}
+                onChange={(event) => updateMouthLoopSetting("enabled", event.currentTarget.checked)}
+              />
+              Activar ciclo durante la voz
+            </label>
+            <label>
+              Boca abierta (ms)
+              <input
+                type="number"
+                min="50"
+                max="1000"
+                step="10"
+                disabled={!(project.settings.mouthLoop ?? defaultMouthLoopSettings()).enabled}
+                value={(project.settings.mouthLoop ?? defaultMouthLoopSettings()).openMilliseconds}
+                onChange={(event) =>
+                  updateMouthLoopSetting("openMilliseconds", Number(event.currentTarget.value))
+                }
+              />
+            </label>
+            <label>
+              Boca cerrada (ms)
+              <input
+                type="number"
+                min="40"
+                max="1000"
+                step="10"
+                disabled={!(project.settings.mouthLoop ?? defaultMouthLoopSettings()).enabled}
+                value={
+                  (project.settings.mouthLoop ?? defaultMouthLoopSettings()).closedMilliseconds
+                }
+                onChange={(event) =>
+                  updateMouthLoopSetting("closedMilliseconds", Number(event.currentTarget.value))
+                }
+              />
+            </label>
+          </fieldset>
           <div className="compact-controls">
             <label>
               Movimiento <b>{(project.settings.motionScale ?? 1).toFixed(2)}</b>
@@ -1376,6 +1435,7 @@ export const App = () => {
           draft={stateDraft}
           seed={project.seed}
           blinkSettings={project.settings.blink ?? defaultBlinkSettings()}
+          mouthLoopSettings={project.settings.mouthLoop ?? defaultMouthLoopSettings()}
           globalBlinkEnabled={project.settings.blinkEnabled}
           onChange={setStateDraft}
           onCancel={() => setStateDraft(null)}

@@ -12,6 +12,7 @@ import {
   isBlinkClosedAtFrame,
   resolveAvatarAtFrame,
   resolveAvatarEffects,
+  resolveMouthAtFrame,
   resolveStateImage,
 } from "./index";
 
@@ -59,6 +60,35 @@ const resolverInput = (state: AvatarState, overrides = {}) => ({
 });
 
 describe("avatar image modes", () => {
+  it("loops the mouth during continuous voice and closes it during silence", () => {
+    const voice = {
+      frame: 0,
+      amplitudeRaw: 0.8,
+      amplitudeSmoothed: 0.8,
+      voiceActive: true,
+      mouthOpenAmount: 0.8,
+      emphasisPulse: 0,
+      bounceAmount: 0,
+    };
+    const loop = { enabled: true, openMilliseconds: 200, closedMilliseconds: 100 };
+    expect(resolveMouthAtFrame(voice, 0.55, 0, 10, loop, 0)).toEqual({
+      open: true,
+      changeFrame: 0,
+    });
+    expect(resolveMouthAtFrame(voice, 0.55, 2, 10, loop, 0)).toEqual({
+      open: false,
+      changeFrame: 2,
+    });
+    expect(resolveMouthAtFrame(voice, 0.55, 3, 10, loop, 0)).toEqual({
+      open: true,
+      changeFrame: 3,
+    });
+    expect(resolveMouthAtFrame({ ...voice, voiceActive: false }, 0.55, 3, 10, loop, 0).open).toBe(
+      false,
+    );
+    expect(resolveMouthAtFrame(voice, 0.55, 2, 10, { ...loop, enabled: false }, 0).open).toBe(true);
+  });
+
   it("uses one base asset for voice and silence while switching effect groups", () => {
     const effects = emptyAvatarEffects();
     effects.mouthClosed.push({

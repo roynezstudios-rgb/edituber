@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultBlinkSettings } from "./defaults";
+import { defaultBlinkSettings, defaultMouthLoopSettings } from "./defaults";
 import { migrateAvatarManifestV1, migrateProjectV1 } from "./migrate";
 import type { AvatarManifestV1, EdituberProjectV1 } from "./types";
 import { validateAvatarManifest, validateProject } from "./validate";
@@ -63,6 +63,7 @@ describe("v1 migration", () => {
     const project = migrateProjectV1(legacyProject, avatar);
     expect(project.stateEvents).toEqual([{ frame: 0, stateId }]);
     expect(project.settings.blink).toEqual(defaultBlinkSettings());
+    expect(project.settings.mouthLoop).toEqual(defaultMouthLoopSettings());
     expect(validateProject(project).valid).toBe(true);
     expect(
       validateProject({

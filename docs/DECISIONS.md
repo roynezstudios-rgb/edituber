@@ -48,3 +48,7 @@ GIF, APNG y WebP animado son referencias válidas y pueden viajar como data URI.
 ## ADR-011 — Un solo parpadeo para toda la grabación
 
 El interruptor, intervalo y duración viven en `project.settings.blink`. El motor usa la semilla del proyecto para mantener un calendario continuo aunque cambie el estado en la timeline. `blinkPolicy` y `blink` dentro de `AvatarState` quedan únicamente como compatibilidad de lectura para documentos anteriores; el Web Lab los promueve al proyecto y deja de exportarlos por estado.
+
+## ADR-012 — Ciclo global de boca durante voz continua
+
+La detección de voz sigue determinando cuándo existe habla, pero `project.settings.mouthLoop` alterna las imágenes de boca abierta y cerrada mientras ese tramo continúa activo. Los tiempos abierta/cerrada son globales y deterministas por frame; una pausa cierra la boca y la siguiente frase reinicia el ciclo. Los efectos continuos de voz permanecen activos durante todo el tramo, mientras que las transiciones de apertura y cierre pueden reaccionar a cada cambio del ciclo.

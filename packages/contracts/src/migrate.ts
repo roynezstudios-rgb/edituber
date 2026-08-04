@@ -1,4 +1,4 @@
-import { defaultBlinkSettings } from "./defaults";
+import { defaultBlinkSettings, defaultMouthLoopSettings } from "./defaults";
 import type {
   AvatarManifestV1,
   AvatarManifestV2,
@@ -84,6 +84,10 @@ export const migrateProjectV1 = (
       frame: event.frame,
       stateId: stateIdForEmoji(event.emoji),
     })),
-    settings: { ...project.settings, blink: defaultBlinkSettings() },
+    settings: {
+      ...project.settings,
+      blink: defaultBlinkSettings(),
+      mouthLoop: defaultMouthLoopSettings(),
+    },
   };
 };

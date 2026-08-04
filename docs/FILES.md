@@ -12,6 +12,7 @@
 - `apps/cli/src/index.ts`: comandos `render` y `validate`.
 - `apps/cli/src/load-bundle.ts`: validación de rutas/tamaños, caché y assets embebidos.
 - `apps/web-lab/src/App.tsx`: preview, parpadeo global, stock de estados y timeline responsive.
+- `apps/web-lab/src/audio-edit.ts`: corte PCM local y remapeo de eventos después de eliminar audio.
 - `apps/web-lab/src/StateEditor.tsx`, `EffectEditor.tsx`: editor progresivo 1/2/4 y cinco grupos de efectos.
 - `apps/web-lab/src/portable.ts`: importación/exportación del documento portable.
 - `apps/web-lab/src/fixture.ts`: adaptación del fixture al navegador.

@@ -90,6 +90,39 @@ describe("bundle", () => {
     expect(hidden.avatar.currentFace).toBeTruthy();
   });
 
+  it("alternates the mouth during one continuous voice segment", () => {
+    const silent = bundle.envelope.frames[0];
+    if (!silent) throw new Error("Test fixture is incomplete");
+    const voice = {
+      ...silent,
+      voiceActive: true,
+      mouthOpenAmount: 0.8,
+      amplitudeRaw: 0.8,
+      amplitudeSmoothed: 0.8,
+    };
+    const loopBundle: EdituberBundle = {
+      ...bundle,
+      project: {
+        ...bundle.project,
+        fps: 10,
+        durationInFrames: 6,
+        audio: { ...bundle.project.audio, durationSeconds: 0.6 },
+        settings: {
+          ...bundle.project.settings,
+          mouthLoop: { enabled: true, openMilliseconds: 200, closedMilliseconds: 100 },
+        },
+      },
+      envelope: {
+        ...bundle.envelope,
+        fps: 10,
+        frames: Array.from({ length: 6 }, (_, frame) => ({ ...voice, frame })),
+      },
+    };
+    expect(
+      [0, 1, 2, 3, 4, 5].map((frame) => resolveFrameState(loopBundle, frame).avatar.mouthOpen),
+    ).toEqual([true, true, false, true, true, false]);
+  });
+
   it("returns identical shared Web Lab and renderer samples for the same frames", () => {
     const effects = {
       mouthClosed: [

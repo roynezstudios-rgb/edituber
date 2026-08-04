@@ -99,6 +99,16 @@
         },
         "talkBounceEnabled": { "type": "boolean" },
         "mouthSensitivity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "mouthLoop": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled", "openMilliseconds", "closedMilliseconds"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "openMilliseconds": { "type": "number", "minimum": 50, "maximum": 1000 },
+            "closedMilliseconds": { "type": "number", "minimum": 40, "maximum": 1000 }
+          }
+        },
         "transitionFrames": { "type": "integer", "minimum": 0, "maximum": 60 },
         "bouncePreset": { "enum": ["soft", "normal", "emphasis"] },
         "motionScale": { "type": "number", "minimum": 0, "maximum": 2 }

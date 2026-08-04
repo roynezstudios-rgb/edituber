@@ -34,7 +34,7 @@ resolveAvatarEffects(project.effects, state, frame, seed, voz, bordes, énfasis)
         └─ translateX/Y + scaleX/Y + rotation + brightness sobre un único padre
 ```
 
-`project.effects` y `project.settings.blink` se aplican durante toda la grabación y no cambian cuando la timeline selecciona otro estado. Los efectos y ajustes de parpadeo antiguos guardados dentro de un estado solo se usan como compatibilidad cuando el proyecto todavía no contiene la configuración global.
+`project.effects`, `project.settings.blink` y `project.settings.mouthLoop` se aplican durante toda la grabación y no cambian cuando la timeline selecciona otro estado. El ciclo de boca se calcula desde el frame inicial de cada tramo de voz, por lo que abre/cierra de forma reproducible y se reinicia tras una pausa. Los efectos y ajustes de parpadeo antiguos guardados dentro de un estado solo se usan como compatibilidad cuando el proyecto todavía no contiene la configuración global.
 
 El reloj del navegador solo selecciona un frame. Las decisiones visuales dependen de frame, FPS, semilla, datos y envolvente; Web y render producen el mismo resultado. `prefers-reduced-motion` neutraliza el movimiento adicional solo en la previsualización web.
 

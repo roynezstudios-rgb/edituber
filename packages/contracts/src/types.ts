@@ -32,12 +32,20 @@ export interface ProjectAudio {
   envelope: string;
 }
 
+export interface MouthLoopSettings {
+  enabled: boolean;
+  openMilliseconds: number;
+  closedMilliseconds: number;
+}
+
 export interface ProjectSettings {
   blinkEnabled: boolean;
   /** Global blink behavior for the complete recording. */
   blink?: BlinkSettings;
   talkBounceEnabled: boolean;
   mouthSensitivity: number;
+  /** Global mouth flap used only while voice is detected. */
+  mouthLoop?: MouthLoopSettings;
   transitionFrames: number;
   bouncePreset: BouncePreset;
   motionScale?: number;

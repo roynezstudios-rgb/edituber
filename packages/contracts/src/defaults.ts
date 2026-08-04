@@ -1,4 +1,10 @@
-import type { AvatarEffect, AvatarEffects, AvatarTransition, BlinkSettings } from "./types";
+import type {
+  AvatarEffect,
+  AvatarEffects,
+  AvatarTransition,
+  BlinkSettings,
+  MouthLoopSettings,
+} from "./types";
 
 export const defaultBlinkSettings = (): BlinkSettings => ({
   intervalMinSeconds: 2.3,
@@ -6,6 +12,12 @@ export const defaultBlinkSettings = (): BlinkSettings => ({
   durationMilliseconds: 130,
   syncAnimatedImages: true,
   playAnimationToEnd: false,
+});
+
+export const defaultMouthLoopSettings = (): MouthLoopSettings => ({
+  enabled: true,
+  openMilliseconds: 140,
+  closedMilliseconds: 90,
 });
 
 export const emptyAvatarEffects = (): AvatarEffects => ({

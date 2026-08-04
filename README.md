@@ -8,8 +8,8 @@ Motor determinista para convertir audio, un avatar 2D y eventos de estado en una
 - Migración en memoria de proyectos/manifiestos v1.
 - Stock ilimitado de estados con UUID estable, nombre, emoji y exactamente 1, 2 o 4 imágenes.
 - Efectos globales para toda la grabación, con grupos de silencio, voz, apertura, cierre y entrada desde timeline; composición y parpadeo deterministas.
-- Timeline por `stateId`: clic para añadir/cambiar, eliminación explícita y selector responsive.
-- Web Lab con importación/exportación portable, carga local de audio, grabación directa desde el micrófono, visibilidad del personaje, fondo y sensibilidad.
+- Timeline por `stateId` con waveform, corte A–B, eliminación de audio, resincronización automática, deshacer y zoom.
+- Web Lab con importación/exportación portable, carga local de audio, grabación directa desde el micrófono, visibilidad del personaje, fondo, sensibilidad y ciclo global de boca configurable.
 - CLI por proyecto o en modo directo `audio + avatar`.
 - MP4 H.264/AAC a 1080 × 1080 y 30 FPS mediante Remotion.
 
@@ -37,7 +37,7 @@ El editor crece por bloques y la única imagen obligatoria es la base:
 2. **Boca sincronizada:** base + imagen al hablar.
 3. **Boca y parpadeo:** las dos anteriores + la pareja completa de ojos cerrados.
 
-Tres imágenes, cero imágenes y más de cuatro se rechazan. Los modos de una y dos imágenes no inventan parpadeo. El intervalo y la duración del parpadeo se configuran una sola vez para el proyecto completo; cada estado solo aporta sus imágenes y su render suave o pixel. Las listas ordenadas de `randomMove`, `waveMove`, `jump`, `waveRotate`, `darken`, `squashStretch` y `emphasis` también pertenecen al proyecto completo, por lo que continúan activas al cambiar de estado. El emoji es solo una etiqueta visual; timeline y motor usan el UUID `stateId`.
+Tres imágenes, cero imágenes y más de cuatro se rechazan. Los modos de una y dos imágenes no inventan parpadeo. El parpadeo y el ciclo de boca se configuran una sola vez para el proyecto completo; durante voz continua, el ciclo alterna las imágenes de boca abierta/cerrada y se reinicia después de cada pausa. Cada estado solo aporta sus imágenes y su render suave o pixel. Las listas ordenadas de `randomMove`, `waveMove`, `jump`, `waveRotate`, `darken`, `squashStretch` y `emphasis` también pertenecen al proyecto completo, por lo que continúan activas al cambiar de estado. El emoji es solo una etiqueta visual; timeline y motor usan el UUID `stateId`.
 
 GIF, APNG y WebP animado se aceptan como assets portables. La sincronización y reinicio deterministas de sus frames internos todavía no están implementados en Remotion; esas opciones se conservan en el contrato sin bloquear PNG/JPEG/SVG/WebP estático.
 

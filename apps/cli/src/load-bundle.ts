@@ -317,6 +317,11 @@ export const loadDirectBundle = async (options: DirectBundleOptions): Promise<Ed
       },
       talkBounceEnabled: true,
       mouthSensitivity: 0.55,
+      mouthLoop: {
+        enabled: true,
+        openMilliseconds: 140,
+        closedMilliseconds: 90,
+      },
       transitionFrames: 8,
       bouncePreset: "normal",
     },

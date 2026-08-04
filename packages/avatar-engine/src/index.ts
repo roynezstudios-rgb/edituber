@@ -9,6 +9,7 @@ import type {
   BouncePreset,
   EdituberProjectV2,
   MotionPreset,
+  MouthLoopSettings,
 } from "@edituber/contracts";
 import { defaultBlinkSettings } from "@edituber/contracts";
 import { resolveStateAtFrame } from "@edituber/timeline-engine";
@@ -281,6 +282,7 @@ export interface AvatarResolutionContext {
   previousEnvelopeFrame?: AudioEnvelopeFrame;
   voiceChange?: "closedToOpen" | "openToClosed" | null;
   voiceChangeFrame?: number;
+  voiceSegmentStartFrame?: number;
   emphasisFrames?: number[];
 }
 
@@ -290,6 +292,46 @@ export const isSpeakingAtFrame = (
 ): boolean =>
   Boolean(envelopeFrame?.voiceActive) &&
   (envelopeFrame?.mouthOpenAmount ?? 0) * (0.55 + mouthSensitivity) >= 0.16;
+
+export interface MouthFrameState {
+  open: boolean;
+  changeFrame: number;
+}
+
+export const isMouthLoopOpenAtFrame = (
+  frame: number,
+  fps: number,
+  settings: MouthLoopSettings | undefined,
+  voiceSegmentStartFrame: number,
+): boolean => {
+  if (!settings?.enabled) return true;
+  const openFrames = Math.max(1, Math.round((settings.openMilliseconds / 1000) * fps));
+  const closedFrames = Math.max(1, Math.round((settings.closedMilliseconds / 1000) * fps));
+  const elapsed = Math.max(0, frame - voiceSegmentStartFrame);
+  return elapsed % (openFrames + closedFrames) < openFrames;
+};
+
+export const resolveMouthAtFrame = (
+  envelopeFrame: AudioEnvelopeFrame | undefined,
+  mouthSensitivity: number,
+  frame: number,
+  fps: number,
+  settings: MouthLoopSettings | undefined,
+  voiceSegmentStartFrame: number,
+): MouthFrameState => {
+  const voiceDetected = isSpeakingAtFrame(envelopeFrame, mouthSensitivity);
+  if (!voiceDetected) return { open: false, changeFrame: voiceSegmentStartFrame };
+  if (!settings?.enabled) return { open: true, changeFrame: voiceSegmentStartFrame };
+  const openFrames = Math.max(1, Math.round((settings.openMilliseconds / 1000) * fps));
+  const closedFrames = Math.max(1, Math.round((settings.closedMilliseconds / 1000) * fps));
+  const cycleFrames = openFrames + closedFrames;
+  const elapsed = Math.max(0, frame - voiceSegmentStartFrame);
+  const phase = elapsed % cycleFrames;
+  const cycleStart = frame - phase;
+  return isMouthLoopOpenAtFrame(frame, fps, settings, voiceSegmentStartFrame)
+    ? { open: true, changeFrame: cycleStart }
+    : { open: false, changeFrame: cycleStart + openFrames };
+};
 
 export const resolveAvatarAtFrame = (
   project: EdituberProjectV2,
@@ -305,10 +347,27 @@ export const resolveAvatarAtFrame = (
     project.settings.transitionFrames,
   );
   const current = stateById(manifest, timeline.currentStateId);
-  const mouthOpen = isSpeakingAtFrame(envelopeFrame, project.settings.mouthSensitivity);
-  const previousSpeaking = Boolean(context.previousEnvelopeFrame?.voiceActive);
+  const voiceDetected = isSpeakingAtFrame(envelopeFrame, project.settings.mouthSensitivity);
+  const voiceSegmentStartFrame = context.voiceSegmentStartFrame ?? frame;
+  const mouth = resolveMouthAtFrame(
+    envelopeFrame,
+    project.settings.mouthSensitivity,
+    frame,
+    project.fps,
+    project.settings.mouthLoop,
+    voiceSegmentStartFrame,
+  );
+  const mouthOpen = mouth.open;
+  const previousMouthOpen = resolveMouthAtFrame(
+    context.previousEnvelopeFrame,
+    project.settings.mouthSensitivity,
+    frame - 1,
+    project.fps,
+    project.settings.mouthLoop,
+    voiceSegmentStartFrame,
+  ).open;
   const inferredChange =
-    previousSpeaking === mouthOpen ? null : mouthOpen ? "closedToOpen" : "openToClosed";
+    previousMouthOpen === mouthOpen ? null : mouthOpen ? "closedToOpen" : "openToClosed";
   const voiceChange = context.voiceChange === undefined ? inferredChange : context.voiceChange;
   const blinkSettings = project.settings.blink ?? current.blink ?? defaultBlinkSettings();
   const eyesClosed =
@@ -323,9 +382,9 @@ export const resolveAvatarAtFrame = (
         effects: activeEffects,
         frame,
         fps: project.fps,
-        isSpeaking: mouthOpen,
+        isSpeaking: voiceDetected,
         voiceChange,
-        voiceChangeFrame: context.voiceChangeFrame ?? frame,
+        voiceChangeFrame: context.voiceChangeFrame ?? mouth.changeFrame,
         stateEnterFrame: timeline.eventFrame,
         emphasisPulse: envelopeFrame?.emphasisPulse ?? 0,
         emphasisFrames: context.emphasisFrames,

@@ -1,5 +1,6 @@
 import {
   isBlinkClosedAtFrame,
+  isMouthLoopOpenAtFrame,
   resolveAvatarEffects,
   resolveStateImage,
 } from "@edituber/avatar-engine";
@@ -9,6 +10,7 @@ import {
   type BlinkSettings,
   defaultEffect,
   emptyAvatarEffects,
+  type MouthLoopSettings,
 } from "@edituber/contracts";
 import { useEffect, useId, useRef, useState } from "react";
 import {
@@ -213,6 +215,7 @@ export const StateEditor = ({
   onSave,
   seed,
   blinkSettings,
+  mouthLoopSettings,
   globalBlinkEnabled,
 }: {
   draft: StateDraft;
@@ -221,6 +224,7 @@ export const StateEditor = ({
   onSave: () => void;
   seed: number;
   blinkSettings: BlinkSettings;
+  mouthLoopSettings: MouthLoopSettings;
   globalBlinkEnabled: boolean;
 }) => {
   const titleId = useId();
@@ -355,6 +359,28 @@ export const StateEditor = ({
     draft.id ?? "2522cfb9-01e1-47c6-9e61-e6e5a4ae3ef0",
   );
   const simulation = resolvePreviewSimulation(previewFrame);
+  const previewMouthOpen =
+    simulation.speaking &&
+    isMouthLoopOpenAtFrame(previewFrame, 30, mouthLoopSettings, simulation.cycleStartFrame + 36);
+  const previewVoiceStartFrame = simulation.cycleStartFrame + 36;
+  const previewOpenFrames = Math.max(
+    1,
+    Math.round((mouthLoopSettings.openMilliseconds / 1000) * 30),
+  );
+  const previewClosedFrames = Math.max(
+    1,
+    Math.round((mouthLoopSettings.closedMilliseconds / 1000) * 30),
+  );
+  const previewMouthPhase =
+    Math.max(0, previewFrame - previewVoiceStartFrame) / (previewOpenFrames + previewClosedFrames);
+  const previewCycleStart =
+    previewVoiceStartFrame +
+    Math.floor(previewMouthPhase) * (previewOpenFrames + previewClosedFrames);
+  const previewMouthChangeFrame = simulation.speaking
+    ? previewMouthOpen
+      ? previewCycleStart
+      : previewCycleStart + previewOpenFrames
+    : simulation.voiceChangeFrame;
   const blinking =
     globalBlinkEnabled &&
     draft.blinkEnabled &&
@@ -364,15 +390,19 @@ export const StateEditor = ({
     frame: previewFrame,
     fps: 30,
     isSpeaking: simulation.speaking,
-    voiceChange: simulation.voiceChange,
-    voiceChangeFrame: simulation.voiceChangeFrame,
+    voiceChange: simulation.speaking
+      ? previewMouthOpen
+        ? "closedToOpen"
+        : "openToClosed"
+      : simulation.voiceChange,
+    voiceChangeFrame: previewMouthChangeFrame,
     stateEnterFrame: simulation.cycleStartFrame,
     emphasisPulse: simulation.emphasisPulse,
     emphasisFrames: simulation.emphasisFrames,
     seed,
     motionScale: 1,
   });
-  const previewImage = resolveStateImage(previewState, simulation.speaking, blinking);
+  const previewImage = resolveStateImage(previewState, previewMouthOpen, blinking);
   const hasPreviewImage = Boolean(
     draft.openClosed || draft.openOpen || draft.closedClosed || draft.closedOpen,
   );
@@ -495,7 +525,7 @@ export const StateEditor = ({
                 >
                   <FaceGuide
                     eyes={blinking ? "closed" : "open"}
-                    mouth={simulation.speaking ? "open" : "closed"}
+                    mouth={previewMouthOpen ? "open" : "closed"}
                   />
                 </span>
               )}
