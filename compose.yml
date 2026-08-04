@@ -1,0 +1,13 @@
+services:
+  edituber:
+    build: .
+    restart: unless-stopped
+    environment:
+      EDITUBER_API_TOKEN: ${EDITUBER_API_TOKEN:?Define EDITUBER_API_TOKEN before starting}
+    ports:
+      - "127.0.0.1:4317:4317"
+    volumes:
+      - edituber-data:/data
+
+volumes:
+  edituber-data:

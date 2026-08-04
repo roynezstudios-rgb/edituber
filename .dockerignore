@@ -1,0 +1,9 @@
+.git
+.github
+.gstack
+.pnpm-store
+node_modules
+**/dist
+**/*.tsbuildinfo
+outputs
+*.log

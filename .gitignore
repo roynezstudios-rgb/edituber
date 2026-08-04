@@ -4,9 +4,9 @@ node_modules/
 dist/
 .vite/
 .remotion/
-outputs/*.mp4
-outputs/*.json
+outputs/
 *.log
+.env
 *.tsbuildinfo
 .DS_Store
 .gstack/

@@ -9,6 +9,7 @@
     { "path": "packages/renderer-contract" },
     { "path": "packages/renderer-remotion" },
     { "path": "apps/cli" },
+    { "path": "apps/server" },
     { "path": "apps/web-lab" }
   ]
 }

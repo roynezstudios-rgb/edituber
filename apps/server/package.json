@@ -1,16 +1,16 @@
 {
-  "name": "@edituber/avatar-engine",
+  "name": "@edituber/server",
   "version": "0.2.0-rc.1",
   "private": true,
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "scripts": {
-    "build": "tsc -b"
+    "build": "tsc -b",
+    "start": "node --import tsx src/index.ts"
   },
   "dependencies": {
     "@edituber/contracts": "workspace:*",
+    "@edituber/core": "workspace:*",
+    "@edituber/renderer-remotion": "workspace:*",
     "@edituber/timeline-engine": "workspace:*"
   }
 }
