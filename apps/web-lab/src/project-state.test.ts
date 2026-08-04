@@ -6,6 +6,7 @@ import {
   EMPTY_AVATAR_SHELL,
   shellAfterAvatarLoad,
   shellAfterStateSave,
+  withoutLegacyDemoJumps,
 } from "./project-state";
 
 const state = (id: string): AvatarState => ({
@@ -86,5 +87,59 @@ describe("Web Lab project state", () => {
     expect(shellAfterAvatarLoad("custom-shell.svg", [uploaded], "factory-shell.svg")).toBe(
       "custom-shell.svg",
     );
+  });
+
+  it("removes only the surprising factory jumps from saved projects", () => {
+    const saved = {
+      ...project,
+      effects: {
+        mouthClosed: [],
+        mouthOpen: [
+          {
+            id: "02a21d60-704f-411a-93e6-5c86ea9a36e8",
+            type: "jump" as const,
+            enabled: true,
+            preset: "custom" as const,
+            amountX: 2,
+            amountY: 24,
+            frequencyHz: 2.4,
+          },
+          {
+            id: "custom-jump",
+            type: "jump" as const,
+            enabled: true,
+            preset: "custom" as const,
+            amountX: 0,
+            amountY: 8,
+            frequencyHz: 1,
+          },
+        ],
+        closedToOpen: [
+          {
+            id: "5be1f67b-8ae1-47b7-b3ce-c49f297bff8a",
+            type: "jump" as const,
+            enabled: true,
+            amount: 18,
+            durationMilliseconds: 180,
+          },
+        ],
+        openToClosed: [],
+        stateEnter: [
+          {
+            id: "7d935dc7-a1ae-4337-92ef-f1c4e90aa6e8",
+            type: "stateEnter" as const,
+            enabled: true,
+            amount: 20,
+            durationMilliseconds: 280,
+          },
+        ],
+      },
+    } satisfies EdituberProjectV2;
+
+    const migrated = withoutLegacyDemoJumps(saved);
+
+    expect(migrated.effects?.mouthOpen.map((effect) => effect.id)).toEqual(["custom-jump"]);
+    expect(migrated.effects?.closedToOpen).toEqual([]);
+    expect(migrated.effects?.stateEnter).toEqual([]);
   });
 });

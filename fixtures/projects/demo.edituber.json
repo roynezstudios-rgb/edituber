@@ -39,36 +39,10 @@
         "phaseOffset": 0
       }
     ],
-    "mouthOpen": [
-      {
-        "id": "02a21d60-704f-411a-93e6-5c86ea9a36e8",
-        "type": "jump",
-        "enabled": true,
-        "preset": "happy",
-        "amountX": 2,
-        "amountY": 24,
-        "frequencyHz": 2.4
-      }
-    ],
-    "closedToOpen": [
-      {
-        "id": "5be1f67b-8ae1-47b7-b3ce-c49f297bff8a",
-        "type": "jump",
-        "enabled": true,
-        "amount": 18,
-        "durationMilliseconds": 180
-      }
-    ],
+    "mouthOpen": [],
+    "closedToOpen": [],
     "openToClosed": [],
-    "stateEnter": [
-      {
-        "id": "7d935dc7-a1ae-4337-92ef-f1c4e90aa6e8",
-        "type": "stateEnter",
-        "enabled": true,
-        "amount": 20,
-        "durationMilliseconds": 280
-      }
-    ]
+    "stateEnter": []
   },
   "settings": {
     "blinkEnabled": true,

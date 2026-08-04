@@ -49,6 +49,7 @@ import {
   deleteStateAndReferences,
   shellAfterAvatarLoad,
   shellAfterStateSave,
+  withoutLegacyDemoJumps,
 } from "./project-state";
 import { chooseRecordingMimeType, recordingErrorMessage, recordingFileName } from "./recording";
 import { draftFromState, type StateDraft, StateEditor, stateFromDraft } from "./StateEditor";
@@ -354,7 +355,7 @@ export const App = () => {
               ? fixtureBundle.avatar
               : document.avatar,
           );
-          setProject(withRecordingEffects(document.project, currentAvatar));
+          setProject(withRecordingEffects(withoutLegacyDemoJumps(document.project), currentAvatar));
           setAvatar(currentAvatar);
           setEnvelope(document.envelope);
           setAudioSource(document.audioSource ?? "");
@@ -909,7 +910,7 @@ export const App = () => {
     }
     try {
       const document = parsePortableDocument(await file.text());
-      setProject(withRecordingEffects(document.project, document.avatar));
+      setProject(withRecordingEffects(withoutLegacyDemoJumps(document.project), document.avatar));
       setAvatar(withoutPerStateBlinkSettings(document.avatar));
       setEnvelope(document.envelope);
       setAudioSource(document.audioSource ?? "");
