@@ -29,6 +29,11 @@ import { fixtureBundle } from "./fixture";
 import { loadLocalProject, saveLocalProject } from "./local-project";
 import { parsePortableDocument, serializePortableDocument } from "./portable";
 import { WEB_LAB_AUDIO_POLICY } from "./product-policy";
+import {
+  deleteStateAndReferences,
+  shellAfterAvatarLoad,
+  shellAfterStateSave,
+} from "./project-state";
 import { chooseRecordingMimeType, recordingErrorMessage, recordingFileName } from "./recording";
 import { draftFromState, type StateDraft, StateEditor, stateFromDraft } from "./StateEditor";
 
@@ -53,6 +58,7 @@ const effectsForRecording = (project: EdituberProjectV2, avatar: AvatarManifestV
   );
 const withoutPerStateBlinkSettings = (avatar: AvatarManifestV2): AvatarManifestV2 => ({
   ...clone(avatar),
+  shell: shellAfterAvatarLoad(avatar.shell, avatar.states, fixtureBundle.avatar.shell),
   states: avatar.states.map((state) => {
     const next = clone(state);
     delete next.blink;
@@ -65,6 +71,7 @@ const withRecordingEffects = (
   avatar: AvatarManifestV2,
 ): EdituberProjectV2 => ({
   ...project,
+  avatar: { ...project.avatar, visible: true },
   effects: effectsForRecording(project, avatar),
   settings: {
     ...project.settings,
@@ -518,6 +525,7 @@ export const App = () => {
     delete next.effects;
     setAvatar((current) => ({
       ...current,
+      shell: shellAfterStateSave(current.shell, next),
       states: stateDraft.id
         ? current.states.map((item) => (item.id === id ? next : item))
         : [...current.states, next],
@@ -541,27 +549,11 @@ export const App = () => {
   };
   const confirmDelete = () => {
     if (!deleteStateId || !replacementId) return;
-    setAvatar((current) => ({
-      ...current,
-      defaultStateId:
-        current.defaultStateId === deleteStateId ? replacementId : current.defaultStateId,
-      states: current.states.filter((item) => item.id !== deleteStateId),
-    }));
-    setProject((current) => ({
-      ...current,
-      avatar: {
-        ...current.avatar,
-        defaultStateId:
-          current.avatar.defaultStateId === deleteStateId
-            ? replacementId
-            : current.avatar.defaultStateId,
-      },
-      stateEvents: current.stateEvents.map((event) =>
-        event.stateId === deleteStateId ? { ...event, stateId: replacementId } : event,
-      ),
-    }));
+    const next = deleteStateAndReferences(avatar, project, deleteStateId, replacementId);
+    setAvatar(next.avatar);
+    setProject(next.project);
     setDeleteStateId(null);
-    setStatus("Estado eliminado y referencias reemplazadas");
+    setStatus("Estado y sus marcas eliminados");
   };
 
   const handleAudio = async (file?: File, knownDurationSeconds?: number) => {
@@ -925,6 +917,7 @@ export const App = () => {
         src={audioSource || undefined}
         preload="metadata"
         onEnded={() => {
+          setFrame(Math.max(0, project.durationInFrames - 1));
           setPlaying(false);
           stopDriver();
         }}
@@ -1253,32 +1246,6 @@ export const App = () => {
               />
             </label>
           ) : null}
-          <div className="switch-grid">
-            <label className="scene-visibility-toggle">
-              <span>
-                Personaje<small>Mostrar en toda la grabación</small>
-              </span>
-              <input
-                aria-label="Mostrar personaje"
-                type="checkbox"
-                checked={project.avatar.visible !== false}
-                onChange={(event) => updateAvatar("visible", event.currentTarget.checked)}
-              />
-            </label>
-            <label>
-              <span>
-                TalkBounce<small>Contenedor padre</small>
-              </span>
-              <input
-                aria-label="Activar TalkBounce"
-                type="checkbox"
-                checked={project.settings.talkBounceEnabled}
-                onChange={(event) =>
-                  updateSetting("talkBounceEnabled", event.currentTarget.checked)
-                }
-              />
-            </label>
-          </div>
           <div className="facial-animation-settings">
             <fieldset className="blink-settings mouth-loop-settings">
               <legend>Movimiento de boca</legend>
