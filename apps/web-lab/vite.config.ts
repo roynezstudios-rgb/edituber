@@ -70,6 +70,7 @@ const localRenderPlugin = (): Plugin => ({
 });
 
 export default defineConfig({
+  base: process.env.GITHUB_ACTIONS ? "/edituber/" : "/",
   plugins: [react(), localRenderPlugin()],
   server: { port: 4317 },
   preview: { port: 4317 },

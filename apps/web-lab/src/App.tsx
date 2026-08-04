@@ -6,6 +6,7 @@ import { fixtureBundle } from "./fixture";
 
 const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
 const MAX_DURATION_SECONDS = 600;
+const localRenderAvailable = import.meta.env.DEV;
 
 const formatTime = (seconds: number) => {
   const safe = Math.max(0, seconds);
@@ -25,7 +26,11 @@ export const App = () => {
   const [audioSource, setAudioSource] = useState(fixtureBundle.audioSource);
   const [frame, setFrame] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [status, setStatus] = useState("Fixture listo · misma lógica que la CLI");
+  const [status, setStatus] = useState(() =>
+    localRenderAvailable
+      ? "Fixture listo · misma lógica que la CLI"
+      : "Web Lab público · el render MP4 se ejecuta mediante la CLI local",
+  );
   const [rendering, setRendering] = useState(false);
 
   const bundle: EdituberBundle = useMemo(
@@ -396,10 +401,14 @@ export const App = () => {
             <button
               type="button"
               className="primary-action"
-              disabled={rendering}
+              disabled={rendering || !localRenderAvailable}
               onClick={() => void renderDemo()}
             >
-              {rendering ? "Renderizando…" : "Renderizar demo"}
+              {localRenderAvailable
+                ? rendering
+                  ? "Renderizando…"
+                  : "Renderizar demo"
+                : "MP4 mediante CLI local"}
             </button>
           </div>
           <p className="status-line">

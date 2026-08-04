@@ -445,7 +445,7 @@ input[type="range"]::-webkit-slider-thumb {
   box-shadow: 0 8px 24px #1ccfe42b;
 }
 .action-grid button:disabled {
-  cursor: wait;
+  cursor: not-allowed;
   opacity: 0.6;
 }
 .status-line {
