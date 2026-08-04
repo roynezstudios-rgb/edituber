@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { AvatarManifestV2, AvatarState } from "./types";
+import { defaultEffect, emptyAvatarEffects } from "./defaults";
+import type { AvatarEffect, AvatarManifestV2, AvatarState } from "./types";
 import { validateAvatarManifest } from "./validate";
 
 const stateId = "2522cfb9-01e1-47c6-9e61-e6e5a4ae3ef0";
@@ -96,5 +97,30 @@ describe("avatar image modes and parameter bounds", () => {
       images: { eyesOpen: { mouthClosed: "base.png" } },
     } as unknown as AvatarState;
     expect(validateAvatarManifest(manifest(invalidEffect)).valid).toBe(false);
+  });
+
+  it.each([
+    ["randomMove", "velocity", 0],
+    ["waveMove", "periodSeconds", 0],
+    ["jump", "frequencyHz", 0],
+    ["waveRotate", "periodSeconds", 0],
+    ["darken", "amount", 1],
+    ["squashStretch", "frequencyHz", 0],
+    ["emphasis", "durationMilliseconds", 0],
+  ] as const)("rejects unsafe %s.%s values", (type, key, value) => {
+    const effects = emptyAvatarEffects();
+    effects.mouthClosed.push({
+      ...defaultEffect(type, "18518776-1336-4e22-85fa-6784945ae28c"),
+      [key]: value,
+    } as AvatarEffect);
+    expect(
+      validateAvatarManifest(
+        manifest({
+          ...baseState,
+          effects,
+          images: { eyesOpen: { mouthClosed: "base.png" } },
+        }),
+      ).valid,
+    ).toBe(false);
   });
 });

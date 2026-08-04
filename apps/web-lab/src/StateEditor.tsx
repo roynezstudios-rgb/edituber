@@ -1,4 +1,5 @@
 import {
+  deriveStateSeed,
   isBlinkClosedAtFrame,
   resolveAvatarEffects,
   resolveStateImage,
@@ -160,11 +161,13 @@ export const StateEditor = ({
   onChange,
   onCancel,
   onSave,
+  seed,
 }: {
   draft: StateDraft;
   onChange: (draft: StateDraft) => void;
   onCancel: () => void;
   onSave: () => void;
+  seed: number;
 }) => {
   const titleId = useId();
   const dialogRef = useRef<HTMLElement>(null);
@@ -280,10 +283,11 @@ export const StateEditor = ({
     },
     draft.id ?? "2522cfb9-01e1-47c6-9e61-e6e5a4ae3ef0",
   );
+  const previewSeed = deriveStateSeed(seed, previewState.id);
   const blinking =
     draft.blinkEnabled &&
     draft.blinkPolicy === "auto" &&
-    isBlinkClosedAtFrame(previewFrame, 30, 7302026, draft.blink);
+    isBlinkClosedAtFrame(previewFrame, 30, previewSeed, draft.blink);
   const transform = resolveAvatarEffects({
     state: previewState,
     frame: previewFrame,
@@ -294,7 +298,7 @@ export const StateEditor = ({
     stateEnterFrame: 0,
     emphasisPulse: previewSpeaking ? 0.75 : 0,
     emphasisFrames: [voiceChangeFrame],
-    seed: 7302026,
+    seed: previewSeed,
     motionScale: 1,
   });
   const previewImage = resolveStateImage(previewState, previewSpeaking, blinking);
@@ -395,7 +399,7 @@ export const StateEditor = ({
                 {imageInput("openOpen", "Imagen al hablar")}
               </div>
             ) : null}
-            {draft.mouthEnabled ? (
+            {draft.mouthEnabled && draft.openOpen ? (
               <label className="progressive-toggle">
                 <input
                   type="checkbox"
@@ -533,7 +537,7 @@ export const StateEditor = ({
                       let target = previewFrame + 1;
                       while (
                         target < previewFrame + 180 &&
-                        !isBlinkClosedAtFrame(target, 30, 7302026, draft.blink)
+                        !isBlinkClosedAtFrame(target, 30, previewSeed, draft.blink)
                       )
                         target += 1;
                       setPreviewFrame(target);

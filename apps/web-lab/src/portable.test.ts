@@ -57,6 +57,21 @@ describe("portable Web Lab documents", () => {
           },
           {
             ...twoImageState,
+            effects: {
+              mouthClosed: [],
+              mouthOpen: [
+                {
+                  id: "b36692aa-b44d-4140-8438-601af96cfa8e",
+                  type: "darken",
+                  enabled: true,
+                  preset: "custom",
+                  amount: 0.2,
+                },
+              ],
+              closedToOpen: [],
+              openToClosed: [],
+              stateEnter: [],
+            },
             images: {
               eyesOpen: {
                 mouthClosed: "data:image/png;base64,AA==",
@@ -78,5 +93,6 @@ describe("portable Web Lab documents", () => {
     expect(parsed.avatar.states.map((state) => state.effects)).toEqual(
       source.avatar.states.map((state) => state.effects),
     );
+    expect(parsed.avatar.states[1]?.effects?.mouthOpen[0]?.preset).toBe("custom");
   });
 });

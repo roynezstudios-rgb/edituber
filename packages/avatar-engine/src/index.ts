@@ -73,6 +73,9 @@ const hashString = (value: string): number => {
   return hash >>> 0;
 };
 
+export const deriveStateSeed = (projectSeed: number, stateId: string): number =>
+  projectSeed ^ hashString(stateId);
+
 const seededUnit = (seed: number, index: number): number => {
   let value = (seed ^ Math.imul(index + 1, 0x9e3779b1)) >>> 0;
   value ^= value << 13;
@@ -306,7 +309,7 @@ export const resolveAvatarAtFrame = (
   const inferredChange =
     previousSpeaking === mouthOpen ? null : mouthOpen ? "closedToOpen" : "openToClosed";
   const voiceChange = context.voiceChange === undefined ? inferredChange : context.voiceChange;
-  const blinkSeed = project.seed ^ hashString(current.id);
+  const blinkSeed = deriveStateSeed(project.seed, current.id);
   const eyesClosed =
     project.settings.blinkEnabled &&
     (current.blinkPolicy ?? "auto") === "auto" &&

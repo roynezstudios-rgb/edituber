@@ -8,6 +8,7 @@ import type {
 import { defaultEffect, emptyAvatarEffects } from "@edituber/contracts";
 import { describe, expect, it } from "vitest";
 import {
+  deriveStateSeed,
   isBlinkClosedAtFrame,
   resolveAvatarAtFrame,
   resolveAvatarEffects,
@@ -112,6 +113,13 @@ describe("avatar image modes", () => {
 });
 
 describe("deterministic blink, effects, and transitions", () => {
+  it("derives a stable per-state seed from the project seed", () => {
+    expect(deriveStateSeed(7302026, stateId)).toBe(deriveStateSeed(7302026, stateId));
+    expect(deriveStateSeed(7302026, stateId)).not.toBe(
+      deriveStateSeed(7302026, "5be1f67b-8ae1-47b7-b3ce-c49f297bff8a"),
+    );
+  });
+
   it("uses configurable deterministic blink intervals and duration", () => {
     const settings = {
       intervalMinSeconds: 1,

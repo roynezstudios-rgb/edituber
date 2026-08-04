@@ -814,6 +814,7 @@ export const App = () => {
       {stateDraft ? (
         <StateEditor
           draft={stateDraft}
+          seed={project.seed}
           onChange={setStateDraft}
           onCancel={() => setStateDraft(null)}
           onSave={saveState}
