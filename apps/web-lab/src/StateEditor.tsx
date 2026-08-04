@@ -437,7 +437,7 @@ export const StateEditor = ({
                     onChange({ ...draft, resetAnimationOnEnter: event.currentTarget.checked })
                   }
                 />
-                Reiniciar animación al entrar
+                Reiniciar al entrar
               </label>
             </div>
 

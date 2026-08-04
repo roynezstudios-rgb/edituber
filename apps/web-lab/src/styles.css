@@ -1659,7 +1659,37 @@ select:focus-visible,
     padding: 18px;
   }
   .state-form-grid {
-    grid-template-columns: 1fr 90px;
+    grid-template-columns: minmax(0, 1fr) 82px;
+    gap: 7px 6px;
+    margin-top: 12px;
+  }
+  .state-form-grid label {
+    gap: 3px;
+    font-size: 8px;
+    line-height: 1.1;
+  }
+  .state-form-grid input,
+  .state-form-grid select {
+    height: 32px;
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+  .state-form-grid .check-field {
+    min-height: 32px;
+    grid-template-columns: 15px 1fr;
+    align-self: end;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    padding: 4px 6px;
+    border: 1px solid #25465a;
+    border-radius: 8px;
+    background: #06111b;
+  }
+  .state-form-grid .check-field input {
+    width: 14px;
+    height: 14px;
+    padding: 0;
   }
   .state-editor-layout {
     grid-template-columns: 1fr;
