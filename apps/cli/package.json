@@ -1,0 +1,24 @@
+{
+  "name": "@edituber/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "edituber": "./src/index.ts"
+  },
+  "exports": {
+    ".": "./src/load-bundle.ts"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "render:demo": "node --import tsx src/index.ts render --project ../../fixtures/projects/demo.edituber.json --output ../../outputs/edituber-demo.mp4",
+    "start": "node --import tsx src/index.ts"
+  },
+  "dependencies": {
+    "@edituber/audio-engine": "workspace:*",
+    "@edituber/contracts": "workspace:*",
+    "@edituber/core": "workspace:*",
+    "@edituber/renderer-remotion": "workspace:*",
+    "commander": "14.0.0"
+  }
+}

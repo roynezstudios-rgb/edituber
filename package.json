@@ -1,15 +1,46 @@
 {
-  "name": "@edituber/timeline-engine",
+  "name": "edituber",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
+  "description": "Deterministic 2D avatar performance engine and responsive Web Lab",
+  "packageManager": "pnpm@11.7.0",
+  "engines": {
+    "node": ">=22"
   },
   "scripts": {
-    "build": "tsc -b"
+    "build": "pnpm -r --if-present build",
+    "check": "biome check . && tsc -b --pretty false",
+    "dev:web": "pnpm --filter @edituber/web-lab dev",
+    "edituber": "node --import tsx apps/cli/src/index.ts",
+    "format": "biome format --write .",
+    "lint": "biome lint .",
+    "render:demo": "node --import tsx apps/cli/src/index.ts render --project fixtures/projects/demo.edituber.json --output outputs/edituber-demo.mp4",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify:demo": "node --import tsx scripts/verify-demo.ts outputs/edituber-demo.mp4"
   },
   "dependencies": {
-    "@edituber/contracts": "workspace:*"
+    "@remotion/bundler": "4.0.332",
+    "@remotion/renderer": "4.0.332",
+    "@sparticuz/chromium": "149.0.0",
+    "ajv": "8.17.1",
+    "ajv-formats": "3.0.1",
+    "commander": "14.0.0",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "remotion": "4.0.332",
+    "zod": "3.22.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.2.4",
+    "@types/node": "24.5.2",
+    "@types/react": "19.1.16",
+    "@types/react-dom": "19.1.9",
+    "@vitejs/plugin-react": "5.0.4",
+    "tsx": "4.20.5",
+    "typescript": "5.9.2",
+    "vite": "7.1.7",
+    "vitest": "3.2.4"
   }
 }
