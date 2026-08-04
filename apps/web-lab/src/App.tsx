@@ -332,7 +332,7 @@ export const App = () => {
               <span>Fondo sólido</span>
               <small>Chroma personalizable</small>
             </div>
-            <div className="color-input">
+            <label className="color-input">
               <i style={{ backgroundColor: project.stage.backgroundColor }} />
               <input
                 aria-label="Color de fondo"
@@ -349,7 +349,7 @@ export const App = () => {
                 }
               />
               <code>{project.stage.backgroundColor}</code>
-            </div>
+            </label>
           </div>
 
           <div className="switch-grid">
