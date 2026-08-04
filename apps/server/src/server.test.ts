@@ -12,7 +12,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import envelopeJson from "../../../fixtures/audio/demo-envelope.json";
 import avatarJson from "../../../fixtures/avatars/robot/avatar.json";
 import projectJson from "../../../fixtures/projects/demo.edituber.json";
-import { createEdituberServer } from "./server";
+import { createEdituberServer, type EdituberServerOptions } from "./server";
 
 const temporaryDirectories: string[] = [];
 const embeddedImage = "data:image/svg+xml;base64,AA==";
@@ -49,7 +49,11 @@ const portable: PortableEdituberDocumentV1 = {
   audioSource: "data:audio/wav;base64,AA==",
 };
 
-const startServer = async (token?: string, existingDirectory?: string) => {
+const startServer = async (
+  token?: string,
+  existingDirectory?: string,
+  render?: EdituberServerOptions["render"],
+) => {
   const directory = existingDirectory ?? (await mkdtemp(join(tmpdir(), "edituber-server-")));
   if (!existingDirectory) temporaryDirectories.push(directory);
   await writeFile(join(directory, "index.html"), "EDITuber test");
@@ -59,9 +63,11 @@ const startServer = async (token?: string, existingDirectory?: string) => {
     outputRoot: resolve(directory, "outputs"),
     webRoot: directory,
     apiToken: token,
-    render: async (_bundle, outputPath) => {
-      await writeFile(outputPath, "video");
-    },
+    render:
+      render ??
+      (async (_bundle, outputPath) => {
+        await writeFile(outputPath, "video");
+      }),
   });
   await new Promise<void>((resolveListen) => server.listen(0, "127.0.0.1", resolveListen));
   const address = server.address();
@@ -181,6 +187,48 @@ describe("EDITuber local API", () => {
       });
       expect((await fetch(`${restarted.baseUrl}/api/v1/renders/${id}/file`)).status).toBe(409);
     } finally {
+      await restarted.close();
+    }
+  });
+
+  it("recovers an interrupted render before the renderer creates its partial file", async () => {
+    let signalStarted: (() => void) | undefined;
+    let releaseRender: (() => void) | undefined;
+    const started = new Promise<void>((resolveStarted) => {
+      signalStarted = resolveStarted;
+    });
+    const blocked = new Promise<void>((resolveRender) => {
+      releaseRender = resolveRender;
+    });
+    const first = await startServer(undefined, undefined, async () => {
+      signalStarted?.();
+      await blocked;
+    });
+    const directory = temporaryDirectories.at(-1) ?? "";
+    const created = await fetch(`${first.baseUrl}/api/v1/renders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(portable),
+    });
+    const { id } = (await created.json()) as { id: string };
+    await started;
+    expect(
+      await fetch(`${first.baseUrl}/api/v1/renders/${id}`).then((response) => response.json()),
+    ).toMatchObject({ id, state: "rendering" });
+    await first.close();
+
+    const restarted = await startServer(undefined, directory);
+    try {
+      const recovered = await fetch(`${restarted.baseUrl}/api/v1/renders/${id}`);
+      expect(recovered.status).toBe(200);
+      expect(await recovered.json()).toMatchObject({
+        id,
+        state: "failed",
+        error: "El servidor se reinició antes de completar el render",
+      });
+      expect((await fetch(`${restarted.baseUrl}/api/v1/renders/${id}/file`)).status).toBe(409);
+    } finally {
+      releaseRender?.();
       await restarted.close();
     }
   });

@@ -1,6 +1,6 @@
 import { randomUUID, timingSafeEqual } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { access, mkdir, readFile, rename, rm, stat } from "node:fs/promises";
+import { access, mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { extname, resolve, sep } from "node:path";
 import {
@@ -170,24 +170,29 @@ export const createEdituberServer = (options: EdituberServerOptions): Server => 
       jobs.set(id, job);
       return job;
     } catch {
-      const partialOutputPath = resolve(options.outputRoot, `${id}.part.mp4`);
-      try {
-        const info = await stat(partialOutputPath);
-        if (!info.isFile()) return undefined;
-        const createdAt = (info.birthtimeMs > 0 ? info.birthtime : info.mtime).toISOString();
-        const job: RenderJob = {
-          id,
-          state: "failed",
-          createdAt,
-          completedAt: info.mtime.toISOString(),
-          error: "El servidor se reinició antes de completar el render",
-          outputPath,
-        };
-        jobs.set(id, job);
-        return job;
-      } catch {
-        return undefined;
+      for (const persistedPath of [
+        resolve(options.outputRoot, `${id}.pending`),
+        resolve(options.outputRoot, `${id}.part.mp4`),
+      ]) {
+        try {
+          const info = await stat(persistedPath);
+          if (!info.isFile()) continue;
+          const createdAt = (info.birthtimeMs > 0 ? info.birthtime : info.mtime).toISOString();
+          const job: RenderJob = {
+            id,
+            state: "failed",
+            createdAt,
+            completedAt: info.mtime.toISOString(),
+            error: "El servidor se reinició antes de completar el render",
+            outputPath,
+          };
+          jobs.set(id, job);
+          return job;
+        } catch {
+          // Try the next persisted artifact.
+        }
       }
+      return undefined;
     }
   };
 
@@ -261,7 +266,9 @@ export const createEdituberServer = (options: EdituberServerOptions): Server => 
           createdAt: new Date().toISOString(),
           outputPath: resolve(options.outputRoot, `${id}.mp4`),
         };
+        const pendingPath = resolve(options.outputRoot, `${id}.pending`);
         const partialOutputPath = resolve(options.outputRoot, `${id}.part.mp4`);
+        await writeFile(pendingPath, "", { flag: "wx" });
         jobs.set(id, job);
         queue = queue
           .catch(() => undefined)
@@ -271,6 +278,7 @@ export const createEdituberServer = (options: EdituberServerOptions): Server => 
               await render(bundle, partialOutputPath);
               await rename(partialOutputPath, job.outputPath);
               job.state = "completed";
+              await rm(pendingPath, { force: true }).catch(() => undefined);
             } catch (error) {
               job.state = "failed";
               job.error = error instanceof Error ? error.message : String(error);
