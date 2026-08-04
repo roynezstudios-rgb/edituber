@@ -353,4 +353,45 @@ describe("deterministic blink, effects, and transitions", () => {
     expect(legacy.currentFace).toBe("open.svg");
     expect(legacy.transform.translateY).toBeLessThan(0);
   });
+
+  it("keeps one audio bounce when recording-wide effects do not define another voice jump", () => {
+    const effects = emptyAvatarEffects();
+    effects.mouthClosed.push(defaultEffect("waveMove", "breathing-motion"));
+    const audio = {
+      voiceActive: true,
+      mouthOpenAmount: 0.8,
+      bounceAmount: 0.5,
+      emphasisPulse: 0,
+    } as AudioEnvelopeFrame;
+
+    const bounced = resolveAvatarAtFrame({ ...project, effects }, manifest, audio, 10);
+
+    expect(bounced.transform.translateY).toBeLessThan(0);
+  });
+
+  it("does not stack the audio bounce over an explicit voice jump", () => {
+    const effects = emptyAvatarEffects();
+    effects.mouthOpen.push({
+      id: "custom-voice-jump",
+      type: "jump",
+      enabled: true,
+      preset: "custom",
+      amountX: 0,
+      amountY: 12,
+      frequencyHz: 2,
+    });
+    const quietBounce = {
+      voiceActive: true,
+      mouthOpenAmount: 0.8,
+      bounceAmount: 0,
+      emphasisPulse: 0,
+    } as AudioEnvelopeFrame;
+    const loudBounce = { ...quietBounce, bounceAmount: 0.8 };
+    const configured = { ...project, effects };
+
+    const withoutAudioBounce = resolveAvatarAtFrame(configured, manifest, quietBounce, 4);
+    const withAudioBounce = resolveAvatarAtFrame(configured, manifest, loudBounce, 4);
+
+    expect(withAudioBounce.transform).toEqual(withoutAudioBounce.transform);
+  });
 });

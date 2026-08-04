@@ -247,6 +247,38 @@ const presetStrength: Record<MotionPreset, { idle: number; squash: number; empha
   kiss: { idle: 0.7, squash: 0.7, emphasis: 0.65 },
 };
 
+const hasConfiguredVoiceBounce = (effects: AvatarEffects): boolean =>
+  effects.mouthOpen.some((effect) => effect.enabled && effect.type === "jump") ||
+  effects.closedToOpen.some((effect) => effect.enabled) ||
+  effects.openToClosed.some((effect) => effect.enabled);
+
+const resolveAudioBounceTransform = (
+  bouncePreset: BouncePreset,
+  envelope: AudioEnvelopeFrame | undefined,
+  motionScale: number,
+): AvatarTransform => {
+  const scale = clamp(motionScale, 0, 2);
+  const bounceAmount = envelope?.bounceAmount ?? 0;
+  const bounce = bounceAmount * bouncePixels[bouncePreset] * scale;
+  const squash = Math.min(0.045, bounceAmount * 0.045) * scale;
+  return {
+    ...identityTransform(),
+    translateY: -bounce,
+    scaleX: 1 + squash,
+    scaleY: 1 - squash,
+  };
+};
+
+const composeTransforms = (first: AvatarTransform, second: AvatarTransform): AvatarTransform => ({
+  translateX: first.translateX + second.translateX,
+  translateY: first.translateY + second.translateY,
+  scaleX: first.scaleX * second.scaleX,
+  scaleY: first.scaleY * second.scaleY,
+  rotation: first.rotation + second.rotation,
+  brightness: first.brightness * second.brightness,
+  transitionActive: first.transitionActive || second.transitionActive,
+});
+
 /** Compatibility path for v2 states written before explicit effect lists. */
 export const resolveAvatarTransform = (
   frame: number,
@@ -377,20 +409,29 @@ export const resolveAvatarAtFrame = (
   const previous = timeline.previousStateId ? stateById(manifest, timeline.previousStateId) : null;
   const activeEffects = project.effects ?? current.effects;
   const transform = activeEffects
-    ? resolveAvatarEffects({
-        state: current,
-        effects: activeEffects,
-        frame,
-        fps: project.fps,
-        isSpeaking: voiceDetected,
-        voiceChange,
-        voiceChangeFrame: context.voiceChangeFrame ?? mouth.changeFrame,
-        stateEnterFrame: timeline.eventFrame,
-        emphasisPulse: envelopeFrame?.emphasisPulse ?? 0,
-        emphasisFrames: context.emphasisFrames,
-        seed: project.seed,
-        motionScale: project.settings.motionScale ?? 1,
-      })
+    ? composeTransforms(
+        resolveAvatarEffects({
+          state: current,
+          effects: activeEffects,
+          frame,
+          fps: project.fps,
+          isSpeaking: voiceDetected,
+          voiceChange,
+          voiceChangeFrame: context.voiceChangeFrame ?? mouth.changeFrame,
+          stateEnterFrame: timeline.eventFrame,
+          emphasisPulse: envelopeFrame?.emphasisPulse ?? 0,
+          emphasisFrames: context.emphasisFrames,
+          seed: project.seed,
+          motionScale: project.settings.motionScale ?? 1,
+        }),
+        project.settings.talkBounceEnabled && !hasConfiguredVoiceBounce(activeEffects)
+          ? resolveAudioBounceTransform(
+              project.settings.bouncePreset,
+              envelopeFrame,
+              project.settings.motionScale ?? 1,
+            )
+          : identityTransform(),
+      )
     : resolveAvatarTransform(
         frame,
         project.fps,
