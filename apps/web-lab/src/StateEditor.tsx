@@ -31,6 +31,58 @@ const fileAsDataUrl = (file: File): Promise<string> =>
     reader.readAsDataURL(file);
   });
 
+type ImageSlot = "openClosed" | "openOpen" | "closedClosed" | "closedOpen";
+
+const slotGuide: Record<
+  ImageSlot,
+  {
+    step: number;
+    label: string;
+    description: string;
+    eyes: "open" | "closed";
+    mouth: "open" | "closed";
+  }
+> = {
+  openClosed: {
+    step: 1,
+    label: "Ojos abiertos · silencio",
+    description: "Imagen normal cuando no estás hablando",
+    eyes: "open",
+    mouth: "closed",
+  },
+  openOpen: {
+    step: 2,
+    label: "Ojos abiertos · hablando",
+    description: "Se muestra mientras detecta tu voz",
+    eyes: "open",
+    mouth: "open",
+  },
+  closedClosed: {
+    step: 3,
+    label: "Parpadeo · silencio",
+    description: "Ojos cerrados cuando no estás hablando",
+    eyes: "closed",
+    mouth: "closed",
+  },
+  closedOpen: {
+    step: 4,
+    label: "Parpadeo · hablando",
+    description: "Ojos cerrados mientras detecta tu voz",
+    eyes: "closed",
+    mouth: "open",
+  },
+};
+
+const FaceGuide = ({ eyes, mouth }: { eyes: "open" | "closed"; mouth: "open" | "closed" }) => (
+  <span className={`face-guide eyes-${eyes} mouth-${mouth}`} aria-hidden="true">
+    <span className="guide-eyes">
+      <i />
+      <i />
+    </span>
+    <i className="guide-mouth" />
+  </span>
+);
+
 const legacyEffects = (state?: AvatarState): AvatarEffects => {
   if (state?.effects) return structuredClone(state.effects);
   const effects = emptyAvatarEffects();
@@ -212,10 +264,7 @@ export const StateEditor = ({
     };
   }, []);
 
-  const setImage = async (
-    key: "openClosed" | "openOpen" | "closedClosed" | "closedOpen",
-    file?: File,
-  ) => {
+  const setImage = async (key: ImageSlot, file?: File) => {
     if (!file) return;
     if (!IMAGE_TYPES.has(file.type)) {
       setAssetError("Usa PNG, APNG, JPEG, WebP, GIF o SVG.");
@@ -228,24 +277,34 @@ export const StateEditor = ({
     onChange({ ...draft, [key]: await fileAsDataUrl(file) });
     setAssetError("");
   };
-  const imageInput = (
-    key: "openClosed" | "openOpen" | "closedClosed" | "closedOpen",
-    label: string,
-  ) => (
-    <label className="asset-field">
-      <span>{label} *</span>
-      <input
-        type="file"
-        accept="image/png,image/apng,image/jpeg,image/webp,image/gif,image/svg+xml"
-        onChange={(event) => void setImage(key, event.currentTarget.files?.[0])}
-      />
-      {draft[key] ? (
-        <img src={draft[key]} alt={`Vista previa: ${label}`} />
-      ) : (
-        <i aria-hidden="true">+</i>
-      )}
-    </label>
-  );
+  const imageInput = (key: ImageSlot) => {
+    const guide = slotGuide[key];
+    return (
+      <label className="asset-field">
+        <span className="asset-role">
+          <b className="asset-step">{guide.step}</b>
+          <span>
+            <b>{guide.label}</b>
+            <small>{guide.description}</small>
+          </span>
+          <FaceGuide eyes={guide.eyes} mouth={guide.mouth} />
+        </span>
+        <input
+          type="file"
+          accept="image/png,image/apng,image/jpeg,image/webp,image/gif,image/svg+xml"
+          onChange={(event) => void setImage(key, event.currentTarget.files?.[0])}
+        />
+        {draft[key] ? (
+          <img src={draft[key]} alt={`Vista previa: ${guide.label}`} />
+        ) : (
+          <span className="empty-asset">
+            <i aria-hidden="true">+</i>
+            <small>Seleccionar imagen</small>
+          </span>
+        )}
+      </label>
+    );
+  };
 
   const blinkComplete = Boolean(draft.closedClosed && draft.closedOpen);
   const blinkValuesValid =
@@ -370,7 +429,37 @@ export const StateEditor = ({
               <b>{modeLabel(draft)}</b>
               <span>La imagen base es la única obligatoria.</span>
             </div>
-            <div className="asset-grid progressive">{imageInput("openClosed", "Imagen base")}</div>
+            <div className="image-role-guide">
+              <div className="guide-title">
+                <b>Guía visual</b>
+                <span>Combina ojos y boca según lo que esté ocurriendo.</span>
+              </div>
+              <div className="guide-matrix">
+                <span />
+                <b>Sin hablar</b>
+                <b>Hablando</b>
+                <b>Ojos abiertos</b>
+                <span className="guide-cell active">
+                  <FaceGuide eyes="open" mouth="closed" />
+                  <small>1 · Base</small>
+                </span>
+                <span className={draft.mouthEnabled ? "guide-cell active" : "guide-cell optional"}>
+                  <FaceGuide eyes="open" mouth="open" />
+                  <small>2 · Boca</small>
+                </span>
+                <b>Ojos cerrados</b>
+                <span className={draft.blinkEnabled ? "guide-cell active" : "guide-cell optional"}>
+                  <FaceGuide eyes="closed" mouth="closed" />
+                  <small>3 · Parpadeo</small>
+                </span>
+                <span className={draft.blinkEnabled ? "guide-cell active" : "guide-cell optional"}>
+                  <FaceGuide eyes="closed" mouth="open" />
+                  <small>4 · Parpadeo + voz</small>
+                </span>
+              </div>
+              <small className="guide-legend">En color: activo · Atenuado: opcional</small>
+            </div>
+            <div className="asset-grid progressive">{imageInput("openClosed")}</div>
             <label className="progressive-toggle">
               <input
                 type="checkbox"
@@ -394,9 +483,7 @@ export const StateEditor = ({
               </span>
             </label>
             {draft.mouthEnabled ? (
-              <div className="asset-grid progressive">
-                {imageInput("openOpen", "Imagen al hablar")}
-              </div>
+              <div className="asset-grid progressive">{imageInput("openOpen")}</div>
             ) : null}
             {draft.mouthEnabled && draft.openOpen ? (
               <label className="progressive-toggle">
@@ -423,8 +510,8 @@ export const StateEditor = ({
             {draft.blinkEnabled ? (
               <>
                 <div className="asset-grid progressive blink-pair">
-                  {imageInput("closedClosed", "Ojos cerrados · silencio")}
-                  {imageInput("closedOpen", "Ojos cerrados · voz")}
+                  {imageInput("closedClosed")}
+                  {imageInput("closedOpen")}
                 </div>
                 <fieldset className="blink-settings">
                   <legend>Parpadeo por estado</legend>
