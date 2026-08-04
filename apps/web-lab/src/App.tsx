@@ -14,6 +14,7 @@ import {
 import { type ChangeEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { fixtureBundle } from "./fixture";
 import { parsePortableDocument, serializePortableDocument } from "./portable";
+import { chooseRecordingMimeType, recordingErrorMessage, recordingFileName } from "./recording";
 import { draftFromState, type StateDraft, StateEditor, stateFromDraft } from "./StateEditor";
 
 const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
@@ -58,6 +59,8 @@ const probeAudioDuration = (file: File): Promise<number> =>
     audio.src = url;
   });
 
+type RecordingState = "idle" | "requesting" | "recording" | "paused" | "processing";
+
 export const App = () => {
   const mouthSensitivityId = useId();
   const stockTitleId = useId();
@@ -66,6 +69,12 @@ export const App = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const animationRef = useRef<number | null>(null);
   const importRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordingStreamRef = useRef<MediaStream | null>(null);
+  const recordingChunksRef = useRef<Blob[]>([]);
+  const recordingMimeTypeRef = useRef("");
+  const recordingSecondsRef = useRef(0);
+  const discardRecordingRef = useRef(false);
   const [project, setProject] = useState<EdituberProjectV2>(() => clone(fixtureBundle.project));
   const [avatar, setAvatar] = useState<AvatarManifestV2>(() => clone(fixtureBundle.avatar));
   const [envelope, setEnvelope] = useState(fixtureBundle.envelope);
@@ -83,6 +92,11 @@ export const App = () => {
   const [deleteStateId, setDeleteStateId] = useState<string | null>(null);
   const [replacementId, setReplacementId] = useState("");
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [recordingState, setRecordingState] = useState<RecordingState>("idle");
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+
+  const canRecord =
+    typeof MediaRecorder !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
 
   useEffect(() => {
     const media = matchMedia("(prefers-reduced-motion: reduce)");
@@ -117,6 +131,45 @@ export const App = () => {
     animationRef.current = requestAnimationFrame(drive);
   }, [project.durationInFrames, project.fps, stopDriver]);
   useEffect(() => () => stopDriver(), [stopDriver]);
+
+  const releaseMicrophone = useCallback(() => {
+    for (const track of recordingStreamRef.current?.getTracks() ?? []) track.stop();
+    recordingStreamRef.current = null;
+  }, []);
+
+  useEffect(
+    () => () => {
+      discardRecordingRef.current = true;
+      const recorder = mediaRecorderRef.current;
+      if (recorder && recorder.state !== "inactive") recorder.stop();
+      releaseMicrophone();
+    },
+    [releaseMicrophone],
+  );
+
+  useEffect(() => {
+    if (recordingState !== "recording") return;
+    const timer = window.setInterval(
+      () =>
+        setRecordingSeconds((current) => {
+          const next = current + 1;
+          recordingSecondsRef.current = next;
+          return next;
+        }),
+      1000,
+    );
+    return () => window.clearInterval(timer);
+  }, [recordingState]);
+
+  useEffect(() => {
+    if (recordingState !== "recording" || recordingSeconds < MAX_DURATION_SECONDS) return;
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      setRecordingState("processing");
+      setStatus("Límite de 10 minutos alcanzado · procesando grabación…");
+      recorder.stop();
+    }
+  }, [recordingSeconds, recordingState]);
 
   const seekToFrame = (next: number) => {
     const safe = Math.max(0, Math.min(project.durationInFrames - 1, Math.floor(next)));
@@ -212,7 +265,7 @@ export const App = () => {
     setStatus("Estado eliminado y referencias reemplazadas");
   };
 
-  const handleAudio = async (file?: File) => {
+  const handleAudio = async (file?: File, knownDurationSeconds?: number) => {
     if (!file) return;
     if (!file.type.startsWith("audio/")) {
       setStatus("Selecciona un archivo de audio reconocido");
@@ -224,7 +277,7 @@ export const App = () => {
     }
     setStatus("Comprobando duración…");
     try {
-      const metadataDuration = await probeAudioDuration(file);
+      const metadataDuration = knownDurationSeconds ?? (await probeAudioDuration(file));
       if (!Number.isFinite(metadataDuration) || metadataDuration > MAX_DURATION_SECONDS) {
         setStatus("El audio supera 10 minutos y no fue analizado");
         return;
@@ -251,6 +304,114 @@ export const App = () => {
       setStatus(`${file.name} · ${nextDuration.toFixed(1)} s · análisis local terminado`);
     } catch (error) {
       setStatus(`No se pudo analizar el audio: ${String(error)}`);
+    }
+  };
+
+  const startRecording = async () => {
+    if (!canRecord || recordingState !== "idle") {
+      if (!canRecord) setStatus("Este navegador no permite grabar audio directamente");
+      return;
+    }
+    setRecordingState("requesting");
+    setRecordingSeconds(0);
+    recordingSecondsRef.current = 0;
+    setStatus("Solicitando acceso al micrófono…");
+    try {
+      audioRef.current?.pause();
+      setPlaying(false);
+      stopDriver();
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+      recordingStreamRef.current = stream;
+      recordingChunksRef.current = [];
+      discardRecordingRef.current = false;
+      const mimeType = chooseRecordingMimeType(MediaRecorder.isTypeSupported.bind(MediaRecorder));
+      const recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      recordingMimeTypeRef.current = recorder.mimeType || mimeType || "audio/webm";
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) recordingChunksRef.current.push(event.data);
+      };
+      recorder.onerror = () => {
+        discardRecordingRef.current = true;
+        setStatus("La grabación se interrumpió por un error del micrófono");
+        if (recorder.state !== "inactive") recorder.stop();
+      };
+      recorder.onstop = () => {
+        releaseMicrophone();
+        mediaRecorderRef.current = null;
+        const chunks = recordingChunksRef.current;
+        recordingChunksRef.current = [];
+        if (discardRecordingRef.current || chunks.length === 0) {
+          discardRecordingRef.current = false;
+          setRecordingState("idle");
+          return;
+        }
+        const recordedType = recordingMimeTypeRef.current;
+        const file = new File(
+          [new Blob(chunks, { type: recordedType })],
+          recordingFileName(recordedType),
+          {
+            type: recordedType,
+          },
+        );
+        setStatus("Analizando la voz grabada localmente…");
+        void handleAudio(file, Math.max(0.1, recordingSecondsRef.current)).finally(() =>
+          setRecordingState("idle"),
+        );
+      };
+      recorder.start(250);
+      setRecordingState("recording");
+      setStatus("Grabando voz · habla con naturalidad");
+    } catch (error) {
+      releaseMicrophone();
+      setRecordingState("idle");
+      setStatus(recordingErrorMessage(error));
+    }
+  };
+
+  const pauseRecording = () => {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state !== "recording") return;
+    recorder.pause();
+    setRecordingState("paused");
+    setStatus("Grabación en pausa");
+  };
+
+  const resumeRecording = () => {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state !== "paused") return;
+    recorder.resume();
+    setRecordingState("recording");
+    setStatus("Grabando voz · habla con naturalidad");
+  };
+
+  const stopRecording = () => {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state === "inactive") return;
+    setRecordingState("processing");
+    setStatus("Procesando grabación…");
+    recorder.stop();
+  };
+
+  const cancelRecording = () => {
+    const recorder = mediaRecorderRef.current;
+    discardRecordingRef.current = true;
+    setStatus("Grabación descartada");
+    if (recorder && recorder.state !== "inactive") {
+      setRecordingState("processing");
+      recorder.stop();
+    } else {
+      releaseMicrophone();
+      setRecordingState("idle");
     }
   };
 
@@ -447,20 +608,78 @@ export const App = () => {
               <h2>Laboratorio</h2>
             </div>
           </div>
-          <label className="upload-card">
-            <input
-              type="file"
-              accept="audio/*"
-              onChange={(event) => void handleAudio(event.currentTarget.files?.[0])}
-            />
-            <span className="upload-icon" aria-hidden="true">
-              ↑
-            </span>
-            <span>
-              <b>Subir audio</b>
-              <small>Local · máximo 100 MB / 10 min</small>
-            </span>
-          </label>
+          {recordingState === "idle" ? (
+            <div className="audio-source-actions">
+              <label className="upload-card">
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={(event) => void handleAudio(event.currentTarget.files?.[0])}
+                />
+                <span className="upload-icon" aria-hidden="true">
+                  ↑
+                </span>
+                <span>
+                  <b>Subir audio</b>
+                  <small>Local · máximo 100 MB / 10 min</small>
+                </span>
+              </label>
+              <button
+                type="button"
+                className="record-card"
+                disabled={!canRecord}
+                title={canRecord ? "Grabar voz con el micrófono" : "Grabación no disponible"}
+                onClick={() => void startRecording()}
+              >
+                <span className="record-icon" aria-hidden="true" />
+                <span>
+                  <b>Grabar voz</b>
+                  <small>Micrófono · el audio no sale de tu navegador</small>
+                </span>
+              </button>
+            </div>
+          ) : (
+            <div className={`recorder-card ${recordingState}`} aria-live="polite">
+              <div className="recorder-status">
+                <span className="record-dot" aria-hidden="true" />
+                <span>
+                  <b>
+                    {recordingState === "requesting"
+                      ? "Esperando permiso"
+                      : recordingState === "processing"
+                        ? "Procesando"
+                        : recordingState === "paused"
+                          ? "Grabación en pausa"
+                          : "Grabando voz"}
+                  </b>
+                  <small>{formatTime(recordingSeconds)} / 10:00</small>
+                </span>
+              </div>
+              <div className="recorder-actions">
+                {recordingState === "recording" ? (
+                  <button type="button" onClick={pauseRecording}>
+                    Pausar
+                  </button>
+                ) : recordingState === "paused" ? (
+                  <button type="button" onClick={resumeRecording}>
+                    Continuar
+                  </button>
+                ) : null}
+                {(recordingState === "recording" || recordingState === "paused") && (
+                  <button type="button" className="primary" onClick={stopRecording}>
+                    Usar audio
+                  </button>
+                )}
+                <button
+                  type="button"
+                  disabled={recordingState === "processing" || recordingState === "requesting"}
+                  onClick={cancelRecording}
+                >
+                  Descartar
+                </button>
+              </div>
+            </div>
+          )}
           <div className="control-group">
             <label className="control-label" htmlFor={mouthSensitivityId}>
               <span>Sensibilidad de boca</span>

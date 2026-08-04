@@ -9,7 +9,7 @@ Motor determinista para convertir audio, un avatar 2D y eventos de estado en una
 - Stock ilimitado de estados con UUID estable, nombre, emoji y exactamente 1, 2 o 4 imágenes.
 - Efectos por estado para silencio, voz, apertura, cierre y entrada desde timeline; composición y parpadeo deterministas.
 - Timeline por `stateId`: clic para añadir/cambiar, eliminación explícita y selector responsive.
-- Web Lab con importación/exportación portable, carga local de audio, fondo y sensibilidad.
+- Web Lab con importación/exportación portable, carga local de audio, grabación directa desde el micrófono, fondo y sensibilidad.
 - CLI por proyecto o en modo directo `audio + avatar`.
 - MP4 H.264/AAC a 1080 × 1080 y 30 FPS mediante Remotion.
 
@@ -26,6 +26,8 @@ pnpm dev:web
 ```
 
 Abre `http://localhost:4317`. En GitHub Pages el laboratorio es completamente estático: procesa audio e imágenes en el navegador, pero el render MP4 se ejecuta con la CLI local.
+
+Puedes subir un archivo de audio o pulsar **Grabar voz** para capturar narración desde el micrófono. La grabación permite pausar, continuar, descartar o usar el audio; se analiza en el dispositivo y nunca se envía a un servidor. El navegador solicitará permiso y la página debe abrirse mediante HTTPS o localhost.
 
 ### Estados del avatar
 

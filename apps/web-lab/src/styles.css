@@ -250,8 +250,13 @@ input[type="range"]::-webkit-slider-thumb {
 .control-panel {
   padding-bottom: 20px;
 }
-.upload-card {
+.audio-source-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
   margin: 0 20px 20px;
+}
+.upload-card {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -260,6 +265,96 @@ input[type="range"]::-webkit-slider-thumb {
   border-radius: 14px;
   background: #0d263444;
   cursor: pointer;
+}
+.record-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px dashed #714658;
+  border-radius: 14px;
+  color: #d8e5eb;
+  background: #2b172044;
+  text-align: left;
+  cursor: pointer;
+}
+.record-card:hover:not(:disabled) {
+  border-color: #ff6685;
+  background: #3a182477;
+}
+.record-card:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.record-icon,
+.record-dot {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ff4b6e;
+  box-shadow: 0 0 0 6px #ff4b6e1f;
+}
+.record-card b,
+.record-card small,
+.recorder-status b,
+.recorder-status small {
+  display: block;
+}
+.record-card b,
+.recorder-status b {
+  font-size: 13px;
+}
+.record-card small,
+.recorder-status small {
+  margin-top: 3px;
+  color: #829bab;
+  font-size: 10px;
+}
+.recorder-card {
+  margin: 0 20px 20px;
+  padding: 14px;
+  border: 1px solid #6d3348;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #301722aa, #122736aa);
+}
+.recorder-status,
+.recorder-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.recorder-actions {
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.recorder-actions button {
+  min-height: 34px;
+  padding: 7px 12px;
+  border: 1px solid #345264;
+  border-radius: 9px;
+  color: #c8d8e1;
+  background: #102837;
+}
+.recorder-actions button.primary {
+  border-color: #27bfd0;
+  color: #071419;
+  background: #51e6f3;
+}
+.recorder-card.recording .record-dot {
+  animation: record-pulse 1.2s ease-in-out infinite;
+}
+.recorder-card.paused .record-dot,
+.recorder-card.processing .record-dot,
+.recorder-card.requesting .record-dot {
+  background: #f4b84b;
+  box-shadow: 0 0 0 6px #f4b84b1f;
+}
+@keyframes record-pulse {
+  50% {
+    opacity: 0.45;
+    transform: scale(0.82);
+  }
 }
 .upload-card:hover {
   border-color: #49dceb;
@@ -1150,6 +1245,9 @@ select:focus-visible,
     margin-inline: 15px;
   }
   .switch-grid {
+    grid-template-columns: 1fr;
+  }
+  .audio-source-actions {
     grid-template-columns: 1fr;
   }
   .action-grid {
