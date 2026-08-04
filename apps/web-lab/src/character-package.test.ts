@@ -51,6 +51,27 @@ describe("character ZIP packages", () => {
     );
   });
 
+  it("keeps equally sized emotion directory names separate", () => {
+    const archive = zipSync({
+      "capibara/personaje.json": manifest([
+        { id: "neutral", name: "Neutral", emoji: "😐" },
+        { id: "enojado", name: "Enojado", emoji: "😠" },
+      ]),
+      "capibara/neutral/1-base.png": image,
+      "capibara/neutral/2-habla.png": image,
+      "capibara/neutral/3-parpadeo.png": image,
+      "capibara/neutral/4-parpadeo-habla.png": image,
+      "capibara/enojado/1-base.png": image,
+      "capibara/enojado/2-habla.png": image,
+      "capibara/enojado/3-parpadeo.png": image,
+      "capibara/enojado/4-parpadeo-habla.png": image,
+    });
+
+    const result = parseCharacterPackage(archive);
+
+    expect(result.avatar.states.map((state) => state.name)).toEqual(["Neutral", "Enojado"]);
+  });
+
   it("rejects incomplete emotions instead of guessing", () => {
     const archive = zipSync({
       "personaje.json": manifest(),

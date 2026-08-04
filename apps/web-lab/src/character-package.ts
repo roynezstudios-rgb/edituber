@@ -107,6 +107,7 @@ const imageForRole = (
   role: string,
 ): string | undefined => {
   const matches = [...files.entries()].filter(([path]) => {
+    if (!path.startsWith(directory)) return false;
     const filename = path.slice(directory.length);
     const extensionIndex = filename.lastIndexOf(".");
     return (
