@@ -12,6 +12,11 @@ import {
   emptyAvatarEffects,
 } from "@edituber/contracts";
 import { useEffect, useId, useRef, useState } from "react";
+import {
+  PREVIEW_CYCLE_FRAMES,
+  previewPhaseLabel,
+  resolvePreviewSimulation,
+} from "./preview-simulation";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const IMAGE_TYPES = new Set([
@@ -22,6 +27,7 @@ const IMAGE_TYPES = new Set([
   "image/gif",
   "image/svg+xml",
 ]);
+const PREVIEW_WAVE_HEIGHTS = Array.from({ length: 18 }, (_, index) => 8 + ((index * 7) % 19));
 
 const fileAsDataUrl = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -226,9 +232,7 @@ export const StateEditor = ({
   onCancelRef.current = onCancel;
   const [assetError, setAssetError] = useState("");
   const [previewFrame, setPreviewFrame] = useState(0);
-  const [previewPlaying, setPreviewPlaying] = useState(false);
-  const [previewSpeaking, setPreviewSpeaking] = useState(false);
-  const [voiceChangeFrame, setVoiceChangeFrame] = useState(0);
+  const [previewPlaying, setPreviewPlaying] = useState(true);
   useEffect(() => {
     if (!previewPlaying) return;
     const timer = window.setInterval(() => setPreviewFrame((frame) => frame + 1), 1000 / 30);
@@ -342,24 +346,25 @@ export const StateEditor = ({
     draft.id ?? "2522cfb9-01e1-47c6-9e61-e6e5a4ae3ef0",
   );
   const previewSeed = deriveStateSeed(seed, previewState.id);
+  const simulation = resolvePreviewSimulation(previewFrame);
   const blinking =
     draft.blinkEnabled &&
     draft.blinkPolicy === "auto" &&
-    isBlinkClosedAtFrame(previewFrame, 30, previewSeed, draft.blink);
+    (simulation.forceBlink || isBlinkClosedAtFrame(previewFrame, 30, previewSeed, draft.blink));
   const transform = resolveAvatarEffects({
     state: previewState,
     frame: previewFrame,
     fps: 30,
-    isSpeaking: previewSpeaking,
-    voiceChange: previewSpeaking ? "closedToOpen" : "openToClosed",
-    voiceChangeFrame,
-    stateEnterFrame: 0,
-    emphasisPulse: previewSpeaking ? 0.75 : 0,
-    emphasisFrames: [voiceChangeFrame],
+    isSpeaking: simulation.speaking,
+    voiceChange: simulation.voiceChange,
+    voiceChangeFrame: simulation.voiceChangeFrame,
+    stateEnterFrame: simulation.cycleStartFrame,
+    emphasisPulse: simulation.emphasisPulse,
+    emphasisFrames: simulation.emphasisFrames,
     seed: previewSeed,
     motionScale: 1,
   });
-  const previewImage = resolveStateImage(previewState, previewSpeaking, blinking);
+  const previewImage = resolveStateImage(previewState, simulation.speaking, blinking);
 
   return (
     <div className="dialog-backdrop" role="presentation">
@@ -668,33 +673,37 @@ export const StateEditor = ({
                 <span>Sube la imagen base</span>
               )}
             </div>
-            <div className="preview-controls">
-              <button type="button" onClick={() => setPreviewPlaying((value) => !value)}>
-                {previewPlaying ? "Pausar" : "Reproducir"}
-              </button>
-              <button
-                type="button"
-                aria-pressed={previewSpeaking}
-                onClick={() => {
-                  setPreviewSpeaking((value) => !value);
-                  setVoiceChangeFrame(previewFrame);
-                }}
+            <div className="automatic-preview" aria-live="polite">
+              <div className="preview-cycle-heading">
+                <span>
+                  <i className={previewPlaying ? "live" : ""} />
+                  <b>Demo automática</b>
+                </span>
+                <button type="button" onClick={() => setPreviewPlaying((value) => !value)}>
+                  {previewPlaying ? "Pausar" : "Continuar"}
+                </button>
+              </div>
+              <div className="preview-phases">
+                {(["entry", "speaking", "silence", "blink"] as const).map((phase) => (
+                  <span className={simulation.phase === phase ? "active" : ""} key={phase}>
+                    {previewPhaseLabel(phase)}
+                  </span>
+                ))}
+              </div>
+              <div
+                className={simulation.speaking ? "simulated-wave speaking" : "simulated-wave"}
+                aria-hidden="true"
               >
-                {previewSpeaking ? "Simular silencio" : "Simular voz"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setPreviewFrame(0);
-                  setVoiceChangeFrame(0);
-                  setPreviewPlaying(true);
-                }}
-              >
-                Probar entrada
-              </button>
+                {PREVIEW_WAVE_HEIGHTS.map((height) => (
+                  <i key={height} style={{ height: `${height}px` }} />
+                ))}
+              </div>
+              <div className="preview-cycle-progress">
+                <i style={{ width: `${(simulation.phaseFrame / PREVIEW_CYCLE_FRAMES) * 100}%` }} />
+              </div>
             </div>
             <small>
-              Frame {previewFrame} · {previewSpeaking ? "voz" : "silencio"}
+              Frame {previewFrame} · {previewPhaseLabel(simulation.phase)}
             </small>
           </aside>
         </div>

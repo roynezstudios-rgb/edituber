@@ -1046,6 +1046,111 @@ input[type="range"]::-webkit-slider-thumb {
   gap: 5px;
   margin: 9px 0;
 }
+.automatic-preview {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 8px;
+  padding: 10px;
+  border: 1px solid #1f4a60;
+  border-radius: 9px;
+  background: #071c27;
+}
+.preview-cycle-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.preview-cycle-heading > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #d9f6ff;
+  font-size: 10px;
+}
+.preview-cycle-heading span i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #617c89;
+}
+.preview-cycle-heading span i.live {
+  background: #20e9ad;
+  box-shadow: 0 0 0 0 rgba(32, 233, 173, 0.45);
+  animation: preview-live-pulse 1.4s ease-out infinite;
+}
+.preview-cycle-heading button {
+  min-height: 28px;
+  padding: 4px 9px;
+  border: 1px solid #2a5268;
+  border-radius: 7px;
+  background: #0b2a38;
+  color: #bdefff;
+  font-size: 9px;
+  cursor: pointer;
+}
+.preview-phases {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+.preview-phases span {
+  overflow: hidden;
+  padding: 5px 2px;
+  border: 1px solid #193d4f;
+  border-radius: 5px;
+  color: #6f95a8;
+  font-size: 7px;
+  line-height: 1.2;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.preview-phases span.active {
+  border-color: #27c5d9;
+  background: rgba(39, 197, 217, 0.12);
+  color: #ccf9ff;
+}
+.simulated-wave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  gap: 3px;
+}
+.simulated-wave i {
+  width: 3px;
+  max-height: 4px;
+  border-radius: 3px;
+  background: #345a6c;
+  transition:
+    max-height 160ms ease,
+    background 160ms ease;
+}
+.simulated-wave.speaking i {
+  max-height: 28px;
+  background: #2dd6df;
+}
+.preview-cycle-progress {
+  height: 3px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #153746;
+}
+.preview-cycle-progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #20e9ad, #31b9ee);
+}
+@keyframes preview-live-pulse {
+  70% {
+    box-shadow: 0 0 0 5px rgba(32, 233, 173, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(32, 233, 173, 0);
+  }
+}
 .preview-controls button,
 .effect-toolbar button,
 .effect-toolbar select,
