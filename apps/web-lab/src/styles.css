@@ -2016,6 +2016,18 @@ select:focus-visible,
     line-height: 1.35;
   }
 
+  .play-button {
+    flex-basis: 44px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .control-panel .add-state,
+  .control-panel .state-actions button,
+  .control-panel .character-card-actions button {
+    min-height: 32px;
+  }
+
   .stage-wrap {
     width: 100%;
     max-width: calc(100vh - 250px);
