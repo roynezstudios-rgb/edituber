@@ -1990,6 +1990,16 @@ select:focus-visible,
   outline-offset: 3px;
 }
 
+@media (min-width: 901px) {
+  .control-panel {
+    position: sticky;
+    top: 18px;
+    max-height: calc(100vh - 36px);
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+}
+
 @media (max-width: 900px) {
   .app-shell {
     width: min(680px, calc(100% - 24px));
