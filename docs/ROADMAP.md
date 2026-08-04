@@ -6,5 +6,5 @@
 - **Fase 3:** CLI robusta, guion, reportes y API local opcional.
 - **Fase 4:** contratos/runtime Dart y prueba de exportación Android/iOS.
 - **Fase 5:** aplicación móvil.
-- **Fase 6:** anuncios recompensados y compra Pro no consumible.
+- **Fase 6:** anuncios recompensados —uno por cada inserción de audio de hasta 60 segundos— y compra Pro no consumible.
 - **Fase 7:** Visual Researcher y formatos adicionales.

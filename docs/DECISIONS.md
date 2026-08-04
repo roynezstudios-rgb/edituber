@@ -52,3 +52,7 @@ El interruptor, intervalo y duración viven en `project.settings.blink`. El moto
 ## ADR-012 — Ciclo global de boca durante voz continua
 
 La detección de voz sigue determinando cuándo existe habla, pero `project.settings.mouthLoop` alterna las imágenes de boca abierta y cerrada mientras ese tramo continúa activo. Los tiempos abierta/cerrada son globales y deterministas por frame; una pausa cierra la boca y la siguiente frase reinicia el ciclo. Los efectos continuos de voz permanecen activos durante todo el tramo, mientras que las transiciones de apertura y cierre pueden reaccionar a cada cambio del ciclo.
+
+## ADR-013 — Un anuncio recompensa una inserción, no una bolsa de segundos
+
+En la futura aplicación descargable gratuita, cada grabación o subida nueva requiere un anuncio recompensado y admite un único fragmento de hasta 60 segundos. El permiso se consume al insertar correctamente el fragmento, sin acumular el tiempo no utilizado: uno de 15 segundos consume la misma ventana que uno de 60. Un archivo inválido, superior a 60 segundos o una operación cancelada no consume un permiso válido. Editar, recortar o eliminar partes del audio ya insertado no requiere otro anuncio.
