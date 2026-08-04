@@ -32,32 +32,34 @@ export const AvatarStage = ({ bundle }: AvatarStageProps) => {
       {state.backgroundType === "image" && state.backgroundImage ? (
         <Img src={state.backgroundImage} style={{ ...imageStyle, objectFit: "cover" }} />
       ) : null}
-      <div
-        data-avatar-parent="true"
-        style={{
-          position: "absolute",
-          left: `${state.positionX * 100}%`,
-          top: `${state.positionY * 100}%`,
-          width: size,
-          height: size,
-          transform: `translate(-50%, -50%) translate(${state.avatar.transform.translateX}px, ${state.avatar.transform.translateY}px) rotate(${state.avatar.transform.rotation}deg) scale(${state.scale * state.avatar.transform.scaleX}, ${state.scale * state.avatar.transform.scaleY})`,
-          transformOrigin: "center",
-          filter: `brightness(${state.avatar.transform.brightness})`,
-          imageRendering: state.avatar.imageMode === "pixel" ? "pixelated" : "auto",
-        }}
-      >
-        <Img src={state.avatar.shell} style={imageStyle} />
-        {state.avatar.previousFace ? (
+      {state.avatarVisible ? (
+        <div
+          data-avatar-parent="true"
+          style={{
+            position: "absolute",
+            left: `${state.positionX * 100}%`,
+            top: `${state.positionY * 100}%`,
+            width: size,
+            height: size,
+            transform: `translate(-50%, -50%) translate(${state.avatar.transform.translateX}px, ${state.avatar.transform.translateY}px) rotate(${state.avatar.transform.rotation}deg) scale(${state.scale * state.avatar.transform.scaleX}, ${state.scale * state.avatar.transform.scaleY})`,
+            transformOrigin: "center",
+            filter: `brightness(${state.avatar.transform.brightness})`,
+            imageRendering: state.avatar.imageMode === "pixel" ? "pixelated" : "auto",
+          }}
+        >
+          <Img src={state.avatar.shell} style={imageStyle} />
+          {state.avatar.previousFace ? (
+            <Img
+              src={state.avatar.previousFace}
+              style={{ ...imageStyle, opacity: state.avatar.previousOpacity }}
+            />
+          ) : null}
           <Img
-            src={state.avatar.previousFace}
-            style={{ ...imageStyle, opacity: state.avatar.previousOpacity }}
+            src={state.avatar.currentFace}
+            style={{ ...imageStyle, opacity: state.avatar.currentOpacity }}
           />
-        ) : null}
-        <Img
-          src={state.avatar.currentFace}
-          style={{ ...imageStyle, opacity: state.avatar.currentOpacity }}
-        />
-      </div>
+        </div>
+      ) : null}
     </AbsoluteFill>
   );
 };

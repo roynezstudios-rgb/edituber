@@ -9,7 +9,7 @@ Motor determinista para convertir audio, un avatar 2D y eventos de estado en una
 - Stock ilimitado de estados con UUID estable, nombre, emoji y exactamente 1, 2 o 4 imágenes.
 - Efectos globales para toda la grabación, con grupos de silencio, voz, apertura, cierre y entrada desde timeline; composición y parpadeo deterministas.
 - Timeline por `stateId`: clic para añadir/cambiar, eliminación explícita y selector responsive.
-- Web Lab con importación/exportación portable, carga local de audio, grabación directa desde el micrófono, fondo y sensibilidad.
+- Web Lab con importación/exportación portable, carga local de audio, grabación directa desde el micrófono, visibilidad del personaje, fondo y sensibilidad.
 - CLI por proyecto o en modo directo `audio + avatar`.
 - MP4 H.264/AAC a 1080 × 1080 y 30 FPS mediante Remotion.
 

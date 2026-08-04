@@ -300,6 +300,7 @@ export const loadDirectBundle = async (options: DirectBundleOptions): Promise<Ed
     avatar: {
       manifest: avatarPath,
       defaultStateId: avatar.defaultStateId,
+      visible: true,
       positionX: 0.5,
       positionY: 0.52,
       scale: 1,

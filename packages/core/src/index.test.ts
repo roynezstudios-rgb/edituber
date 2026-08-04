@@ -72,9 +72,22 @@ describe("bundle", () => {
   it("validates and always resolves visible shell and face layers", () => {
     expect(validateBundle(bundle)).toEqual({ valid: true, errors: [] });
     const state = resolveFrameState(bundle, 0);
+    expect(state.avatarVisible).toBe(true);
     expect(state.avatar.shell).toBeTruthy();
     expect(state.avatar.currentFace).toBeTruthy();
     expect(state.avatar.currentOpacity + state.avatar.previousOpacity).toBe(1);
+  });
+
+  it("can hide the avatar while keeping its state library intact", () => {
+    const hidden = resolveFrameState(
+      {
+        ...bundle,
+        project: { ...bundle.project, avatar: { ...bundle.project.avatar, visible: false } },
+      },
+      0,
+    );
+    expect(hidden.avatarVisible).toBe(false);
+    expect(hidden.avatar.currentFace).toBeTruthy();
   });
 
   it("returns identical shared Web Lab and renderer samples for the same frames", () => {

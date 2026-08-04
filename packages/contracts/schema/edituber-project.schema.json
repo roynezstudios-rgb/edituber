@@ -60,6 +60,7 @@
       "properties": {
         "manifest": { "type": "string", "minLength": 1 },
         "defaultStateId": { "type": "string", "format": "uuid" },
+        "visible": { "type": "boolean" },
         "positionX": { "type": "number", "minimum": 0, "maximum": 1 },
         "positionY": { "type": "number", "minimum": 0, "maximum": 1 },
         "scale": { "type": "number", "exclusiveMinimum": 0, "maximum": 4 }

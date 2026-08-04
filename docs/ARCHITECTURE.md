@@ -38,6 +38,8 @@ resolveAvatarEffects(project.effects, state, frame, seed, voz, bordes, énfasis)
 
 El reloj del navegador solo selecciona un frame. Las decisiones visuales dependen de frame, FPS, semilla, datos y envolvente; Web y render producen el mismo resultado. `prefers-reduced-motion` neutraliza el movimiento adicional solo en la previsualización web.
 
+`project.avatar.visible` permite ocultar la capa completa sin borrar el stock ni romper el estado base requerido en el frame 0. Ausente equivale a `true` para conservar compatibilidad con proyectos anteriores.
+
 ## Límites de archivos de la CLI
 
 ```text

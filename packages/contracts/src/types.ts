@@ -83,6 +83,7 @@ export interface EdituberProjectV2 {
   avatar: {
     manifest: string;
     defaultStateId: string;
+    visible?: boolean;
     positionX: number;
     positionY: number;
     scale: number;

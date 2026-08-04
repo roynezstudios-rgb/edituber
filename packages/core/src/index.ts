@@ -26,6 +26,7 @@ export interface EdituberFrameState {
   positionX: number;
   positionY: number;
   scale: number;
+  avatarVisible: boolean;
   avatar: AvatarLayerState;
 }
 
@@ -84,6 +85,7 @@ export const resolveFrameState = (bundle: EdituberBundle, frame: number): Editub
     positionX: bundle.project.avatar.positionX,
     positionY: bundle.project.avatar.positionY,
     scale: bundle.project.avatar.scale,
+    avatarVisible: bundle.project.avatar.visible !== false,
     avatar: resolveAvatarAtFrame(
       bundle.project,
       bundle.avatar,

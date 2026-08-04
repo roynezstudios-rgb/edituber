@@ -475,6 +475,9 @@ input[type="range"]::-webkit-slider-thumb {
   border-radius: 12px;
   background: #081824;
 }
+.switch-grid .scene-visibility-toggle {
+  grid-column: 1 / -1;
+}
 .switch-grid span,
 .switch-grid small {
   display: block;

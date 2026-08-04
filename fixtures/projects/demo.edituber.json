@@ -16,6 +16,7 @@
   "avatar": {
     "manifest": "avatars/robot/avatar.json",
     "defaultStateId": "2522cfb9-01e1-47c6-9e61-e6e5a4ae3ef0",
+    "visible": true,
     "positionX": 0.5,
     "positionY": 0.52,
     "scale": 1

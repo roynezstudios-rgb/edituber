@@ -234,6 +234,14 @@ export const App = () => {
     key: K,
     value: EdituberProjectV2["settings"][K],
   ) => setProject((current) => ({ ...current, settings: { ...current.settings, [key]: value } }));
+  const updateAvatar = <K extends keyof EdituberProjectV2["avatar"]>(
+    key: K,
+    value: EdituberProjectV2["avatar"][K],
+  ) => setProject((current) => ({ ...current, avatar: { ...current.avatar, [key]: value } }));
+  const updateStage = <K extends keyof EdituberProjectV2["stage"]>(
+    key: K,
+    value: EdituberProjectV2["stage"][K],
+  ) => setProject((current) => ({ ...current, stage: { ...current.stage, [key]: value } }));
   const updateBlinkSetting = <K extends keyof BlinkSettings>(key: K, value: BlinkSettings[K]) =>
     setProject((current) => ({
       ...current,
@@ -250,6 +258,7 @@ export const App = () => {
       avatar: {
         ...current.avatar,
         defaultStateId: target === 0 ? stateId : current.avatar.defaultStateId,
+        visible: true,
       },
       stateEvents: upsertStateEvent(
         current.stateEvents,
@@ -589,34 +598,42 @@ export const App = () => {
               }}
             >
               <div className="safe-area" />
-              <div
-                className="avatar-parent"
-                style={{
-                  left: `${state.positionX * 100}%`,
-                  top: `${state.positionY * 100}%`,
-                  width: `${(visualSize / project.width) * 100}%`,
-                  transform: `translate(-50%, -50%) translate(${motion.translateX}px, ${motion.translateY}px) rotate(${motion.rotation}deg) scale(${state.scale * motion.scaleX}, ${state.scale * motion.scaleY})`,
-                  filter: `brightness(${motion.brightness})`,
-                  imageRendering: state.avatar.imageMode === "pixel" ? "pixelated" : "auto",
-                }}
-              >
-                <img src={state.avatar.shell} alt="" />
-                {state.avatar.previousFace ? (
+              {state.avatarVisible ? (
+                <div
+                  className="avatar-parent"
+                  style={{
+                    left: `${state.positionX * 100}%`,
+                    top: `${state.positionY * 100}%`,
+                    width: `${(visualSize / project.width) * 100}%`,
+                    transform: `translate(-50%, -50%) translate(${motion.translateX}px, ${motion.translateY}px) rotate(${motion.rotation}deg) scale(${state.scale * motion.scaleX}, ${state.scale * motion.scaleY})`,
+                    filter: `brightness(${motion.brightness})`,
+                    imageRendering: state.avatar.imageMode === "pixel" ? "pixelated" : "auto",
+                  }}
+                >
+                  <img src={state.avatar.shell} alt="" />
+                  {state.avatar.previousFace ? (
+                    <img
+                      src={state.avatar.previousFace}
+                      alt=""
+                      style={{ opacity: state.avatar.previousOpacity }}
+                    />
+                  ) : null}
                   <img
-                    src={state.avatar.previousFace}
+                    src={state.avatar.currentFace}
                     alt=""
-                    style={{ opacity: state.avatar.previousOpacity }}
+                    style={{ opacity: state.avatar.currentOpacity }}
                   />
-                ) : null}
-                <img
-                  src={state.avatar.currentFace}
-                  alt=""
-                  style={{ opacity: state.avatar.currentOpacity }}
-                />
-              </div>
+                </div>
+              ) : null}
               <div className="stage-badge">
-                {activeState?.emoji} {activeState?.name} ·{" "}
-                {state.avatar.mouthOpen ? "BOCA ABIERTA" : "BOCA CERRADA"}
+                {state.avatarVisible ? (
+                  <>
+                    {activeState?.emoji} {activeState?.name} ·{" "}
+                    {state.avatar.mouthOpen ? "BOCA ABIERTA" : "BOCA CERRADA"}
+                  </>
+                ) : (
+                  "PERSONAJE OCULTO"
+                )}
               </div>
             </div>
           </div>
@@ -769,12 +786,7 @@ export const App = () => {
                 max="4"
                 step="0.05"
                 value={project.avatar.scale}
-                onChange={(event) =>
-                  setProject((current) => ({
-                    ...current,
-                    avatar: { ...current.avatar, scale: Number(event.currentTarget.value) },
-                  }))
-                }
+                onChange={(event) => updateAvatar("scale", Number(event.currentTarget.value))}
               />
             </label>
             <label>
@@ -785,12 +797,7 @@ export const App = () => {
                 max="1"
                 step="0.01"
                 value={project.avatar.positionX}
-                onChange={(event) =>
-                  setProject((current) => ({
-                    ...current,
-                    avatar: { ...current.avatar, positionX: Number(event.currentTarget.value) },
-                  }))
-                }
+                onChange={(event) => updateAvatar("positionX", Number(event.currentTarget.value))}
               />
             </label>
             <label>
@@ -801,12 +808,7 @@ export const App = () => {
                 max="1"
                 step="0.01"
                 value={project.avatar.positionY}
-                onChange={(event) =>
-                  setProject((current) => ({
-                    ...current,
-                    avatar: { ...current.avatar, positionY: Number(event.currentTarget.value) },
-                  }))
-                }
+                onChange={(event) => updateAvatar("positionY", Number(event.currentTarget.value))}
               />
             </label>
           </div>
@@ -819,14 +821,10 @@ export const App = () => {
               aria-label="Tipo de fondo"
               value={project.stage.backgroundType}
               onChange={(event) =>
-                setProject((current) => ({
-                  ...current,
-                  stage: {
-                    ...current.stage,
-                    backgroundType: event.currentTarget
-                      .value as EdituberProjectV2["stage"]["backgroundType"],
-                  },
-                }))
+                updateStage(
+                  "backgroundType",
+                  event.currentTarget.value as EdituberProjectV2["stage"]["backgroundType"],
+                )
               }
             >
               <option value="solid">Sólido</option>
@@ -842,13 +840,7 @@ export const App = () => {
                 type="color"
                 value={project.stage.backgroundColor}
                 onChange={(event) =>
-                  setProject((current) => ({
-                    ...current,
-                    stage: {
-                      ...current.stage,
-                      backgroundColor: event.currentTarget.value.toUpperCase(),
-                    },
-                  }))
+                  updateStage("backgroundColor", event.currentTarget.value.toUpperCase())
                 }
               />
               <code>{project.stage.backgroundColor}</code>
@@ -885,6 +877,17 @@ export const App = () => {
             </label>
           ) : null}
           <div className="switch-grid">
+            <label className="scene-visibility-toggle">
+              <span>
+                Personaje<small>Mostrar en toda la grabación</small>
+              </span>
+              <input
+                aria-label="Mostrar personaje"
+                type="checkbox"
+                checked={project.avatar.visible !== false}
+                onChange={(event) => updateAvatar("visible", event.currentTarget.checked)}
+              />
+            </label>
             <label>
               <span>
                 Parpadeo<small>Semilla {project.seed}</small>
@@ -983,7 +986,7 @@ export const App = () => {
             <div className="stock-heading">
               <div>
                 <span id={stockTitleId}>Stock de estados</span>
-                <small>{avatar.states.length} disponibles · sin límite fijo</small>
+                <small>{avatar.states.length} guardados · biblioteca de imágenes</small>
               </div>
               <button
                 type="button"
@@ -1084,6 +1087,7 @@ export const App = () => {
             <div>
               <p className="eyebrow">PROYECTO JSON</p>
               <h2>Timeline de estados</h2>
+              <small>Cada estado continúa visible hasta el siguiente marcador.</small>
             </div>
             <button type="button" className="timeline-help" onClick={() => setPickerFrame(frame)}>
               Elegir estado en F{frame}
