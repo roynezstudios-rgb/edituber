@@ -24,13 +24,14 @@ resolveStateAtFrame ──► currentStateId + crossfade
         ▼
 resolveStateImage(state, speaking, blinking)
         │
-        ├─ 2 imágenes: ojos abiertos
-        └─ 4 imágenes: parpadeo completo
+        ├─ 1 imagen: mismo asset, grupos de efectos distintos
+        ├─ 2 imágenes: boca cerrada/abierta, sin blink falso
+        └─ 4 imágenes: boca y parpadeo completos
         │
         ▼
-resolveAvatarTransform(frame, seed, envelope, motionPreset)
+resolveAvatarEffects(state, frame, seed, voz, bordes, énfasis)
         │
-        └─ translate + scaleX/Y + rotation sobre un único padre
+        └─ translateX/Y + scaleX/Y + rotation + brightness sobre un único padre
 ```
 
 El reloj del navegador solo selecciona un frame. Las decisiones visuales dependen de frame, FPS, semilla, datos y envolvente; Web y render producen el mismo resultado. `prefers-reduced-motion` neutraliza el movimiento adicional solo en la previsualización web.
@@ -54,7 +55,7 @@ El proyecto no controla una ruta de escritura. `audio.envelope` es una referenci
 ## Límites de módulos
 
 - `contracts`: datos, esquemas, validación y migración; no conoce UI ni render.
-- `audio-engine`, `timeline-engine` y `avatar-engine`: funciones deterministas sin Remotion.
+- `audio-engine`, `timeline-engine` y `avatar-engine`: funciones deterministas sin Remotion. El motor de avatar compone listas en orden estable y reconstruye ruido, blink y transiciones desde frame + semilla, sin estado mutable.
 - `core`: valida el bundle y resuelve el estado del frame.
 - `renderer-remotion`: adapta el estado compartido a video.
 - `web-lab`: administra estados y usa las mismas funciones puras.

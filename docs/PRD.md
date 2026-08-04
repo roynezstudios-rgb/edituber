@@ -14,8 +14,8 @@ desde una CLI y desde un Web Lab responsive, y producir un MP4 reproducible.
 
 - Audio WAV/MP3/otros formatos decodificables por FFmpeg, hasta 10 minutos por defecto.
 - Envolvente cacheada por frame: señal cruda, suavizada, voz, boca, énfasis y rebote.
-- Stock ilimitado de estados de avatar, cada uno con UUID, metadatos y dos o cuatro imágenes.
-- Boca, parpadeo, rebote y transiciones resueltos únicamente desde frame, datos y semilla.
+- Stock ilimitado de estados de avatar, cada uno con UUID, metadatos y una, dos o cuatro imágenes.
+- Boca, parpadeo, efectos continuos y transiciones de voz/entrada resueltos únicamente desde frame, datos y semilla.
 - Proyecto y manifiesto validados mediante JSON Schema v2, con migración desde v1.
 - Web Lab responsive que consume los mismos paquetes de dominio.
 - Render MP4 H.264/AAC, 1080 × 1080, 30 FPS mediante adaptador Remotion.

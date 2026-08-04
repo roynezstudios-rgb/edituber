@@ -6,8 +6,8 @@ Motor determinista para convertir audio, un avatar 2D y eventos de estado en una
 
 - Proyecto y manifiesto de avatar JSON v2, validados con JSON Schema.
 - Migración en memoria de proyectos/manifiestos v1.
-- Stock ilimitado de estados con UUID estable, nombre, emoji, 2 o 4 imágenes, parpadeo y preset de movimiento.
-- Boca sincronizada con RMS/histéresis, parpadeo con semilla, idle sutil, squash/stretch y pulsos de énfasis.
+- Stock ilimitado de estados con UUID estable, nombre, emoji y exactamente 1, 2 o 4 imágenes.
+- Efectos por estado para silencio, voz, apertura, cierre y entrada desde timeline; composición y parpadeo deterministas.
 - Timeline por `stateId`: clic para añadir/cambiar, eliminación explícita y selector responsive.
 - Web Lab con importación/exportación portable, carga local de audio, fondo y sensibilidad.
 - CLI por proyecto o en modo directo `audio + avatar`.
@@ -29,12 +29,15 @@ Abre `http://localhost:4317`. En GitHub Pages el laboratorio es completamente es
 
 ### Estados del avatar
 
-Cada estado necesita dos imágenes transparentes sin deformación:
+El editor crece por bloques y la única imagen obligatoria es la base:
 
-1. ojos abiertos + boca cerrada;
-2. ojos abiertos + boca abierta.
+1. **Modo simple:** una imagen durante voz y silencio; los efectos sí cambian con la voz.
+2. **Boca sincronizada:** base + imagen al hablar.
+3. **Boca y parpadeo:** las dos anteriores + la pareja completa de ojos cerrados.
 
-Para habilitar parpadeo añade también las dos variantes de ojos cerrados. Una pareja parcial se rechaza. El emoji es solo una etiqueta visual; timeline y motor usan el UUID `stateId`.
+Tres imágenes, cero imágenes y más de cuatro se rechazan. Los modos de una y dos imágenes no inventan parpadeo. Cada estado configura intervalo/duración de blink, render suave o pixel y listas ordenadas de `randomMove`, `waveMove`, `jump`, `waveRotate`, `darken`, `squashStretch` y `emphasis`, además de transiciones de voz y entrada. El emoji es solo una etiqueta visual; timeline y motor usan el UUID `stateId`.
+
+GIF, APNG y WebP animado se aceptan como assets portables. La sincronización y reinicio deterministas de sus frames internos todavía no están implementados en Remotion; esas opciones se conservan en el contrato sin bloquear PNG/JPEG/SVG/WebP estático.
 
 El JSON portable incluye proyecto, manifiesto y envolvente. Conserva la referencia al audio, pero no incrusta el archivo: al importarlo se vuelve a seleccionar el audio local. Los archivos subidos no salen del navegador.
 
@@ -47,7 +50,7 @@ pnpm build
 pnpm audit
 ```
 
-Las pruebas cubren migración v1→v2, combinaciones de 2/4 imágenes, parpadeo, timeline/upsert, movimiento determinista, importación portable y contención de rutas POSIX/Windows/symlinks.
+Las pruebas cubren migración v1→v2, modos 1/2/4, rechazo de 0/3/5 assets, blink configurable, efectos/transiciones deterministas, timeline/upsert, importación portable y contención de rutas POSIX/Windows/symlinks.
 
 ## Render de demostración
 
