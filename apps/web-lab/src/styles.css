@@ -1995,6 +1995,27 @@ select:focus-visible,
     grid-template-columns: minmax(0, 1.06fr) minmax(420px, 0.94fr);
   }
 
+  .control-panel .audio-source-actions small,
+  .control-panel .compact-controls label,
+  .control-panel .blink-settings legend,
+  .control-panel .blink-settings label,
+  .control-panel .blink-loop-intro > p,
+  .control-panel .mouth-loop-intro > p,
+  .control-panel .mouth-loop-preview b,
+  .control-panel .mouth-loop-preview small,
+  .control-panel .character-library-heading small,
+  .control-panel .character-drop-zone small,
+  .control-panel .character-card-copy small,
+  .control-panel .character-card-actions button,
+  .control-panel .stock-heading small,
+  .control-panel .state-main small,
+  .control-panel .state-actions button,
+  .control-panel .local-save-line,
+  .control-panel .status-line {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
   .stage-wrap {
     width: 100%;
     max-width: calc(100vh - 250px);
