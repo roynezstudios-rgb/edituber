@@ -43,6 +43,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Test and type-check
+        run: |
+          pnpm test
+          pnpm check
+
       - name: Build Web Lab
         run: pnpm --filter @edituber/web-lab build
 

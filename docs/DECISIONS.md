@@ -24,3 +24,19 @@ composición y exportación. Ninguno se filtra al contrato del proyecto.
 
 No se añade un cascarón móvil vacío. La prueba Flutter comenzará cuando el contrato v1 y los casos
 dorados del motor estén estables.
+
+## ADR-006 — Estado estable por UUID
+
+El emoji y el nombre son presentación editable. Proyecto y timeline referencian `stateId`, por lo que renombrar, duplicar o reutilizar un emoji no cambia la semántica. El cambio incompatible se expresa como schema v2 y los documentos v1 se migran en memoria.
+
+## ADR-007 — Dos o cuatro imágenes, nunca tres
+
+Ojos abiertos requieren boca cerrada y abierta. Los ojos cerrados son una pareja opcional completa; si falta una variante se desactiva el parpadeo. Esto evita combinaciones visuales parciales y elimina `expressionControlled`.
+
+## ADR-008 — Presets por datos, no por emoji
+
+`motionPreset` selecciona idle, sorpresa, énfasis o beso. El motor nunca infiere comportamiento del glyph visible. Todos los transforms se aplican al contenedor padre y permanecen deterministas.
+
+## ADR-009 — Proyecto sin autoridad de escritura
+
+La CLI separa `assetRoot` de `cacheRoot`. Las referencias del JSON solo pueden leerse después de comprobar contención canónica; la caché recibe nombres derivados del hash. Esta frontera incluye rutas POSIX, Windows, UNC y enlaces simbólicos/junctions.

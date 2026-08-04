@@ -9,3 +9,4 @@ outputs/*.json
 *.log
 *.tsbuildinfo
 .DS_Store
+.gstack/
