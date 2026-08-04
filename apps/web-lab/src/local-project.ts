@@ -61,6 +61,15 @@ export const saveLocalProject = async (document: PortableEdituberDocumentV1): Pr
   }
 };
 
+export const commitLocalProjectUpdate = async (
+  document: PortableEdituberDocumentV1,
+  apply: () => void,
+  persist: (document: PortableEdituberDocumentV1) => Promise<void> = saveLocalProject,
+): Promise<void> => {
+  await persist(document);
+  apply();
+};
+
 export const loadLocalCharacters = async (): Promise<ImportedCharacter[]> => {
   const database = await openDatabase();
   try {

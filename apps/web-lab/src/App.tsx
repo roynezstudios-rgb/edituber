@@ -38,6 +38,7 @@ import { type ImportedCharacter, parseCharacterPackageFile } from "./character-p
 import { EffectEditor } from "./EffectEditor";
 import { fixtureBundle } from "./fixture";
 import {
+  commitLocalProjectUpdate,
   deleteLocalCharacter,
   loadLocalCharacters,
   loadLocalProject,
@@ -746,44 +747,83 @@ export const App = () => {
         selectionBounds.start,
         selectionBounds.end,
       );
-      setAudioEditUndo({ project: clone(project), envelope: clone(envelope), audioSource });
-      setAudioSource(nextAudioSource);
-      setEnvelope(nextEnvelope);
-      setProject((current) => ({
-        ...current,
+      const nextProject: EdituberProjectV2 = {
+        ...project,
         durationInFrames: nextEnvelope.frames.length,
         audio: {
-          ...current.audio,
+          ...project.audio,
           source: "audio-editado.wav",
-          durationSeconds: nextEnvelope.frames.length / current.fps,
+          durationSeconds: nextEnvelope.frames.length / project.fps,
         },
-        avatar: { ...current.avatar, defaultStateId: timeline.defaultStateId },
+        avatar: { ...project.avatar, defaultStateId: timeline.defaultStateId },
         stateEvents: timeline.events.filter((event) => event.frame < nextEnvelope.frames.length),
-      }));
-      setFrame(Math.min(selectionBounds.start, nextEnvelope.frames.length - 1));
-      setSelectionStartFrame(null);
-      setSelectionEndFrame(null);
+      };
+      const undo = { project: clone(project), envelope: clone(envelope), audioSource };
+      setLocalSaveState("saving");
+      await commitLocalProjectUpdate(
+        {
+          format: "edituber-portable",
+          version: 1,
+          project: nextProject,
+          avatar,
+          envelope: nextEnvelope,
+          audioSource: nextAudioSource,
+        },
+        () => {
+          setAudioEditUndo(undo);
+          setAudioSource(nextAudioSource);
+          setEnvelope(nextEnvelope);
+          setProject(nextProject);
+          setFrame(Math.min(selectionBounds.start, nextEnvelope.frames.length - 1));
+          setSelectionStartFrame(null);
+          setSelectionEndFrame(null);
+          setLocalSaveState("saved");
+        },
+      );
       setStatus(`${formatTime(endSeconds - startSeconds)} eliminados · A y C quedaron unidos`);
     } catch (error) {
+      setLocalSaveState("error");
       setStatus(`No se pudo editar el audio: ${String(error)}`);
     } finally {
       setEditingAudio(false);
     }
   };
 
-  const undoAudioEdit = () => {
+  const undoAudioEdit = async () => {
     if (!audioEditUndo || editingAudio) return;
     audioRef.current?.pause();
     setPlaying(false);
     stopDriver();
-    setProject(audioEditUndo.project);
-    setEnvelope(audioEditUndo.envelope);
-    setAudioSource(audioEditUndo.audioSource);
-    setFrame(0);
-    setSelectionStartFrame(null);
-    setSelectionEndFrame(null);
-    setAudioEditUndo(null);
-    setStatus("Última edición de audio deshecha");
+    setEditingAudio(true);
+    setLocalSaveState("saving");
+    try {
+      await commitLocalProjectUpdate(
+        {
+          format: "edituber-portable",
+          version: 1,
+          project: audioEditUndo.project,
+          avatar,
+          envelope: audioEditUndo.envelope,
+          audioSource: audioEditUndo.audioSource,
+        },
+        () => {
+          setProject(audioEditUndo.project);
+          setEnvelope(audioEditUndo.envelope);
+          setAudioSource(audioEditUndo.audioSource);
+          setFrame(0);
+          setSelectionStartFrame(null);
+          setSelectionEndFrame(null);
+          setAudioEditUndo(null);
+          setLocalSaveState("saved");
+        },
+      );
+      setStatus("Última edición de audio deshecha");
+    } catch (error) {
+      setLocalSaveState("error");
+      setStatus(`No se pudo deshacer la edición: ${String(error)}`);
+    } finally {
+      setEditingAudio(false);
+    }
   };
 
   const startRecording = async () => {
