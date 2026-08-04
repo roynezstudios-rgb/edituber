@@ -479,7 +479,10 @@ input[type="range"]::-webkit-slider-thumb {
   padding-bottom: 26px;
 }
 .timeline-help {
+  border: 0;
+  background: transparent;
   color: #6e8799;
+  cursor: pointer;
   font-size: 10px;
 }
 .ruler {
@@ -511,6 +514,16 @@ input[type="range"]::-webkit-slider-thumb {
     #193245 16.666%
   );
   overflow: visible;
+}
+.timeline-hit-area {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  cursor: crosshair;
 }
 .timeline-progress {
   position: absolute;
@@ -619,7 +632,6 @@ input[type="range"]::-webkit-slider-thumb {
   border: 0;
   text-align: left;
   background: transparent;
-  cursor: pointer;
 }
 .state-main span {
   font-size: 24px;

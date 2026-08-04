@@ -28,6 +28,14 @@ export const validateProject = (candidate: unknown): ValidationResult => {
     }
     const sorted = [...project.stateEvents].sort((a, b) => a.frame - b.frame);
     if (sorted[0]?.frame !== 0) errors.push("/stateEvents must contain a state at frame 0");
+    if (sorted[0]?.stateId !== project.avatar.defaultStateId)
+      errors.push("/stateEvents/0 must match avatar.defaultStateId");
+    for (let index = 1; index < sorted.length; index += 1) {
+      if (sorted[index]?.frame === sorted[index - 1]?.frame)
+        errors.push("/stateEvents must contain at most one event per frame");
+    }
+    if (project.stateEvents.some((event, index) => event !== sorted[index]))
+      errors.push("/stateEvents must be sorted by frame");
     if (project.durationInFrames > Math.ceil(project.audio.durationSeconds * project.fps) + 1)
       errors.push("/durationInFrames cannot exceed the declared audio duration");
   }

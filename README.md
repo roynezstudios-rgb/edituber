@@ -36,7 +36,7 @@ Cada estado necesita dos imágenes transparentes sin deformación:
 
 Para habilitar parpadeo añade también las dos variantes de ojos cerrados. Una pareja parcial se rechaza. El emoji es solo una etiqueta visual; timeline y motor usan el UUID `stateId`.
 
-El JSON portable del Web Lab incluye proyecto, manifiesto y, cuando procede, audio/envolvente como referencias de datos. Los archivos subidos no salen del navegador.
+El JSON portable incluye proyecto, manifiesto y envolvente. Conserva la referencia al audio, pero no incrusta el archivo: al importarlo se vuelve a seleccionar el audio local. Los archivos subidos no salen del navegador.
 
 ## Calidad
 

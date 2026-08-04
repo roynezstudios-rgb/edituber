@@ -15,5 +15,11 @@ export const parsePortableDocument = (source: string): PortableEdituberDocumentV
   const avatarResult = validateAvatarManifest(document.avatar);
   if (!projectResult.valid || !avatarResult.valid)
     throw new Error([...projectResult.errors, ...avatarResult.errors].join("; "));
+  if (!document.envelope || document.envelope.version !== 1)
+    throw new Error("Envelope de audio ausente o no compatible");
+  if (document.envelope.fps !== document.project.fps)
+    throw new Error("El FPS del envelope no coincide con el proyecto");
+  if (document.envelope.frames.length < document.project.durationInFrames)
+    throw new Error("El envelope no cubre la duración del proyecto");
   return document;
 };

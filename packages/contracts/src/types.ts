@@ -150,7 +150,7 @@ export interface PortableEdituberDocumentV1 {
   version: 1;
   project: EdituberProjectV2;
   avatar: AvatarManifestV2;
-  envelope?: AudioEnvelopeV1;
+  envelope: AudioEnvelopeV1;
   audioSource?: string;
 }
 

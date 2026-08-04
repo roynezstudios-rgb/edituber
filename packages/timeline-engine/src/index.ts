@@ -15,7 +15,10 @@ export const normalizeStateEvents = (
 ): StateEvent[] => {
   const byFrame = new Map<number, StateEvent>();
   byFrame.set(0, { frame: 0, stateId: defaultStateId });
-  for (const event of events) byFrame.set(Math.max(0, Math.floor(event.frame)), event);
+  for (const event of events) {
+    const frame = Math.max(0, Math.floor(event.frame));
+    byFrame.set(frame, { ...event, frame });
+  }
   return [...byFrame.values()].sort((a, b) => a.frame - b.frame);
 };
 

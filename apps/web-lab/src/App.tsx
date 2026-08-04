@@ -12,21 +12,15 @@ import {
   removeStateEvent,
   upsertStateEvent,
 } from "@edituber/timeline-engine";
-import {
-  type ChangeEvent,
-  type KeyboardEvent,
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { type ChangeEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { fixtureBundle } from "./fixture";
 import { parsePortableDocument, serializePortableDocument } from "./portable";
 
 const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
 const MAX_DURATION_SECONDS = 600;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_PROJECT_BYTES = 64 * 1024 * 1024;
+const IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/svg+xml"]);
 const localRenderAvailable = import.meta.env.DEV;
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 const formatTime = (seconds: number) =>
@@ -90,11 +84,22 @@ const StateEditor = ({
   onSave: () => void;
 }) => {
   const titleId = useId();
+  const [assetError, setAssetError] = useState("");
   const setImage = async (
     key: "openClosed" | "openOpen" | "closedClosed" | "closedOpen",
     file?: File,
   ) => {
-    if (file) onChange({ ...draft, [key]: await fileAsDataUrl(file) });
+    if (!file) return;
+    if (!IMAGE_TYPES.has(file.type)) {
+      setAssetError("Usa PNG, JPEG, WebP o SVG.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setAssetError("Cada imagen debe pesar 5 MB o menos.");
+      return;
+    }
+    onChange({ ...draft, [key]: await fileAsDataUrl(file) });
+    setAssetError("");
   };
   const imageInput = (
     key: "openClosed" | "openOpen" | "closedClosed" | "closedOpen",
@@ -194,6 +199,7 @@ const StateEditor = ({
         {partialBlink ? (
           <p className="form-error">El parpadeo necesita las dos imágenes de ojos cerrados.</p>
         ) : null}
+        {assetError ? <p className="form-error">{assetError}</p> : null}
         <div className="dialog-actions">
           <button type="button" className="secondary-action" onClick={onCancel}>
             Cancelar
@@ -428,7 +434,6 @@ export const App = () => {
       project,
       avatar,
       envelope,
-      audioSource: audioSource.startsWith("data:") ? audioSource : undefined,
     };
     const url = URL.createObjectURL(
       new Blob([serializePortableDocument(portable)], { type: "application/json" }),
@@ -441,14 +446,22 @@ export const App = () => {
   };
   const importProject = async (file?: File) => {
     if (!file) return;
+    if (file.size > MAX_PROJECT_BYTES) {
+      setStatus("El proyecto supera el límite de 64 MB");
+      return;
+    }
     try {
       const document = parsePortableDocument(await file.text());
       setProject(document.project);
       setAvatar(document.avatar);
-      if (document.envelope) setEnvelope(document.envelope);
-      if (document.audioSource) setAudioSource(document.audioSource);
+      setEnvelope(document.envelope);
+      setAudioSource(document.audioSource ?? "");
       setFrame(0);
-      setStatus(`${file.name} importado`);
+      setStatus(
+        document.audioSource
+          ? `${file.name} importado`
+          : `${file.name} importado · vuelve a seleccionar el archivo de audio`,
+      );
     } catch (error) {
       setStatus(`No se pudo importar: ${String(error)}`);
     }
@@ -485,16 +498,6 @@ export const App = () => {
     () => Array.from({ length: 5 }, (_, index) => (durationSeconds * index) / 4),
     [durationSeconds],
   );
-  const timelineKey = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-      event.preventDefault();
-      seekToFrame(frame + (event.key === "ArrowLeft" ? -1 : 1));
-    } else if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      setPickerFrame(frame);
-    }
-  };
-
   const motion = reducedMotion
     ? { translateY: 0, rotation: 0, scaleX: 1, scaleY: 1 }
     : state.avatar.transform;
@@ -503,7 +506,7 @@ export const App = () => {
       {/* biome-ignore lint/a11y/useMediaCaption: user-supplied narration is a transport source */}
       <audio
         ref={audioRef}
-        src={audioSource}
+        src={audioSource || undefined}
         preload="metadata"
         onEnded={() => {
           setPlaying(false);
@@ -705,17 +708,11 @@ export const App = () => {
                   className={item.id === state.avatar.stateId ? "state-card active" : "state-card"}
                   key={item.id}
                 >
-                  <button
-                    type="button"
-                    className="state-main"
-                    aria-label={`Usar ${item.name} en frame ${frame}`}
-                    aria-pressed={item.id === state.avatar.stateId}
-                    onClick={() => chooseState(item.id)}
-                  >
+                  <div className="state-main">
                     <span>{item.emoji}</span>
                     <b>{item.name}</b>
                     <small>{item.images.eyesClosed ? "4 imágenes" : "2 imágenes"}</small>
-                  </button>
+                  </div>
                   <div className="state-actions">
                     <button
                       type="button"
@@ -787,7 +784,9 @@ export const App = () => {
               <p className="eyebrow">PROYECTO JSON</p>
               <h2>Timeline de estados</h2>
             </div>
-            <span className="timeline-help">Toca la pista para elegir un estado</span>
+            <button type="button" className="timeline-help" onClick={() => setPickerFrame(frame)}>
+              Elegir estado en F{frame}
+            </button>
           </div>
           <div className="ruler">
             {rulerSeconds.map((second) => (
@@ -799,27 +798,26 @@ export const App = () => {
               </span>
             ))}
           </div>
-          <div
-            className="timeline-track"
-            role="slider"
-            tabIndex={0}
-            aria-label="Timeline de estados"
-            aria-valuemin={0}
-            aria-valuemax={project.durationInFrames - 1}
-            aria-valuenow={frame}
-            onKeyDown={timelineKey}
-            onClick={(event) => {
-              const rect = event.currentTarget.getBoundingClientRect();
-              const target = frameFromTimelinePosition(
-                event.clientX,
-                rect.left,
-                rect.width,
-                project.durationInFrames,
-              );
-              seekToFrame(target);
-              setPickerFrame(target);
-            }}
-          >
+          <div className="timeline-track">
+            <button
+              type="button"
+              className="timeline-hit-area"
+              aria-label={`Elegir un estado en el frame actual ${frame}`}
+              onClick={(event) => {
+                const rect = event.currentTarget.getBoundingClientRect();
+                const target =
+                  event.detail === 0
+                    ? frame
+                    : frameFromTimelinePosition(
+                        event.clientX,
+                        rect.left,
+                        rect.width,
+                        project.durationInFrames,
+                      );
+                seekToFrame(target);
+                setPickerFrame(target);
+              }}
+            />
             <div
               className="timeline-progress"
               style={{ width: `${(frame / Math.max(1, project.durationInFrames - 1)) * 100}%` }}

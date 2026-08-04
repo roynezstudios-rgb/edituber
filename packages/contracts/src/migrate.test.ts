@@ -63,4 +63,21 @@ describe("v1 migration", () => {
     expect(project.stateEvents).toEqual([{ frame: 0, stateId }]);
     expect(validateProject(project).valid).toBe(true);
   });
+
+  it("rejects duplicate, unsorted, or mismatched frame-zero events", () => {
+    const avatar = migrateAvatarManifestV1(legacyAvatar);
+    const project = migrateProjectV1(legacyProject, avatar);
+    expect(
+      validateProject({
+        ...project,
+        avatar: { ...project.avatar, defaultStateId: crypto.randomUUID() },
+      }).errors,
+    ).toContain("/stateEvents/0 must match avatar.defaultStateId");
+    expect(
+      validateProject({
+        ...project,
+        stateEvents: [...project.stateEvents, { frame: 0, stateId }],
+      }).errors,
+    ).toContain("/stateEvents must contain at most one event per frame");
+  });
 });
