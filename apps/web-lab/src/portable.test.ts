@@ -18,6 +18,7 @@ describe("portable Web Lab documents", () => {
       project: projectJson as EdituberProjectV2,
       avatar: avatarJson as AvatarManifestV2,
       envelope: envelopeJson as AudioEnvelopeV1,
+      audioSource: "data:audio/wav;base64,AA==",
     };
     const parsed = parsePortableDocument(serializePortableDocument(source));
     expect(parsed).toEqual(source);

@@ -1,5 +1,6 @@
 import { analyzeAudioBuffer } from "@edituber/audio-engine";
 import {
+  type AudioEnvelopeV1,
   type AvatarEffects,
   type AvatarManifestV2,
   type AvatarState,
@@ -16,15 +17,17 @@ import {
   upsertStateEvent,
 } from "@edituber/timeline-engine";
 import { type ChangeEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { decodeAndRemoveAudioRange, remapStateTimelineAfterDelete } from "./audio-edit";
 import { EffectEditor } from "./EffectEditor";
 import { fixtureBundle } from "./fixture";
 import { parsePortableDocument, serializePortableDocument } from "./portable";
+import { WEB_LAB_AUDIO_POLICY } from "./product-policy";
 import { chooseRecordingMimeType, recordingErrorMessage, recordingFileName } from "./recording";
 import { draftFromState, type StateDraft, StateEditor, stateFromDraft } from "./StateEditor";
 
-const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
-const MAX_DURATION_SECONDS = 600;
-const MAX_PROJECT_BYTES = 64 * 1024 * 1024;
+const MAX_AUDIO_BYTES = WEB_LAB_AUDIO_POLICY.maxBytes;
+const MAX_DURATION_SECONDS = WEB_LAB_AUDIO_POLICY.maxDurationSeconds;
+const MAX_PROJECT_BYTES = 160 * 1024 * 1024;
 const MAX_BACKGROUND_BYTES = 5 * 1024 * 1024;
 const BACKGROUND_IMAGE_TYPES = new Set([
   "image/png",
@@ -96,6 +99,12 @@ const probeAudioDuration = (file: File): Promise<number> =>
 
 type RecordingState = "idle" | "requesting" | "recording" | "paused" | "processing";
 
+interface AudioEditSnapshot {
+  project: EdituberProjectV2;
+  envelope: AudioEnvelopeV1;
+  audioSource: string;
+}
+
 export const App = () => {
   const mouthSensitivityId = useId();
   const stockTitleId = useId();
@@ -104,6 +113,7 @@ export const App = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const animationRef = useRef<number | null>(null);
   const importRef = useRef<HTMLInputElement>(null);
+  const timelineViewportRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordingStreamRef = useRef<MediaStream | null>(null);
   const recordingChunksRef = useRef<Blob[]>([]);
@@ -133,6 +143,11 @@ export const App = () => {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [recordingState, setRecordingState] = useState<RecordingState>("idle");
   const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [selectionStartFrame, setSelectionStartFrame] = useState<number | null>(null);
+  const [selectionEndFrame, setSelectionEndFrame] = useState<number | null>(null);
+  const [timelineZoom, setTimelineZoom] = useState(1);
+  const [editingAudio, setEditingAudio] = useState(false);
+  const [audioEditUndo, setAudioEditUndo] = useState<AudioEditSnapshot | null>(null);
 
   const canRecord =
     typeof MediaRecorder !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
@@ -152,6 +167,13 @@ export const App = () => {
   const state = resolveFrameState(bundle, frame);
   const durationSeconds = project.durationInFrames / project.fps;
   const currentSeconds = frame / project.fps;
+  const selectionBounds = useMemo(() => {
+    if (selectionStartFrame === null || selectionEndFrame === null) return null;
+    return {
+      start: Math.min(selectionStartFrame, selectionEndFrame),
+      end: Math.max(selectionStartFrame, selectionEndFrame),
+    };
+  }, [selectionEndFrame, selectionStartFrame]);
   const visualSize = Math.min(project.width, project.height) * 0.76;
   const activeState = avatar.states.find((candidate) => candidate.id === state.avatar.stateId);
   const recordingEffects = project.effects ?? emptyAvatarEffects();
@@ -215,6 +237,16 @@ export const App = () => {
     const safe = Math.max(0, Math.min(project.durationInFrames - 1, Math.floor(next)));
     setFrame(safe);
     if (audioRef.current) audioRef.current.currentTime = safe / project.fps;
+  };
+  const changeTimelineZoom = (next: number) => {
+    const safe = Math.max(1, Math.min(8, next));
+    setTimelineZoom(safe);
+    requestAnimationFrame(() => {
+      const viewport = timelineViewportRef.current;
+      if (!viewport) return;
+      const progress = frame / Math.max(1, project.durationInFrames - 1);
+      viewport.scrollLeft = Math.max(0, progress * viewport.scrollWidth - viewport.clientWidth / 2);
+    });
   };
   const togglePlayback = async () => {
     const audio = audioRef.current;
@@ -360,10 +392,92 @@ export const App = () => {
         ),
       }));
       setFrame(0);
+      setSelectionStartFrame(null);
+      setSelectionEndFrame(null);
+      setAudioEditUndo(null);
       setStatus(`${file.name} · ${nextDuration.toFixed(1)} s · análisis local terminado`);
     } catch (error) {
       setStatus(`No se pudo analizar el audio: ${String(error)}`);
     }
+  };
+
+  const deleteSelectedAudio = async () => {
+    if (
+      !selectionBounds ||
+      selectionBounds.end <= selectionBounds.start ||
+      !audioSource ||
+      editingAudio
+    )
+      return;
+    if (selectionBounds.end - selectionBounds.start >= project.durationInFrames - 1) {
+      setStatus("Deja al menos un fragmento de audio en la timeline");
+      return;
+    }
+    audioRef.current?.pause();
+    setPlaying(false);
+    stopDriver();
+    setEditingAudio(true);
+    setStatus("Eliminando selección y recalculando sincronización…");
+    try {
+      const source = await fetch(audioSource).then((response) => {
+        if (!response.ok) throw new Error("No se pudo leer el audio actual");
+        return response.arrayBuffer();
+      });
+      const startSeconds = selectionBounds.start / project.fps;
+      const endSeconds = selectionBounds.end / project.fps;
+      const editedWave = await decodeAndRemoveAudioRange(source, startSeconds, endSeconds);
+      const nextEnvelope = await analyzeAudioBuffer(
+        editedWave,
+        project.fps,
+        `edit:${project.audio.source}:${selectionBounds.start}-${selectionBounds.end}`,
+      );
+      const nextAudioSource = await fileAsDataUrl(
+        new File([editedWave], "audio-editado.wav", { type: "audio/wav" }),
+      );
+      const timeline = remapStateTimelineAfterDelete(
+        project.stateEvents,
+        project.avatar.defaultStateId,
+        selectionBounds.start,
+        selectionBounds.end,
+      );
+      setAudioEditUndo({ project: clone(project), envelope: clone(envelope), audioSource });
+      setAudioSource(nextAudioSource);
+      setEnvelope(nextEnvelope);
+      setProject((current) => ({
+        ...current,
+        durationInFrames: nextEnvelope.frames.length,
+        audio: {
+          ...current.audio,
+          source: "audio-editado.wav",
+          durationSeconds: nextEnvelope.frames.length / current.fps,
+        },
+        avatar: { ...current.avatar, defaultStateId: timeline.defaultStateId },
+        stateEvents: timeline.events.filter((event) => event.frame < nextEnvelope.frames.length),
+      }));
+      setFrame(Math.min(selectionBounds.start, nextEnvelope.frames.length - 1));
+      setSelectionStartFrame(null);
+      setSelectionEndFrame(null);
+      setStatus(`${formatTime(endSeconds - startSeconds)} eliminados · A y C quedaron unidos`);
+    } catch (error) {
+      setStatus(`No se pudo editar el audio: ${String(error)}`);
+    } finally {
+      setEditingAudio(false);
+    }
+  };
+
+  const undoAudioEdit = () => {
+    if (!audioEditUndo || editingAudio) return;
+    audioRef.current?.pause();
+    setPlaying(false);
+    stopDriver();
+    setProject(audioEditUndo.project);
+    setEnvelope(audioEditUndo.envelope);
+    setAudioSource(audioEditUndo.audioSource);
+    setFrame(0);
+    setSelectionStartFrame(null);
+    setSelectionEndFrame(null);
+    setAudioEditUndo(null);
+    setStatus("Último corte deshecho");
   };
 
   const startRecording = async () => {
@@ -481,6 +595,7 @@ export const App = () => {
       project,
       avatar,
       envelope,
+      audioSource: audioSource || undefined,
     };
     const url = URL.createObjectURL(
       new Blob([serializePortableDocument(portable)], { type: "application/json" }),
@@ -494,7 +609,7 @@ export const App = () => {
   const importProject = async (file?: File) => {
     if (!file) return;
     if (file.size > MAX_PROJECT_BYTES) {
-      setStatus("El proyecto supera el límite de 64 MB");
+      setStatus("El proyecto supera el límite de seguridad de 160 MB");
       return;
     }
     try {
@@ -504,6 +619,9 @@ export const App = () => {
       setEnvelope(document.envelope);
       setAudioSource(document.audioSource ?? "");
       setFrame(0);
+      setSelectionStartFrame(null);
+      setSelectionEndFrame(null);
+      setAudioEditUndo(null);
       setStatus(
         document.audioSource
           ? `${file.name} importado`
@@ -541,10 +659,24 @@ export const App = () => {
       ),
     [envelope],
   );
-  const rulerSeconds = useMemo(
-    () => Array.from({ length: 5 }, (_, index) => (durationSeconds * index) / 4),
-    [durationSeconds],
+  const timelineBars = useMemo(
+    () =>
+      Array.from(
+        { length: 180 },
+        (_, index) =>
+          envelope.frames[
+            Math.min(envelope.frames.length - 1, Math.floor((index / 180) * envelope.frames.length))
+          ]?.amplitudeSmoothed ?? 0,
+      ),
+    [envelope],
   );
+  const rulerSeconds = useMemo(() => {
+    const divisions = Math.min(32, Math.max(4, Math.round(timelineZoom * 4)));
+    return Array.from(
+      { length: divisions + 1 },
+      (_, index) => (durationSeconds * index) / divisions,
+    );
+  }, [durationSeconds, timelineZoom]);
   const motion = reducedMotion
     ? { translateX: 0, translateY: 0, rotation: 0, scaleX: 1, scaleY: 1, brightness: 1 }
     : state.avatar.transform;
@@ -688,7 +820,7 @@ export const App = () => {
                 </span>
                 <span>
                   <b>Subir audio</b>
-                  <small>Local · máximo 100 MB / 10 min</small>
+                  <small>Web Lab / guía · máximo 100 MB / 10 min</small>
                 </span>
               </label>
               <button
@@ -1086,72 +1218,145 @@ export const App = () => {
           <div className="panel-heading compact">
             <div>
               <p className="eyebrow">PROYECTO JSON</p>
-              <h2>Timeline de estados</h2>
-              <small>Cada estado continúa visible hasta el siguiente marcador.</small>
+              <h2>Timeline de audio y estados</h2>
+              <small>
+                Marca A y B para recortar; los estados posteriores se sincronizan solos.
+              </small>
             </div>
-            <button type="button" className="timeline-help" onClick={() => setPickerFrame(frame)}>
-              Elegir estado en F{frame}
-            </button>
-          </div>
-          <div className="ruler">
-            {rulerSeconds.map((second) => (
-              <span
-                key={second}
-                style={{ left: `${durationSeconds ? (second / durationSeconds) * 100 : 0}%` }}
-              >
-                {second.toFixed(second < 10 ? 1 : 0)}s
-              </span>
-            ))}
-          </div>
-          <div className="timeline-track">
-            <button
-              type="button"
-              className="timeline-hit-area"
-              aria-label={`Elegir un estado en el frame actual ${frame}`}
-              onClick={(event) => {
-                const rect = event.currentTarget.getBoundingClientRect();
-                const target =
-                  event.detail === 0
-                    ? frame
-                    : frameFromTimelinePosition(
-                        event.clientX,
-                        rect.left,
-                        rect.width,
-                        project.durationInFrames,
-                      );
-                seekToFrame(target);
-                setPickerFrame(target);
-              }}
-            />
-            <div
-              className="timeline-progress"
-              style={{ width: `${(frame / Math.max(1, project.durationInFrames - 1)) * 100}%` }}
-            />
-            <div
-              className="playhead"
-              style={{ left: `${(frame / Math.max(1, project.durationInFrames - 1)) * 100}%` }}
-            />
-            {project.stateEvents.map((event) => {
-              const markerState = avatar.states.find((item) => item.id === event.stateId);
-              return (
+            <div className="timeline-heading-actions">
+              <button type="button" className="timeline-help" onClick={() => setPickerFrame(frame)}>
+                Estado en F{frame}
+              </button>
+              <fieldset className="zoom-control" aria-label="Zoom de la timeline">
                 <button
                   type="button"
-                  key={`${event.frame}-${event.stateId}`}
-                  className="event-marker"
-                  style={{
-                    left: `${(event.frame / Math.max(1, project.durationInFrames - 1)) * 100}%`,
-                  }}
-                  aria-label={`${markerState?.name ?? "Estado"} en frame ${event.frame}`}
-                  onClick={(click) => {
-                    click.stopPropagation();
-                    seekToFrame(event.frame);
-                    setPickerFrame(event.frame);
-                  }}
+                  aria-label="Alejar timeline"
+                  disabled={timelineZoom <= 1}
+                  onClick={() => changeTimelineZoom(timelineZoom - 0.5)}
                 >
-                  {markerState?.emoji ?? "?"}
+                  −
                 </button>
-              );
-            })}
+                <output>{Math.round(timelineZoom * 100)}%</output>
+                <button
+                  type="button"
+                  aria-label="Acercar timeline"
+                  disabled={timelineZoom >= 8}
+                  onClick={() => changeTimelineZoom(timelineZoom + 0.5)}
+                >
+                  +
+                </button>
+              </fieldset>
+            </div>
+          </div>
+          <fieldset className="audio-edit-toolbar" aria-label="Herramientas de edición de audio">
+            <span>
+              Selección:{" "}
+              {selectionBounds
+                ? `${formatTime(selectionBounds.start / project.fps)} – ${formatTime(selectionBounds.end / project.fps)}`
+                : "sin marcar"}
+            </span>
+            <button type="button" onClick={() => setSelectionStartFrame(frame)}>
+              Marcar inicio A
+            </button>
+            <button type="button" onClick={() => setSelectionEndFrame(frame)}>
+              Marcar fin B
+            </button>
+            <button
+              type="button"
+              className="delete-audio-selection"
+              disabled={
+                !selectionBounds || selectionBounds.end <= selectionBounds.start || editingAudio
+              }
+              onClick={() => void deleteSelectedAudio()}
+            >
+              {editingAudio ? "Procesando…" : "Eliminar A–B"}
+            </button>
+            <button type="button" disabled={!audioEditUndo || editingAudio} onClick={undoAudioEdit}>
+              Deshacer
+            </button>
+          </fieldset>
+          <div className="timeline-viewport" ref={timelineViewportRef}>
+            <div className="timeline-canvas" style={{ width: `${timelineZoom * 100}%` }}>
+              <div className="ruler">
+                {rulerSeconds.map((second) => (
+                  <span
+                    key={second}
+                    style={{ left: `${durationSeconds ? (second / durationSeconds) * 100 : 0}%` }}
+                  >
+                    {second.toFixed(second < 10 ? 1 : 0)}s
+                  </span>
+                ))}
+              </div>
+              <div className="timeline-track">
+                <button
+                  type="button"
+                  className="timeline-hit-area"
+                  aria-label={`Mover cursor de audio desde el frame ${frame}`}
+                  onClick={(event) => {
+                    const rect = event.currentTarget.getBoundingClientRect();
+                    const target =
+                      event.detail === 0
+                        ? frame
+                        : frameFromTimelinePosition(
+                            event.clientX,
+                            rect.left,
+                            rect.width,
+                            project.durationInFrames,
+                          );
+                    seekToFrame(target);
+                  }}
+                />
+                <div className="timeline-waveform" aria-hidden="true">
+                  {timelineBars.map((value, index) => (
+                    <i
+                      key={`${index}-${value}`}
+                      style={{ height: `${Math.max(4, value * 38)}px` }}
+                    />
+                  ))}
+                </div>
+                {selectionBounds ? (
+                  <div
+                    className="audio-selection"
+                    style={{
+                      left: `${(selectionBounds.start / Math.max(1, project.durationInFrames - 1)) * 100}%`,
+                      width: `${((selectionBounds.end - selectionBounds.start) / Math.max(1, project.durationInFrames - 1)) * 100}%`,
+                    }}
+                  >
+                    <b>A</b>
+                    <b>B</b>
+                  </div>
+                ) : null}
+                <div
+                  className="timeline-progress"
+                  style={{ width: `${(frame / Math.max(1, project.durationInFrames - 1)) * 100}%` }}
+                />
+                <div
+                  className="playhead"
+                  style={{ left: `${(frame / Math.max(1, project.durationInFrames - 1)) * 100}%` }}
+                />
+                {project.stateEvents.map((event) => {
+                  const markerState = avatar.states.find((item) => item.id === event.stateId);
+                  return (
+                    <button
+                      type="button"
+                      key={`${event.frame}-${event.stateId}`}
+                      className="event-marker"
+                      style={{
+                        left: `${(event.frame / Math.max(1, project.durationInFrames - 1)) * 100}%`,
+                      }}
+                      aria-label={`${markerState?.name ?? "Estado"} en frame ${event.frame}`}
+                      onClick={(click) => {
+                        click.stopPropagation();
+                        seekToFrame(event.frame);
+                        setPickerFrame(event.frame);
+                      }}
+                    >
+                      {markerState?.emoji ?? "?"}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </section>
 

@@ -587,6 +587,77 @@ input[type="range"]::-webkit-slider-thumb {
   cursor: pointer;
   font-size: 10px;
 }
+.timeline-heading-actions,
+.zoom-control,
+.audio-edit-toolbar {
+  display: flex;
+  align-items: center;
+}
+.timeline-heading-actions {
+  gap: 10px;
+}
+.zoom-control {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #244b61;
+  border-radius: 9px;
+  background: #071722;
+}
+.zoom-control button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: #9feaf0;
+  background: transparent;
+}
+.zoom-control output {
+  min-width: 48px;
+  color: #8ba8b8;
+  text-align: center;
+  font:
+    9px ui-monospace,
+    monospace;
+}
+.audio-edit-toolbar {
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0 34px 8px;
+  padding: 0;
+  border: 0;
+}
+.audio-edit-toolbar > span {
+  margin-right: auto;
+  color: #7894a7;
+  font-size: 9px;
+}
+.audio-edit-toolbar button {
+  min-height: 30px;
+  padding: 6px 9px;
+  border: 1px solid #244b61;
+  border-radius: 8px;
+  color: #a8c4d2;
+  background: #091c28;
+  font-size: 9px;
+}
+.audio-edit-toolbar .delete-audio-selection:not(:disabled) {
+  border-color: #a94a59;
+  color: #ffadba;
+  background: #2a111a;
+}
+.timeline-viewport {
+  width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-color: #28536a #071722;
+}
+.timeline-canvas {
+  min-width: 100%;
+  padding-bottom: 18px;
+}
 .stage.transparent {
   background-image:
     linear-gradient(45deg, #d7e2e8 25%, transparent 25%),
@@ -671,6 +742,47 @@ input[type="range"]::-webkit-slider-thumb {
   border-radius: 10px;
   background: transparent;
   cursor: crosshair;
+}
+.timeline-waveform {
+  position: absolute;
+  inset: 8px 4px;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  opacity: 0.48;
+  pointer-events: none;
+}
+.timeline-waveform i {
+  min-width: 1px;
+  flex: 1;
+  border-radius: 2px;
+  background: #35dbea;
+}
+.audio-selection {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  min-width: 2px;
+  border-inline: 2px solid #ff8295;
+  background: #ff60733d;
+  pointer-events: none;
+}
+.audio-selection b {
+  position: relative;
+  top: -15px;
+  color: #ff9bac;
+  font:
+    10px ui-monospace,
+    monospace;
+}
+.audio-selection b:first-child {
+  transform: translateX(-50%);
+}
+.audio-selection b:last-child {
+  transform: translateX(50%);
 }
 .timeline-progress {
   position: absolute;
@@ -1636,8 +1748,34 @@ select:focus-visible,
   .action-grid {
     grid-template-columns: 1fr;
   }
+  .timeline-heading-actions {
+    align-items: flex-end;
+    flex-direction: column;
+    gap: 5px;
+  }
   .timeline-help {
-    display: none;
+    padding: 0;
+    font-size: 8px;
+  }
+  .zoom-control button {
+    width: 27px;
+    height: 27px;
+  }
+  .zoom-control output {
+    min-width: 42px;
+  }
+  .audio-edit-toolbar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin: 0 16px 8px;
+  }
+  .audio-edit-toolbar > span {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+  .audio-edit-toolbar button {
+    width: 100%;
   }
   .ruler,
   .timeline-track {
