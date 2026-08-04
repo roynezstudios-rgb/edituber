@@ -896,26 +896,85 @@ input[type="range"]::-webkit-slider-thumb {
   text-align: center;
 }
 .guide-cell {
-  min-height: 72px;
-  display: grid;
-  place-items: center;
-  gap: 4px;
-  padding: 7px;
+  position: relative;
+  min-height: 108px;
+  overflow: hidden;
   border: 1px solid #203e50;
   border-radius: 9px;
   background: #071621;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    opacity 140ms ease;
+}
+.guide-cell label {
+  min-height: 108px;
+  display: grid;
+  grid-template-rows: minmax(42px, 1fr) auto auto;
+  place-items: center;
+  gap: 3px;
+  padding: 7px;
+  cursor: pointer;
+}
+.guide-cell input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.guide-cell img {
+  width: 100%;
+  height: 62px;
+  object-fit: contain;
 }
 .guide-cell.active {
   border-color: #2bbaca;
   background: #0c2c39;
 }
 .guide-cell.optional {
-  opacity: 0.42;
+  opacity: 0.62;
+}
+.guide-cell:hover,
+.guide-cell:focus-within {
+  opacity: 1;
+  border-color: #5ce7ef;
+  background: #103542;
 }
 .guide-cell small {
   color: #8ba6b8;
   font-size: 8px;
   text-align: center;
+}
+.guide-cell em {
+  color: #55dbe5;
+  font-size: 7px;
+  font-style: normal;
+  text-align: center;
+}
+.guide-cell.filled em {
+  color: #7896a8;
+}
+.remove-guide-image {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid #315469;
+  border-radius: 50%;
+  background: #071621dd;
+  color: #b8d2df;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.remove-guide-image:hover,
+.remove-guide-image:focus-visible {
+  border-color: #ff7f91;
+  color: #ff9cab;
 }
 .guide-legend {
   display: block;

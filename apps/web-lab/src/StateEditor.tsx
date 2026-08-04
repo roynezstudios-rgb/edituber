@@ -36,12 +36,13 @@ const fileAsDataUrl = (file: File): Promise<string> =>
     reader.readAsDataURL(file);
   });
 
-type ImageSlot = "openClosed" | "openOpen" | "closedClosed" | "closedOpen";
+export type ImageSlot = "openClosed" | "openOpen" | "closedClosed" | "closedOpen";
 
 const slotGuide: Record<
   ImageSlot,
   {
     step: number;
+    shortLabel: string;
     label: string;
     description: string;
     eyes: "open" | "closed";
@@ -50,6 +51,7 @@ const slotGuide: Record<
 > = {
   openClosed: {
     step: 1,
+    shortLabel: "Base",
     label: "Ojos abiertos · silencio",
     description: "Imagen normal cuando no estás hablando",
     eyes: "open",
@@ -57,6 +59,7 @@ const slotGuide: Record<
   },
   openOpen: {
     step: 2,
+    shortLabel: "Boca",
     label: "Ojos abiertos · hablando",
     description: "Se muestra mientras detecta tu voz",
     eyes: "open",
@@ -64,6 +67,7 @@ const slotGuide: Record<
   },
   closedClosed: {
     step: 3,
+    shortLabel: "Parpadeo",
     label: "Parpadeo · silencio",
     description: "Ojos cerrados cuando no estás hablando",
     eyes: "closed",
@@ -71,6 +75,7 @@ const slotGuide: Record<
   },
   closedOpen: {
     step: 4,
+    shortLabel: "Parpadeo + voz",
     label: "Parpadeo · hablando",
     description: "Ojos cerrados mientras detecta tu voz",
     eyes: "closed",
@@ -185,6 +190,16 @@ export const draftWithoutBlinkImages = (
   };
 };
 
+export const draftWithImage = (draft: StateDraft, key: ImageSlot, image: string): StateDraft => {
+  const next = { ...draft, [key]: image };
+  if (key === "openOpen") next.mouthEnabled = true;
+  if (key === "closedClosed" || key === "closedOpen") {
+    next.mouthEnabled = true;
+    next.blinkEnabled = true;
+  }
+  return next;
+};
+
 const modeLabel = (draft: StateDraft): string => {
   if (draft.blinkEnabled) return "Boca y parpadeo · 4 imágenes";
   if (draft.mouthEnabled) return "Boca sincronizada · 2 imágenes";
@@ -260,35 +275,59 @@ export const StateEditor = ({
       setAssetError("Cada imagen debe pesar 5 MB o menos.");
       return;
     }
-    onChange({ ...draft, [key]: await fileAsDataUrl(file) });
+    onChange(draftWithImage(draft, key, await fileAsDataUrl(file)));
     setAssetError("");
   };
-  const imageInput = (key: ImageSlot) => {
+  const removeImageBlock = (key: ImageSlot) => {
+    if (key === "openClosed") return;
+    if (key === "openOpen") {
+      const next = draftWithoutMouthImages(draft, () =>
+        window.confirm("Esto retirará las imágenes de boca y parpadeo. ¿Continuar?"),
+      );
+      if (next) onChange(next);
+      return;
+    }
+    const next = draftWithoutBlinkImages(draft, () =>
+      window.confirm("Se retirarán las dos imágenes de parpadeo. ¿Continuar?"),
+    );
+    if (next) onChange(next);
+  };
+  const imageGuideCell = (key: ImageSlot) => {
     const guide = slotGuide[key];
+    const enabled =
+      key === "openClosed" || (key === "openOpen" ? draft.mouthEnabled : draft.blinkEnabled);
     return (
-      <label className="asset-field">
-        <span className="asset-role">
-          <b className="asset-step">{guide.step}</b>
-          <span>
-            <b>{guide.label}</b>
-            <small>{guide.description}</small>
-          </span>
-          <FaceGuide eyes={guide.eyes} mouth={guide.mouth} />
-        </span>
-        <input
-          type="file"
-          accept="image/png,image/apng,image/jpeg,image/webp,image/gif,image/svg+xml"
-          onChange={(event) => void setImage(key, event.currentTarget.files?.[0])}
-        />
-        {draft[key] ? (
-          <img src={draft[key]} alt={`Vista previa: ${guide.label}`} />
-        ) : (
-          <span className="empty-asset">
-            <i aria-hidden="true">+</i>
-            <small>Seleccionar imagen</small>
-          </span>
-        )}
-      </label>
+      <div
+        className={`guide-cell ${enabled ? "active" : "optional"} ${draft[key] ? "filled" : "empty"}`}
+      >
+        <label>
+          <input
+            type="file"
+            aria-label={`Seleccionar ${guide.label}`}
+            accept="image/png,image/apng,image/jpeg,image/webp,image/gif,image/svg+xml"
+            onChange={(event) => void setImage(key, event.currentTarget.files?.[0])}
+          />
+          {draft[key] ? (
+            <img src={draft[key]} alt={`Vista previa: ${guide.label}`} />
+          ) : (
+            <FaceGuide eyes={guide.eyes} mouth={guide.mouth} />
+          )}
+          <small>
+            {guide.step} · {guide.shortLabel}
+          </small>
+          <em>{draft[key] ? "Clic para reemplazar" : "+ Agregar imagen"}</em>
+        </label>
+        {draft[key] && key !== "openClosed" ? (
+          <button
+            type="button"
+            className="remove-guide-image"
+            aria-label={`Quitar ${guide.label}`}
+            onClick={() => removeImageBlock(key)}
+          >
+            ×
+          </button>
+        ) : null}
+      </div>
     );
   };
 
@@ -405,98 +444,24 @@ export const StateEditor = ({
             </div>
             <div className="image-role-guide">
               <div className="guide-title">
-                <b>Guía visual</b>
-                <span>Combina ojos y boca según lo que esté ocurriendo.</span>
+                <b>Imágenes del estado</b>
+                <span>Haz clic en un cuadro para agregar o reemplazar su imagen.</span>
               </div>
               <div className="guide-matrix">
                 <span />
                 <b>Sin hablar</b>
                 <b>Hablando</b>
                 <b>Ojos abiertos</b>
-                <span className="guide-cell active">
-                  <FaceGuide eyes="open" mouth="closed" />
-                  <small>1 · Base</small>
-                </span>
-                <span className={draft.mouthEnabled ? "guide-cell active" : "guide-cell optional"}>
-                  <FaceGuide eyes="open" mouth="open" />
-                  <small>2 · Boca</small>
-                </span>
+                {imageGuideCell("openClosed")}
+                {imageGuideCell("openOpen")}
                 <b>Ojos cerrados</b>
-                <span className={draft.blinkEnabled ? "guide-cell active" : "guide-cell optional"}>
-                  <FaceGuide eyes="closed" mouth="closed" />
-                  <small>3 · Parpadeo</small>
-                </span>
-                <span className={draft.blinkEnabled ? "guide-cell active" : "guide-cell optional"}>
-                  <FaceGuide eyes="closed" mouth="open" />
-                  <small>4 · Parpadeo + voz</small>
-                </span>
+                {imageGuideCell("closedClosed")}
+                {imageGuideCell("closedOpen")}
               </div>
-              <small className="guide-legend">En color: activo · Atenuado: opcional</small>
+              <small className="guide-legend">
+                La imagen 1 es obligatoria · las imágenes 3 y 4 forman una pareja
+              </small>
             </div>
-            <div className="asset-grid progressive">{imageInput("openClosed")}</div>
-            <label className="progressive-toggle">
-              <input
-                type="checkbox"
-                checked={draft.mouthEnabled}
-                onChange={(event) => {
-                  if (event.currentTarget.checked) {
-                    onChange({ ...draft, mouthEnabled: true });
-                    return;
-                  }
-                  const next = draftWithoutMouthImages(draft, () =>
-                    window.confirm(
-                      "Esto retirará las imágenes opcionales de boca y parpadeo. ¿Continuar?",
-                    ),
-                  );
-                  if (next) onChange(next);
-                }}
-              />
-              <span>
-                <b>Agregar imagen al hablar</b>
-                <small>Activa boca sincronizada.</small>
-              </span>
-            </label>
-            {draft.mouthEnabled ? (
-              <div className="asset-grid progressive">{imageInput("openOpen")}</div>
-            ) : null}
-            {draft.mouthEnabled && draft.openOpen ? (
-              <label className="progressive-toggle">
-                <input
-                  type="checkbox"
-                  checked={draft.blinkEnabled}
-                  onChange={(event) => {
-                    if (event.currentTarget.checked) {
-                      onChange({ ...draft, blinkEnabled: true });
-                      return;
-                    }
-                    const next = draftWithoutBlinkImages(draft, () =>
-                      window.confirm("Se retirarán las dos imágenes de parpadeo. ¿Continuar?"),
-                    );
-                    if (next) onChange(next);
-                  }}
-                />
-                <span>
-                  <b>Agregar parpadeo</b>
-                  <small>Los dos slots se agregan o retiran juntos.</small>
-                </span>
-              </label>
-            ) : null}
-            {draft.blinkEnabled ? (
-              <>
-                <div className="asset-grid progressive blink-pair">
-                  {imageInput("closedClosed")}
-                  {imageInput("closedOpen")}
-                </div>
-                <p className="field-help">
-                  El ritmo del parpadeo se configura una sola vez en Parpadeo general.
-                </p>
-              </>
-            ) : (
-              <p className="field-help">
-                El parpadeo por intercambio de imágenes está deshabilitado en modos de 1 y 2
-                imágenes.
-              </p>
-            )}
             {draft.blinkEnabled && !blinkComplete ? (
               <p className="form-error">Completa juntas las dos imágenes de ojos cerrados.</p>
             ) : null}

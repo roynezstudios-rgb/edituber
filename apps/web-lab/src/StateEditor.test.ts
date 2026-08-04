@@ -2,6 +2,7 @@ import { validateAvatarManifest } from "@edituber/contracts";
 import { describe, expect, it } from "vitest";
 import {
   draftFromState,
+  draftWithImage,
   draftWithoutBlinkImages,
   draftWithoutMouthImages,
   stateFromDraft,
@@ -97,5 +98,18 @@ describe("progressive state editor model", () => {
     const state = stateFromDraft(base);
     expect(state.blink).toBeUndefined();
     expect(state.blinkPolicy).toBeUndefined();
+  });
+
+  it("activates optional image modes directly from the visual matrix", () => {
+    const base = { ...draftFromState(), openClosed: "base.png" };
+    const mouth = draftWithImage(base, "openOpen", "talk.png");
+    expect(mouth).toMatchObject({ mouthEnabled: true, openOpen: "talk.png" });
+
+    const blink = draftWithImage(mouth, "closedClosed", "blink.png");
+    expect(blink).toMatchObject({
+      mouthEnabled: true,
+      blinkEnabled: true,
+      closedClosed: "blink.png",
+    });
   });
 });
