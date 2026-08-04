@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import type { EdituberBundle } from "./index";
 import { resolveFrameState, validateBundle } from "./index";
 
+const stateId = "2522cfb9-01e1-47c6-9e61-e6e5a4ae3ef0";
 const bundle = {
   project: {
-    schemaVersion: 1,
+    schemaVersion: 2,
     projectId: "f86ff1e3-567d-4c44-97a0-71a444c8c51d",
     title: "Test",
     fps: 30,
@@ -16,12 +17,12 @@ const bundle = {
     stage: { backgroundType: "solid", backgroundColor: "#00FF00" },
     avatar: {
       manifest: "avatar.json",
-      defaultExpression: "🙂",
+      defaultStateId: stateId,
       positionX: 0.5,
       positionY: 0.5,
       scale: 1,
     },
-    expressionEvents: [{ frame: 0, emoji: "🙂" }],
+    stateEvents: [{ frame: 0, stateId }],
     settings: {
       blinkEnabled: true,
       talkBounceEnabled: true,
@@ -31,18 +32,19 @@ const bundle = {
     },
   },
   avatar: {
-    schemaVersion: 1,
+    schemaVersion: 2,
     avatarId: "robot",
     name: "Robot fixture",
     canvas: { width: 800, height: 800 },
     shell: "shell.svg",
-    defaultExpression: "🙂",
-    expressions: [
+    defaultStateId: stateId,
+    states: [
       {
-        id: "smile",
+        id: stateId,
+        name: "Smile",
         emoji: "🙂",
         blinkPolicy: "auto",
-        states: { eyesOpenMouthClosed: "closed.svg", eyesOpenMouthOpen: "open.svg" },
+        images: { eyesOpen: { mouthClosed: "closed.svg", mouthOpen: "open.svg" } },
       },
     ],
   },
@@ -73,5 +75,40 @@ describe("bundle", () => {
     expect(state.avatar.shell).toBeTruthy();
     expect(state.avatar.currentFace).toBeTruthy();
     expect(state.avatar.currentOpacity + state.avatar.previousOpacity).toBe(1);
+  });
+
+  it("returns identical shared Web Lab and renderer samples for the same frames", () => {
+    const effects = {
+      mouthClosed: [
+        {
+          id: "18518776-1336-4e22-85fa-6784945ae28c",
+          type: "randomMove" as const,
+          enabled: true,
+          preset: "shaking" as const,
+          amount: 10,
+          velocity: 3,
+        },
+      ],
+      mouthOpen: [],
+      closedToOpen: [],
+      openToClosed: [],
+      stateEnter: [],
+    };
+    const frame = bundle.envelope.frames[0];
+    const avatarState = bundle.avatar.states[0];
+    if (!frame || !avatarState) throw new Error("Test fixture is incomplete");
+    const sharedBundle: EdituberBundle = {
+      ...bundle,
+      avatar: {
+        ...bundle.avatar,
+        states: [{ ...avatarState, effects }],
+      },
+      project: { ...bundle.project, durationInFrames: 4 },
+      envelope: { ...bundle.envelope, frames: [frame, frame, frame, frame] },
+    };
+    const webSamples = [0, 1, 2, 3].map((sample) => resolveFrameState(sharedBundle, sample));
+    const rendererSamples = [0, 1, 2, 3].map((sample) => resolveFrameState(sharedBundle, sample));
+    expect(rendererSamples).toEqual(webSamples);
+    expect(webSamples[3]?.avatar.transform.translateX).not.toBe(0);
   });
 });

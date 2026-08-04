@@ -1,26 +1,61 @@
 # Arquitectura
 
-EDITuber es un monorepo con un contrato compartido y varios adaptadores.
+EDITuber es un monorepo con un contrato v2 compartido y adaptadores de entrada/salida.
 
 ```mermaid
 flowchart TD
-  P[Proyecto JSON v1] --> C[Core y timeline]
+  J[Proyecto v1 o v2] --> V[Validar y migrar a v2]
+  M[Manifiesto v1 o v2] --> V
   A[Audio] --> E[Audio engine]
+  V --> C[Core por frame]
   E --> C
-  C --> R[Contrato de renderer]
-  R --> M[Remotion / CLI]
   C --> W[Web Lab]
-  P -. futuro .-> F[Runtime Flutter]
+  C --> R[Remotion / CLI]
 ```
 
-## Límites
+## Flujo por frame
 
-- `contracts` contiene datos, esquema y validación; no conoce UI ni renderizadores.
-- `audio-engine`, `timeline-engine` y `avatar-engine` son deterministas y no importan Remotion.
-- `core` coordina la carga de datos y el estado de cada frame.
-- `renderer-contract` define la interfaz intercambiable.
-- `renderer-remotion` adapta el estado compartido a video.
-- `web-lab` usa las mismas funciones puras; no mantiene una segunda máquina de estados.
+```text
+stateEvents + frame
+        │
+        ▼
+resolveStateAtFrame ──► currentStateId + crossfade
+        │
+        ▼
+resolveStateImage(state, speaking, blinking)
+        │
+        ├─ 1 imagen: mismo asset, grupos de efectos distintos
+        ├─ 2 imágenes: boca cerrada/abierta, sin blink falso
+        └─ 4 imágenes: boca y parpadeo completos
+        │
+        ▼
+resolveAvatarEffects(state, frame, seed, voz, bordes, énfasis)
+        │
+        └─ translateX/Y + scaleX/Y + rotation + brightness sobre un único padre
+```
 
-La previsualización se gobierna con el frame derivado del tiempo del audio. El reloj del navegador
-solo selecciona el frame; no participa en el cálculo de la animación.
+El reloj del navegador solo selecciona un frame. Las decisiones visuales dependen de frame, FPS, semilla, datos y envolvente; Web y render producen el mismo resultado. `prefers-reduced-motion` neutraliza el movimiento adicional solo en la previsualización web.
+
+## Límites de archivos de la CLI
+
+```text
+argumento --asset-root (confianza del usuario)
+        │
+        ├─ realpath de proyecto, audio, manifiesto e imágenes
+        ├─ comprobación canónica de contención
+        └─ solo lectura
+
+argumento --cache-root o <asset-root>/.edituber-cache
+        │
+        └─ escritura exclusiva <audioHash>-<fps>.envelope.json
+```
+
+El proyecto no controla una ruta de escritura. `audio.envelope` es una referencia opcional de lectura; si falta o está obsoleta, la salida va a la caché confiable.
+
+## Límites de módulos
+
+- `contracts`: datos, esquemas, validación y migración; no conoce UI ni render.
+- `audio-engine`, `timeline-engine` y `avatar-engine`: funciones deterministas sin Remotion. El motor de avatar compone listas en orden estable y reconstruye ruido, blink y transiciones desde frame + semilla, sin estado mutable.
+- `core`: valida el bundle y resuelve el estado del frame.
+- `renderer-remotion`: adapta el estado compartido a video.
+- `web-lab`: administra estados y usa las mismas funciones puras.

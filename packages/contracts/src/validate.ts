@@ -1,11 +1,13 @@
 import Ajv2020, { type ErrorObject } from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
+import avatarSchema from "../schema/avatar-manifest.schema.json";
 import projectSchema from "../schema/edituber-project.schema.json";
-import type { EdituberProjectV1, ValidationResult } from "./types";
+import type { AvatarManifestV2, EdituberProjectV2, ValidationResult } from "./types";
 
 const ajv = new Ajv2020({ allErrors: true, strict: true });
 addFormats(ajv);
-const validateSchema = ajv.compile<EdituberProjectV1>(projectSchema);
+const validateProjectSchema = ajv.compile<EdituberProjectV2>(projectSchema);
+const validateAvatarSchema = ajv.compile<AvatarManifestV2>(avatarSchema);
 
 const formatError = (error: ErrorObject): string =>
   `${error.instancePath || "/"} ${error.message ?? "is invalid"}`;
@@ -16,32 +18,53 @@ export const isSingleGrapheme = (value: string): boolean => {
 };
 
 export const validateProject = (candidate: unknown): ValidationResult => {
-  const validBySchema = validateSchema(candidate);
-  const errors = validBySchema ? [] : (validateSchema.errors ?? []).map(formatError);
-
+  const validBySchema = validateProjectSchema(candidate);
+  const errors = validBySchema ? [] : (validateProjectSchema.errors ?? []).map(formatError);
   if (validBySchema) {
-    const project = candidate as EdituberProjectV1;
-    if (!isSingleGrapheme(project.avatar.defaultExpression)) {
-      errors.push("/avatar/defaultExpression must be exactly one Unicode grapheme");
+    const project = candidate as EdituberProjectV2;
+    for (const [index, event] of project.stateEvents.entries()) {
+      if (event.frame >= project.durationInFrames)
+        errors.push(`/stateEvents/${index}/frame must be inside the project duration`);
     }
-
-    for (const [index, event] of project.expressionEvents.entries()) {
-      if (!isSingleGrapheme(event.emoji)) {
-        errors.push(`/expressionEvents/${index}/emoji must be exactly one Unicode grapheme`);
-      }
-      if (event.frame >= project.durationInFrames) {
-        errors.push(`/expressionEvents/${index}/frame must be inside the project duration`);
-      }
+    const sorted = [...project.stateEvents].sort((a, b) => a.frame - b.frame);
+    if (sorted[0]?.frame !== 0) errors.push("/stateEvents must contain a state at frame 0");
+    if (sorted[0]?.stateId !== project.avatar.defaultStateId)
+      errors.push("/stateEvents/0 must match avatar.defaultStateId");
+    for (let index = 1; index < sorted.length; index += 1) {
+      if (sorted[index]?.frame === sorted[index - 1]?.frame)
+        errors.push("/stateEvents must contain at most one event per frame");
     }
-
-    const sorted = [...project.expressionEvents].sort((a, b) => a.frame - b.frame);
-    if (sorted[0]?.frame !== 0) {
-      errors.push("/expressionEvents must contain a default expression at frame 0");
-    }
-    if (project.durationInFrames > Math.ceil(project.audio.durationSeconds * project.fps) + 1) {
+    if (project.stateEvents.some((event, index) => event !== sorted[index]))
+      errors.push("/stateEvents must be sorted by frame");
+    if (project.durationInFrames > Math.ceil(project.audio.durationSeconds * project.fps) + 1)
       errors.push("/durationInFrames cannot exceed the declared audio duration");
-    }
+    if (project.stage.backgroundType === "image" && !project.stage.backgroundImage)
+      errors.push("/stage/backgroundImage is required for image backgrounds");
   }
+  return { valid: errors.length === 0, errors };
+};
 
+export const validateAvatarManifest = (candidate: unknown): ValidationResult => {
+  const validBySchema = validateAvatarSchema(candidate);
+  const errors = validBySchema ? [] : (validateAvatarSchema.errors ?? []).map(formatError);
+  if (validBySchema) {
+    const avatar = candidate as AvatarManifestV2;
+    const ids = new Set<string>();
+    for (const [index, state] of avatar.states.entries()) {
+      if (ids.has(state.id)) errors.push(`/states/${index}/id must be unique`);
+      ids.add(state.id);
+      if (!isSingleGrapheme(state.emoji))
+        errors.push(`/states/${index}/emoji must be one grapheme`);
+      const openMouth = state.images.eyesOpen.mouthOpen;
+      const closed = state.images.eyesClosed;
+      if (closed && !openMouth)
+        errors.push(`/states/${index}/images cannot contain exactly three images`);
+      if (closed && (!closed.mouthClosed || !closed.mouthOpen))
+        errors.push(`/states/${index}/images/eyesClosed must contain both mouth images`);
+      if (state.blink && state.blink.intervalMinSeconds > state.blink.intervalMaxSeconds)
+        errors.push(`/states/${index}/blink minimum interval must not exceed maximum`);
+    }
+    if (!ids.has(avatar.defaultStateId)) errors.push("/defaultStateId must reference a state");
+  }
   return { valid: errors.length === 0, errors };
 };

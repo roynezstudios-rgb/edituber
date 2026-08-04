@@ -13,11 +13,11 @@
   "dependencies": {
     "@edituber/core": "workspace:*",
     "@edituber/renderer-contract": "workspace:*",
-    "@remotion/bundler": "4.0.332",
-    "@remotion/renderer": "4.0.332",
+    "@remotion/bundler": "4.0.410",
+    "@remotion/renderer": "4.0.410",
     "@sparticuz/chromium": "149.0.0",
     "react": "19.1.1",
-    "remotion": "4.0.332",
+    "remotion": "4.0.410",
     "zod": "3.22.3"
   }
 }

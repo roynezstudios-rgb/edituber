@@ -1,42 +1,124 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "avatarId": "9223eae6-96a7-4cab-8906-e5cf35cf0f19",
   "name": "Robot Cyan Fixture",
   "canvas": { "width": 800, "height": 800 },
   "shell": "shell.svg",
-  "defaultExpression": "🙂",
-  "expressions": [
+  "defaultStateId": "2522cfb9-01e1-47c6-9e61-e6e5a4ae3ef0",
+  "states": [
     {
       "id": "2522cfb9-01e1-47c6-9e61-e6e5a4ae3ef0",
+      "name": "Sonrisa",
       "emoji": "🙂",
       "blinkPolicy": "auto",
-      "states": {
-        "eyesOpenMouthClosed": "faces/smile-open-eyes-closed-mouth.svg",
-        "eyesOpenMouthOpen": "faces/smile-open-eyes-open-mouth.svg",
-        "eyesClosedMouthClosed": "faces/smile-closed-eyes-closed-mouth.svg",
-        "eyesClosedMouthOpen": "faces/smile-closed-eyes-open-mouth.svg"
+      "motionPreset": "idle",
+      "images": {
+        "eyesOpen": {
+          "mouthClosed": "faces/smile-open-eyes-closed-mouth.svg",
+          "mouthOpen": "faces/smile-open-eyes-open-mouth.svg"
+        },
+        "eyesClosed": {
+          "mouthClosed": "faces/smile-closed-eyes-closed-mouth.svg",
+          "mouthOpen": "faces/smile-closed-eyes-open-mouth.svg"
+        }
       }
     },
     {
       "id": "c114b68a-1653-4186-ad11-f380d2ea9379",
+      "name": "Pensando",
       "emoji": "🤔",
       "blinkPolicy": "auto",
-      "states": {
-        "eyesOpenMouthClosed": "faces/think-open-eyes-closed-mouth.svg",
-        "eyesOpenMouthOpen": "faces/think-open-eyes-open-mouth.svg",
-        "eyesClosedMouthClosed": "faces/think-closed-eyes-closed-mouth.svg",
-        "eyesClosedMouthOpen": "faces/think-closed-eyes-open-mouth.svg"
+      "motionPreset": "idle",
+      "images": {
+        "eyesOpen": {
+          "mouthClosed": "faces/think-open-eyes-closed-mouth.svg",
+          "mouthOpen": "faces/think-open-eyes-open-mouth.svg"
+        },
+        "eyesClosed": {
+          "mouthClosed": "faces/think-closed-eyes-closed-mouth.svg",
+          "mouthOpen": "faces/think-closed-eyes-open-mouth.svg"
+        }
       }
     },
     {
       "id": "041731df-94b8-492b-a8cc-9e4300c4dc2f",
+      "name": "Sorpresa",
       "emoji": "😮",
       "blinkPolicy": "auto",
-      "states": {
-        "eyesOpenMouthClosed": "faces/surprise-open-eyes-closed-mouth.svg",
-        "eyesOpenMouthOpen": "faces/surprise-open-eyes-open-mouth.svg",
-        "eyesClosedMouthClosed": "faces/surprise-closed-eyes-closed-mouth.svg",
-        "eyesClosedMouthOpen": "faces/surprise-closed-eyes-open-mouth.svg"
+      "motionPreset": "surprise",
+      "images": {
+        "eyesOpen": {
+          "mouthClosed": "faces/surprise-open-eyes-closed-mouth.svg",
+          "mouthOpen": "faces/surprise-open-eyes-open-mouth.svg"
+        },
+        "eyesClosed": {
+          "mouthClosed": "faces/surprise-closed-eyes-closed-mouth.svg",
+          "mouthOpen": "faces/surprise-closed-eyes-open-mouth.svg"
+        }
+      }
+    },
+    {
+      "id": "ba1ef770-0f9c-4a62-a358-c39653e9ec42",
+      "name": "Simple reactivo",
+      "emoji": "✨",
+      "blinkPolicy": "disabled",
+      "blink": {
+        "intervalMinSeconds": 2.3,
+        "intervalMaxSeconds": 5,
+        "durationMilliseconds": 130,
+        "syncAnimatedImages": true,
+        "playAnimationToEnd": false
+      },
+      "imageMode": "smooth",
+      "resetAnimationOnEnter": true,
+      "effects": {
+        "mouthClosed": [
+          {
+            "id": "18518776-1336-4e22-85fa-6784945ae28c",
+            "type": "waveMove",
+            "enabled": true,
+            "preset": "breathing",
+            "amountX": 0,
+            "amountY": 4,
+            "periodSeconds": 2.4,
+            "phaseOffset": 0
+          }
+        ],
+        "mouthOpen": [
+          {
+            "id": "02a21d60-704f-411a-93e6-5c86ea9a36e8",
+            "type": "jump",
+            "enabled": true,
+            "preset": "happy",
+            "amountX": 2,
+            "amountY": 24,
+            "frequencyHz": 2.4
+          }
+        ],
+        "closedToOpen": [
+          {
+            "id": "5be1f67b-8ae1-47b7-b3ce-c49f297bff8a",
+            "type": "jump",
+            "enabled": true,
+            "amount": 18,
+            "durationMilliseconds": 180
+          }
+        ],
+        "openToClosed": [],
+        "stateEnter": [
+          {
+            "id": "7d935dc7-a1ae-4337-92ef-f1c4e90aa6e8",
+            "type": "stateEnter",
+            "enabled": true,
+            "amount": 20,
+            "durationMilliseconds": 280
+          }
+        ]
+      },
+      "images": {
+        "eyesOpen": {
+          "mouthClosed": "faces/smile-open-eyes-closed-mouth.svg"
+        }
       }
     }
   ]

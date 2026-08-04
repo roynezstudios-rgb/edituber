@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "projectId": "e21622fd-6f57-4c6d-a1cc-123b92652674",
-  "title": "Demostración EDITuber",
+  "projectId": "59eb3e0d-5fbf-40d8-9c04-3c7db750aa25",
+  "title": "Demo de una imagen",
   "fps": 30,
   "width": 1080,
   "height": 1080,
@@ -15,21 +15,18 @@
   "stage": { "backgroundType": "solid", "backgroundColor": "#00FF00" },
   "avatar": {
     "manifest": "avatars/robot/avatar.json",
-    "defaultStateId": "2522cfb9-01e1-47c6-9e61-e6e5a4ae3ef0",
+    "defaultStateId": "ba1ef770-0f9c-4a62-a358-c39653e9ec42",
     "positionX": 0.5,
     "positionY": 0.52,
     "scale": 1
   },
-  "stateEvents": [
-    { "frame": 0, "stateId": "2522cfb9-01e1-47c6-9e61-e6e5a4ae3ef0" },
-    { "frame": 60, "stateId": "c114b68a-1653-4186-ad11-f380d2ea9379" },
-    { "frame": 120, "stateId": "041731df-94b8-492b-a8cc-9e4300c4dc2f" }
-  ],
+  "stateEvents": [{ "frame": 0, "stateId": "ba1ef770-0f9c-4a62-a358-c39653e9ec42" }],
   "settings": {
     "blinkEnabled": true,
     "talkBounceEnabled": true,
     "mouthSensitivity": 0.55,
     "transitionFrames": 8,
-    "bouncePreset": "normal"
+    "bouncePreset": "normal",
+    "motionScale": 1
   }
 }

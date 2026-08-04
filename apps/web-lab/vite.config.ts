@@ -20,6 +20,8 @@ const runRender = (): Promise<void> =>
         "render",
         "--project",
         "fixtures/projects/demo.edituber.json",
+        "--asset-root",
+        "fixtures",
         "--output",
         "outputs/web-lab-demo.mp4",
       ],
