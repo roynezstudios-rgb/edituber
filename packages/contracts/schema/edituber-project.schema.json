@@ -78,6 +78,9 @@
         }
       }
     },
+    "effects": {
+      "$ref": "https://edituber.dev/schemas/avatar-manifest-v2.json#/$defs/effects"
+    },
     "settings": {
       "type": "object",
       "additionalProperties": false,

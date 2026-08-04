@@ -21,6 +21,7 @@ describe("portable Web Lab documents", () => {
     };
     const parsed = parsePortableDocument(serializePortableDocument(source));
     expect(parsed).toEqual(source);
+    expect(parsed.project.effects).toEqual(source.project.effects);
     expect(parsed.avatar.states.some((state) => !state.images.eyesOpen.mouthOpen)).toBe(true);
     expect(parsed.avatar.states.some((state) => Boolean(state.images.eyesClosed))).toBe(true);
     expect(parsed.avatar.states.find((state) => state.effects)?.effects?.mouthOpen[0]?.preset).toBe(

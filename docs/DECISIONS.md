@@ -33,9 +33,9 @@ El emoji y el nombre son presentación editable. Proyecto y timeline referencian
 
 La imagen base es la única obligatoria. `mouthOpen` habilita boca sincronizada; `eyesClosed` solo puede existir como pareja completa cuando `mouthOpen` existe. Un estado simple conserva el asset visible pero cambia sus efectos con la voz. Esto evita combinaciones parciales y elimina `expressionControlled`.
 
-## ADR-008 — Listas de efectos por datos, no por emoji
+## ADR-008 — Listas de efectos globales por datos, no por emoji
 
-Cinco listas pertenecen al estado: silencio, voz, abrir, cerrar y entrar. Los presets solo rellenan parámetros editables; el motor compone matemáticamente todos los efectos sobre el contenedor padre. `motionPreset` queda como ruta de compatibilidad para JSON v2 creados antes de estas listas y nunca se infiere comportamiento del glyph visible.
+Cinco listas pertenecen al proyecto completo: silencio, voz, abrir, cerrar y entrar. Cambiar el estado o emoji de la timeline no sustituye los efectos. Los presets solo rellenan parámetros editables; el motor compone matemáticamente todos los efectos sobre el contenedor padre. Las listas antiguas dentro de `AvatarState` y `motionPreset` quedan como ruta de compatibilidad para JSON v2 previos y nunca se infiere comportamiento del glyph visible.
 
 ## ADR-009 — Proyecto sin autoridad de escritura
 

@@ -29,10 +29,12 @@ resolveStateImage(state, speaking, blinking)
         └─ 4 imágenes: boca y parpadeo completos
         │
         ▼
-resolveAvatarEffects(state, frame, seed, voz, bordes, énfasis)
+resolveAvatarEffects(project.effects, state, frame, seed, voz, bordes, énfasis)
         │
         └─ translateX/Y + scaleX/Y + rotation + brightness sobre un único padre
 ```
+
+`project.effects` se aplica durante toda la grabación y no cambia cuando la timeline selecciona otro estado. Los efectos antiguos guardados dentro de un estado solo se usan como compatibilidad cuando el proyecto todavía no contiene la configuración global.
 
 El reloj del navegador solo selecciona un frame. Las decisiones visuales dependen de frame, FPS, semilla, datos y envolvente; Web y render producen el mismo resultado. `prefers-reduced-motion` neutraliza el movimiento adicional solo en la previsualización web.
 

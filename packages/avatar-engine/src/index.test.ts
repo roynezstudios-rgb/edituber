@@ -113,6 +113,36 @@ describe("avatar image modes", () => {
 });
 
 describe("deterministic blink, effects, and transitions", () => {
+  it("gives recording-wide project effects priority over state-specific effects", () => {
+    const stateEffects = emptyAvatarEffects();
+    stateEffects.mouthClosed = [
+      {
+        id: "1c3bb0fc-7597-4478-b568-e3c5aa43773f",
+        type: "darken",
+        enabled: true,
+        preset: "custom",
+        amount: 0.7,
+      },
+    ];
+    const recordingEffects = emptyAvatarEffects();
+    recordingEffects.mouthClosed = [
+      {
+        id: "54ee2f5f-f4bb-46ba-a322-f7da817be4c7",
+        type: "darken",
+        enabled: true,
+        preset: "custom",
+        amount: 0.2,
+      },
+    ];
+    const result = resolveAvatarAtFrame(
+      { ...project, effects: recordingEffects },
+      { ...manifest, states: [{ ...fourImageState, effects: stateEffects }] },
+      undefined,
+      6,
+    );
+    expect(result.transform.brightness).toBeCloseTo(0.8);
+  });
+
   it("derives a stable per-state seed from the project seed", () => {
     expect(deriveStateSeed(7302026, stateId)).toBe(deriveStateSeed(7302026, stateId));
     expect(deriveStateSeed(7302026, stateId)).not.toBe(

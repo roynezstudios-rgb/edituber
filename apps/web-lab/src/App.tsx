@@ -1,9 +1,11 @@
 import { analyzeAudioBuffer } from "@edituber/audio-engine";
-import type {
-  AvatarManifestV2,
-  AvatarState,
-  EdituberProjectV2,
-  PortableEdituberDocumentV1,
+import {
+  type AvatarEffects,
+  type AvatarManifestV2,
+  type AvatarState,
+  type EdituberProjectV2,
+  emptyAvatarEffects,
+  type PortableEdituberDocumentV1,
 } from "@edituber/contracts";
 import { type EdituberBundle, resolveFrameState } from "@edituber/core";
 import {
@@ -12,6 +14,7 @@ import {
   upsertStateEvent,
 } from "@edituber/timeline-engine";
 import { type ChangeEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { EffectEditor } from "./EffectEditor";
 import { fixtureBundle } from "./fixture";
 import { parsePortableDocument, serializePortableDocument } from "./portable";
 import { chooseRecordingMimeType, recordingErrorMessage, recordingFileName } from "./recording";
@@ -30,6 +33,16 @@ const BACKGROUND_IMAGE_TYPES = new Set([
 ]);
 const localRenderAvailable = import.meta.env.DEV;
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+const effectsForRecording = (project: EdituberProjectV2, avatar: AvatarManifestV2): AvatarEffects =>
+  clone(
+    project.effects ??
+      avatar.states.find((state) => state.effects)?.effects ??
+      emptyAvatarEffects(),
+  );
+const withRecordingEffects = (
+  project: EdituberProjectV2,
+  avatar: AvatarManifestV2,
+): EdituberProjectV2 => ({ ...project, effects: effectsForRecording(project, avatar) });
 const formatTime = (seconds: number) =>
   `${Math.floor(Math.max(0, seconds) / 60)}:${String(Math.floor(Math.max(0, seconds) % 60)).padStart(2, "0")}`;
 
@@ -75,7 +88,9 @@ export const App = () => {
   const recordingMimeTypeRef = useRef("");
   const recordingSecondsRef = useRef(0);
   const discardRecordingRef = useRef(false);
-  const [project, setProject] = useState<EdituberProjectV2>(() => clone(fixtureBundle.project));
+  const [project, setProject] = useState<EdituberProjectV2>(() =>
+    withRecordingEffects(clone(fixtureBundle.project), fixtureBundle.avatar),
+  );
   const [avatar, setAvatar] = useState<AvatarManifestV2>(() => clone(fixtureBundle.avatar));
   const [envelope, setEnvelope] = useState(fixtureBundle.envelope);
   const [audioSource, setAudioSource] = useState(fixtureBundle.audioSource);
@@ -115,6 +130,7 @@ export const App = () => {
   const currentSeconds = frame / project.fps;
   const visualSize = Math.min(project.width, project.height) * 0.76;
   const activeState = avatar.states.find((candidate) => candidate.id === state.avatar.stateId);
+  const recordingEffects = project.effects ?? emptyAvatarEffects();
 
   const stopDriver = useCallback(() => {
     if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
@@ -218,6 +234,7 @@ export const App = () => {
     if (!stateDraft) return;
     const id = stateDraft.id ?? crypto.randomUUID();
     const next = stateFromDraft(stateDraft, id);
+    delete next.effects;
     setAvatar((current) => ({
       ...current,
       states: stateDraft.id
@@ -229,6 +246,7 @@ export const App = () => {
   };
   const duplicateState = (source: AvatarState) => {
     const duplicate = { ...clone(source), id: crypto.randomUUID(), name: `${source.name} copia` };
+    delete duplicate.effects;
     setAvatar((current) => ({ ...current, states: [...current.states, duplicate] }));
     setStatus(`${duplicate.name} añadido`);
   };
@@ -440,7 +458,7 @@ export const App = () => {
     }
     try {
       const document = parsePortableDocument(await file.text());
-      setProject(document.project);
+      setProject(withRecordingEffects(document.project, document.avatar));
       setAvatar(document.avatar);
       setEnvelope(document.envelope);
       setAudioSource(document.audioSource ?? "");
@@ -870,7 +888,9 @@ export const App = () => {
               <button
                 type="button"
                 className="add-state"
-                onClick={() => setStateDraft(draftFromState())}
+                onClick={() =>
+                  setStateDraft({ ...draftFromState(), effects: clone(recordingEffects) })
+                }
               >
                 + Añadir
               </button>
@@ -896,7 +916,9 @@ export const App = () => {
                     <button
                       type="button"
                       aria-label={`Editar ${item.name}`}
-                      onClick={() => setStateDraft(draftFromState(item))}
+                      onClick={() =>
+                        setStateDraft({ ...draftFromState(item), effects: clone(recordingEffects) })
+                      }
                     >
                       Editar
                     </button>
@@ -1027,6 +1049,16 @@ export const App = () => {
               );
             })}
           </div>
+        </section>
+
+        <section className="global-effects-panel panel">
+          <EffectEditor
+            value={recordingEffects}
+            onChange={(effects) => {
+              setProject((current) => ({ ...current, effects: clone(effects) }));
+              setStatus("Efectos actualizados para toda la grabación");
+            }}
+          />
         </section>
       </div>
 

@@ -6,8 +6,12 @@ import type { AvatarManifestV2, EdituberProjectV2, ValidationResult } from "./ty
 
 const ajv = new Ajv2020({ allErrors: true, strict: true });
 addFormats(ajv);
+ajv.addSchema(avatarSchema);
 const validateProjectSchema = ajv.compile<EdituberProjectV2>(projectSchema);
-const validateAvatarSchema = ajv.compile<AvatarManifestV2>(avatarSchema);
+const validateAvatarSchema = ajv.getSchema<AvatarManifestV2>(
+  "https://edituber.dev/schemas/avatar-manifest-v2.json",
+);
+if (!validateAvatarSchema) throw new Error("Avatar schema could not be registered");
 
 const formatError = (error: ErrorObject): string =>
   `${error.instancePath || "/"} ${error.message ?? "is invalid"}`;

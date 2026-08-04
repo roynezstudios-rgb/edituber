@@ -39,6 +39,7 @@ export interface AvatarLayerState {
 
 export interface EffectResolverInput {
   state: AvatarState;
+  effects?: AvatarEffects;
   frame: number;
   fps: number;
   isSpeaking: boolean;
@@ -221,7 +222,7 @@ const applyTransitions = (
 
 export const resolveAvatarEffects = (input: EffectResolverInput): AvatarTransform => {
   const output = identityTransform();
-  const effects: AvatarEffects | undefined = input.state.effects;
+  const effects = input.effects ?? input.state.effects;
   if (!effects) return output;
   for (const effect of input.isSpeaking ? effects.mouthOpen : effects.mouthClosed)
     applyEffect(output, effect, input);
@@ -316,9 +317,11 @@ export const resolveAvatarAtFrame = (
     Boolean(current.images.eyesClosed) &&
     isBlinkClosedAtFrame(frame, project.fps, blinkSeed, current.blink ?? defaultBlinkSettings());
   const previous = timeline.previousStateId ? stateById(manifest, timeline.previousStateId) : null;
-  const transform = current.effects
+  const activeEffects = project.effects ?? current.effects;
+  const transform = activeEffects
     ? resolveAvatarEffects({
         state: current,
+        effects: activeEffects,
         frame,
         fps: project.fps,
         isSpeaking: mouthOpen,

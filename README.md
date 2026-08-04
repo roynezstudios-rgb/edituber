@@ -7,7 +7,7 @@ Motor determinista para convertir audio, un avatar 2D y eventos de estado en una
 - Proyecto y manifiesto de avatar JSON v2, validados con JSON Schema.
 - Migración en memoria de proyectos/manifiestos v1.
 - Stock ilimitado de estados con UUID estable, nombre, emoji y exactamente 1, 2 o 4 imágenes.
-- Efectos por estado para silencio, voz, apertura, cierre y entrada desde timeline; composición y parpadeo deterministas.
+- Efectos globales para toda la grabación, con grupos de silencio, voz, apertura, cierre y entrada desde timeline; composición y parpadeo deterministas.
 - Timeline por `stateId`: clic para añadir/cambiar, eliminación explícita y selector responsive.
 - Web Lab con importación/exportación portable, carga local de audio, grabación directa desde el micrófono, fondo y sensibilidad.
 - CLI por proyecto o en modo directo `audio + avatar`.
@@ -37,7 +37,7 @@ El editor crece por bloques y la única imagen obligatoria es la base:
 2. **Boca sincronizada:** base + imagen al hablar.
 3. **Boca y parpadeo:** las dos anteriores + la pareja completa de ojos cerrados.
 
-Tres imágenes, cero imágenes y más de cuatro se rechazan. Los modos de una y dos imágenes no inventan parpadeo. Cada estado configura intervalo/duración de blink, render suave o pixel y listas ordenadas de `randomMove`, `waveMove`, `jump`, `waveRotate`, `darken`, `squashStretch` y `emphasis`, además de transiciones de voz y entrada. El emoji es solo una etiqueta visual; timeline y motor usan el UUID `stateId`.
+Tres imágenes, cero imágenes y más de cuatro se rechazan. Los modos de una y dos imágenes no inventan parpadeo. Cada estado configura intervalo/duración de blink y render suave o pixel. Las listas ordenadas de `randomMove`, `waveMove`, `jump`, `waveRotate`, `darken`, `squashStretch` y `emphasis` pertenecen al proyecto completo, por lo que continúan activas al cambiar de estado. El emoji es solo una etiqueta visual; timeline y motor usan el UUID `stateId`.
 
 GIF, APNG y WebP animado se aceptan como assets portables. La sincronización y reinicio deterministas de sus frames internos todavía no están implementados en Remotion; esas opciones se conservan en el contrato sin bloquear PNG/JPEG/SVG/WebP estático.
 

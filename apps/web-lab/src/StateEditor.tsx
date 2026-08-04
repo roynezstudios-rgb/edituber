@@ -12,7 +12,6 @@ import {
   emptyAvatarEffects,
 } from "@edituber/contracts";
 import { useEffect, useId, useRef, useState } from "react";
-import { EffectEditor } from "./EffectEditor";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const IMAGE_TYPES = new Set([
@@ -613,10 +612,9 @@ export const StateEditor = ({
           </aside>
         </div>
 
-        <EffectEditor
-          value={draft.effects}
-          onChange={(effects) => onChange({ ...draft, effects })}
-        />
+        <p className="state-effects-scope">
+          Los efectos pertenecen a toda la grabación y se configuran desde el panel principal.
+        </p>
         <div className="dialog-actions">
           <button type="button" className="secondary-action" onClick={onCancel}>
             Cancelar

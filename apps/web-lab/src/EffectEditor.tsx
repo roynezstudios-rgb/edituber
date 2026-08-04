@@ -189,11 +189,14 @@ export const EffectEditor = ({
     <section className="effects-editor" aria-labelledby={titleId}>
       <div className="effects-heading">
         <div>
-          <p className="eyebrow">MOTOR DETERMINISTA</p>
-          <h3 id={titleId}>Efectos</h3>
+          <p className="eyebrow">TODA LA GRABACIÓN</p>
+          <h3 id={titleId}>Efectos globales</h3>
         </div>
         <span>{activeCount} activos</span>
       </div>
+      <p className="global-effects-help">
+        Esta configuración continúa activa aunque cambies de estado o emoji en la timeline.
+      </p>
       <div className="effect-tabs" role="tablist" aria-label="Grupos de efectos">
         {groups.map((candidate) => (
           <button

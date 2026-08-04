@@ -86,6 +86,8 @@ export interface EdituberProjectV2 {
     scale: number;
   };
   stateEvents: StateEvent[];
+  /** Effects applied to the complete recording, independent of timeline state changes. */
+  effects?: AvatarEffects;
   settings: ProjectSettings;
 }
 
