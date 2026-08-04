@@ -1,6 +1,19 @@
 export type BlinkPolicy = "auto" | "disabled";
 export type BouncePreset = "soft" | "normal" | "emphasis";
 export type MotionPreset = "idle" | "surprise" | "emphasis" | "kiss";
+export type ImageMode = "smooth" | "pixel";
+export type EffectPreset =
+  | "custom"
+  | "relaxed"
+  | "shaking"
+  | "shakingHard"
+  | "breathing"
+  | "circling"
+  | "bouncy"
+  | "happy"
+  | "agitated"
+  | "swaying"
+  | "swayingHard";
 
 export interface StateEvent {
   frame: number;
@@ -25,6 +38,7 @@ export interface ProjectSettings {
   mouthSensitivity: number;
   transitionFrames: number;
   bouncePreset: BouncePreset;
+  motionScale?: number;
 }
 
 export interface EdituberProjectV1 {
@@ -59,7 +73,11 @@ export interface EdituberProjectV2 {
   durationInFrames: number;
   seed: number;
   audio: ProjectAudio;
-  stage: { backgroundType: "solid"; backgroundColor: string };
+  stage: {
+    backgroundType: "solid" | "transparent" | "image";
+    backgroundColor: string;
+    backgroundImage?: string;
+  };
   avatar: {
     manifest: string;
     defaultStateId: string;
@@ -92,9 +110,97 @@ export interface AudioEnvelopeV1 {
   frames: AudioEnvelopeFrame[];
 }
 
-export interface AvatarStateImages {
-  eyesOpen: { mouthClosed: string; mouthOpen: string };
-  eyesClosed?: { mouthClosed: string; mouthOpen: string };
+type BaseImage = { mouthClosed: string };
+type MouthPair = { mouthClosed: string; mouthOpen: string };
+export type AvatarStateImages =
+  | { eyesOpen: BaseImage & { mouthOpen?: never }; eyesClosed?: never }
+  | { eyesOpen: MouthPair; eyesClosed?: never }
+  | { eyesOpen: MouthPair; eyesClosed: MouthPair };
+
+export interface BlinkSettings {
+  intervalMinSeconds: number;
+  intervalMaxSeconds: number;
+  durationMilliseconds: number;
+  syncAnimatedImages: boolean;
+  playAnimationToEnd: boolean;
+}
+
+interface EffectBase {
+  id: string;
+  enabled: boolean;
+  preset: EffectPreset;
+}
+
+export interface RandomMoveEffect extends EffectBase {
+  type: "randomMove";
+  amount: number;
+  velocity: number;
+}
+
+export interface WaveMoveEffect extends EffectBase {
+  type: "waveMove";
+  amountX: number;
+  amountY: number;
+  periodSeconds: number;
+  phaseOffset: number;
+}
+
+export interface JumpEffect extends EffectBase {
+  type: "jump";
+  amountX: number;
+  amountY: number;
+  frequencyHz: number;
+}
+
+export interface WaveRotateEffect extends EffectBase {
+  type: "waveRotate";
+  amountDegrees: number;
+  periodSeconds: number;
+  phaseOffset: number;
+}
+
+export interface DarkenEffect extends EffectBase {
+  type: "darken";
+  amount: number;
+}
+
+export interface SquashStretchEffect extends EffectBase {
+  type: "squashStretch";
+  amount: number;
+  frequencyHz: number;
+  axisBalance: number;
+}
+
+export interface EmphasisEffect extends EffectBase {
+  type: "emphasis";
+  amount: number;
+  durationMilliseconds: number;
+  cooldownMilliseconds: number;
+}
+
+export type AvatarEffect =
+  | RandomMoveEffect
+  | WaveMoveEffect
+  | JumpEffect
+  | WaveRotateEffect
+  | DarkenEffect
+  | SquashStretchEffect
+  | EmphasisEffect;
+
+export interface AvatarTransition {
+  id: string;
+  type: "jump" | "stateEnter";
+  enabled: boolean;
+  amount: number;
+  durationMilliseconds: number;
+}
+
+export interface AvatarEffects {
+  mouthClosed: AvatarEffect[];
+  mouthOpen: AvatarEffect[];
+  closedToOpen: AvatarTransition[];
+  openToClosed: AvatarTransition[];
+  stateEnter: AvatarTransition[];
 }
 
 export interface AvatarState {
@@ -103,6 +209,11 @@ export interface AvatarState {
   emoji: string;
   images: AvatarStateImages;
   blinkPolicy?: BlinkPolicy;
+  blink?: BlinkSettings;
+  imageMode?: ImageMode;
+  resetAnimationOnEnter?: boolean;
+  effects?: AvatarEffects;
+  /** @deprecated Kept so v2 documents created before effect lists remain readable. */
   motionPreset?: MotionPreset;
 }
 

@@ -1,7 +1,9 @@
+import { defaultBlinkSettings } from "./defaults";
 import type {
   AvatarManifestV1,
   AvatarManifestV2,
   AvatarState,
+  AvatarStateImages,
   EdituberProjectV1,
   EdituberProjectV2,
   MotionPreset,
@@ -13,27 +15,33 @@ const legacyPreset = (emoji: string): MotionPreset => {
 };
 
 export const migrateAvatarManifestV1 = (manifest: AvatarManifestV1): AvatarManifestV2 => {
-  const states: AvatarState[] = manifest.expressions.map((expression, index) => ({
-    id: expression.id,
-    name: `Estado ${index + 1}`,
-    emoji: expression.emoji,
-    blinkPolicy: expression.blinkPolicy === "auto" ? "auto" : "disabled",
-    motionPreset: legacyPreset(expression.emoji),
-    images: {
-      eyesOpen: {
-        mouthClosed: expression.states.eyesOpenMouthClosed,
-        mouthOpen: expression.states.eyesOpenMouthOpen,
-      },
-      ...(expression.states.eyesClosedMouthClosed && expression.states.eyesClosedMouthOpen
+  const states: AvatarState[] = manifest.expressions.map((expression, index) => {
+    const eyesOpen = {
+      mouthClosed: expression.states.eyesOpenMouthClosed,
+      mouthOpen: expression.states.eyesOpenMouthOpen,
+    };
+    const images: AvatarStateImages =
+      expression.states.eyesClosedMouthClosed && expression.states.eyesClosedMouthOpen
         ? {
+            eyesOpen,
             eyesClosed: {
               mouthClosed: expression.states.eyesClosedMouthClosed,
               mouthOpen: expression.states.eyesClosedMouthOpen,
             },
           }
-        : {}),
-    },
-  }));
+        : { eyesOpen };
+    return {
+      id: expression.id,
+      name: `Estado ${index + 1}`,
+      emoji: expression.emoji,
+      blinkPolicy: expression.blinkPolicy === "auto" ? "auto" : "disabled",
+      blink: defaultBlinkSettings(),
+      imageMode: "smooth",
+      resetAnimationOnEnter: false,
+      motionPreset: legacyPreset(expression.emoji),
+      images,
+    };
+  });
   const defaultStateId =
     states.find((state) => state.emoji === manifest.defaultExpression)?.id ?? states[0]?.id ?? "";
   return {

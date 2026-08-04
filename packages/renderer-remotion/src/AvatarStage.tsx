@@ -21,8 +21,17 @@ export const AvatarStage = ({ bundle }: AvatarStageProps) => {
   const size = Math.min(bundle.project.width, bundle.project.height) * 0.76;
 
   return (
-    <AbsoluteFill style={{ backgroundColor: state.backgroundColor, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        backgroundColor:
+          state.backgroundType === "transparent" ? "transparent" : state.backgroundColor,
+        overflow: "hidden",
+      }}
+    >
       <Audio src={bundle.audioSource} />
+      {state.backgroundType === "image" && state.backgroundImage ? (
+        <Img src={state.backgroundImage} style={{ ...imageStyle, objectFit: "cover" }} />
+      ) : null}
       <div
         data-avatar-parent="true"
         style={{
@@ -31,8 +40,10 @@ export const AvatarStage = ({ bundle }: AvatarStageProps) => {
           top: `${state.positionY * 100}%`,
           width: size,
           height: size,
-          transform: `translate(-50%, -50%) translateY(${state.avatar.transform.translateY}px) rotate(${state.avatar.transform.rotation}deg) scale(${state.scale * state.avatar.transform.scaleX}, ${state.scale * state.avatar.transform.scaleY})`,
+          transform: `translate(-50%, -50%) translate(${state.avatar.transform.translateX}px, ${state.avatar.transform.translateY}px) rotate(${state.avatar.transform.rotation}deg) scale(${state.scale * state.avatar.transform.scaleX}, ${state.scale * state.avatar.transform.scaleY})`,
           transformOrigin: "center",
+          filter: `brightness(${state.avatar.transform.brightness})`,
+          imageRendering: state.avatar.imageMode === "pixel" ? "pixelated" : "auto",
         }}
       >
         <Img src={state.avatar.shell} style={imageStyle} />

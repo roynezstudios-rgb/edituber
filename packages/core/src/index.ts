@@ -1,4 +1,8 @@
-import { type AvatarLayerState, resolveAvatarAtFrame } from "@edituber/avatar-engine";
+import {
+  type AvatarLayerState,
+  isSpeakingAtFrame,
+  resolveAvatarAtFrame,
+} from "@edituber/avatar-engine";
 import type {
   AudioEnvelopeV1,
   AvatarManifestV2,
@@ -17,6 +21,8 @@ export interface EdituberBundle {
 export interface EdituberFrameState {
   frame: number;
   backgroundColor: string;
+  backgroundType: "solid" | "transparent" | "image";
+  backgroundImage?: string;
   positionX: number;
   positionY: number;
   scale: number;
@@ -50,9 +56,31 @@ export const validateBundle = (bundle: EdituberBundle): ValidationResult => {
 
 export const resolveFrameState = (bundle: EdituberBundle, frame: number): EdituberFrameState => {
   const safeFrame = Math.max(0, Math.min(bundle.project.durationInFrames - 1, Math.floor(frame)));
+  const isSpeaking = isSpeakingAtFrame(
+    bundle.envelope.frames[safeFrame],
+    bundle.project.settings.mouthSensitivity,
+  );
+  let voiceChangeFrame = safeFrame;
+  while (
+    voiceChangeFrame > 0 &&
+    isSpeakingAtFrame(
+      bundle.envelope.frames[voiceChangeFrame - 1],
+      bundle.project.settings.mouthSensitivity,
+    ) === isSpeaking
+  )
+    voiceChangeFrame -= 1;
+  const emphasisFrames: number[] = [];
+  const emphasisWindowStart = Math.max(0, safeFrame - bundle.project.fps * 12);
+  for (let index = emphasisWindowStart; index <= safeFrame; index += 1) {
+    const currentPulse = bundle.envelope.frames[index]?.emphasisPulse ?? 0;
+    const previousPulse = bundle.envelope.frames[index - 1]?.emphasisPulse ?? 0;
+    if (currentPulse >= 0.8 && currentPulse > previousPulse) emphasisFrames.push(index);
+  }
   return {
     frame: safeFrame,
     backgroundColor: bundle.project.stage.backgroundColor,
+    backgroundType: bundle.project.stage.backgroundType,
+    backgroundImage: bundle.project.stage.backgroundImage,
     positionX: bundle.project.avatar.positionX,
     positionY: bundle.project.avatar.positionY,
     scale: bundle.project.avatar.scale,
@@ -61,6 +89,17 @@ export const resolveFrameState = (bundle: EdituberBundle, frame: number): Editub
       bundle.avatar,
       bundle.envelope.frames[safeFrame],
       safeFrame,
+      {
+        previousEnvelopeFrame: bundle.envelope.frames[safeFrame - 1],
+        voiceChange:
+          voiceChangeFrame === 0 && !isSpeaking
+            ? null
+            : isSpeaking
+              ? "closedToOpen"
+              : "openToClosed",
+        voiceChangeFrame,
+        emphasisFrames,
+      },
     ),
   };
 };

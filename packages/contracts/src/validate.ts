@@ -38,6 +38,8 @@ export const validateProject = (candidate: unknown): ValidationResult => {
       errors.push("/stateEvents must be sorted by frame");
     if (project.durationInFrames > Math.ceil(project.audio.durationSeconds * project.fps) + 1)
       errors.push("/durationInFrames cannot exceed the declared audio duration");
+    if (project.stage.backgroundType === "image" && !project.stage.backgroundImage)
+      errors.push("/stage/backgroundImage is required for image backgrounds");
   }
   return { valid: errors.length === 0, errors };
 };
@@ -53,9 +55,14 @@ export const validateAvatarManifest = (candidate: unknown): ValidationResult => 
       ids.add(state.id);
       if (!isSingleGrapheme(state.emoji))
         errors.push(`/states/${index}/emoji must be one grapheme`);
+      const openMouth = state.images.eyesOpen.mouthOpen;
       const closed = state.images.eyesClosed;
+      if (closed && !openMouth)
+        errors.push(`/states/${index}/images cannot contain exactly three images`);
       if (closed && (!closed.mouthClosed || !closed.mouthOpen))
         errors.push(`/states/${index}/images/eyesClosed must contain both mouth images`);
+      if (state.blink && state.blink.intervalMinSeconds > state.blink.intervalMaxSeconds)
+        errors.push(`/states/${index}/blink minimum interval must not exceed maximum`);
     }
     if (!ids.has(avatar.defaultStateId)) errors.push("/defaultStateId must reference a state");
   }

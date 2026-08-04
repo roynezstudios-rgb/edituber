@@ -23,30 +23,53 @@
     "states": {
       "type": "array",
       "minItems": 1,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["id", "name", "emoji", "images"],
-        "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "name": { "type": "string", "minLength": 1, "maxLength": 80 },
-          "emoji": { "type": "string", "minLength": 1 },
-          "blinkPolicy": { "enum": ["auto", "disabled"] },
-          "motionPreset": { "enum": ["idle", "surprise", "emphasis", "kiss"] },
-          "images": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["eyesOpen"],
+      "items": { "$ref": "#/$defs/state" }
+    }
+  },
+  "$defs": {
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "emoji", "images"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "emoji": { "type": "string", "minLength": 1 },
+        "blinkPolicy": { "enum": ["auto", "disabled"] },
+        "blink": { "$ref": "#/$defs/blink" },
+        "imageMode": { "enum": ["smooth", "pixel"] },
+        "resetAnimationOnEnter": { "type": "boolean" },
+        "motionPreset": { "enum": ["idle", "surprise", "emphasis", "kiss"] },
+        "effects": { "$ref": "#/$defs/effects" },
+        "images": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["eyesOpen"],
+          "properties": {
+            "eyesOpen": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["mouthClosed"],
+              "properties": {
+                "mouthClosed": { "type": "string", "minLength": 1 },
+                "mouthOpen": { "type": "string", "minLength": 1 }
+              }
+            },
+            "eyesClosed": { "$ref": "#/$defs/mouthPair" }
+          },
+          "if": { "properties": { "eyesClosed": true }, "required": ["eyesClosed"] },
+          "then": {
             "properties": {
-              "eyesOpen": { "$ref": "#/$defs/mouthPair" },
-              "eyesClosed": { "$ref": "#/$defs/mouthPair" }
+              "eyesOpen": {
+                "type": "object",
+                "properties": { "mouthClosed": true, "mouthOpen": true },
+                "required": ["mouthClosed", "mouthOpen"]
+              }
             }
           }
         }
       }
-    }
-  },
-  "$defs": {
+    },
     "mouthPair": {
       "type": "object",
       "additionalProperties": false,
@@ -54,6 +77,239 @@
       "properties": {
         "mouthClosed": { "type": "string", "minLength": 1 },
         "mouthOpen": { "type": "string", "minLength": 1 }
+      }
+    },
+    "blink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "intervalMinSeconds",
+        "intervalMaxSeconds",
+        "durationMilliseconds",
+        "syncAnimatedImages",
+        "playAnimationToEnd"
+      ],
+      "properties": {
+        "intervalMinSeconds": { "type": "number", "minimum": 0.8, "maximum": 30 },
+        "intervalMaxSeconds": { "type": "number", "minimum": 0.8, "maximum": 60 },
+        "durationMilliseconds": { "type": "number", "minimum": 60, "maximum": 1000 },
+        "syncAnimatedImages": { "type": "boolean" },
+        "playAnimationToEnd": { "type": "boolean" }
+      }
+    },
+    "effectBase": {
+      "type": "object",
+      "required": ["id", "type", "enabled", "preset"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "type": { "type": "string" },
+        "enabled": { "type": "boolean" },
+        "preset": {
+          "enum": [
+            "custom",
+            "relaxed",
+            "shaking",
+            "shakingHard",
+            "breathing",
+            "circling",
+            "bouncy",
+            "happy",
+            "agitated",
+            "swaying",
+            "swayingHard"
+          ]
+        }
+      }
+    },
+    "effects": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mouthClosed", "mouthOpen", "closedToOpen", "openToClosed", "stateEnter"],
+      "properties": {
+        "mouthClosed": { "type": "array", "items": { "$ref": "#/$defs/effect" } },
+        "mouthOpen": { "type": "array", "items": { "$ref": "#/$defs/effect" } },
+        "closedToOpen": { "type": "array", "items": { "$ref": "#/$defs/transition" } },
+        "openToClosed": { "type": "array", "items": { "$ref": "#/$defs/transition" } },
+        "stateEnter": { "type": "array", "items": { "$ref": "#/$defs/transition" } }
+      }
+    },
+    "effect": {
+      "oneOf": [
+        { "$ref": "#/$defs/randomMove" },
+        { "$ref": "#/$defs/waveMove" },
+        { "$ref": "#/$defs/jump" },
+        { "$ref": "#/$defs/waveRotate" },
+        { "$ref": "#/$defs/darken" },
+        { "$ref": "#/$defs/squashStretch" },
+        { "$ref": "#/$defs/emphasis" }
+      ]
+    },
+    "randomMove": {
+      "allOf": [
+        { "$ref": "#/$defs/effectBase" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "type", "enabled", "preset", "amount", "velocity"],
+          "properties": {
+            "id": true,
+            "type": { "const": "randomMove" },
+            "enabled": true,
+            "preset": true,
+            "amount": { "type": "number", "minimum": 0, "maximum": 80 },
+            "velocity": { "type": "number", "exclusiveMinimum": 0, "maximum": 8 }
+          }
+        }
+      ]
+    },
+    "waveMove": {
+      "allOf": [
+        { "$ref": "#/$defs/effectBase" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "type",
+            "enabled",
+            "preset",
+            "amountX",
+            "amountY",
+            "periodSeconds",
+            "phaseOffset"
+          ],
+          "properties": {
+            "id": true,
+            "type": { "const": "waveMove" },
+            "enabled": true,
+            "preset": true,
+            "amountX": { "type": "number", "minimum": -80, "maximum": 80 },
+            "amountY": { "type": "number", "minimum": -80, "maximum": 80 },
+            "periodSeconds": { "type": "number", "minimum": 0.25, "maximum": 30 },
+            "phaseOffset": { "type": "number", "minimum": -6.2832, "maximum": 6.2832 }
+          }
+        }
+      ]
+    },
+    "jump": {
+      "allOf": [
+        { "$ref": "#/$defs/effectBase" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "type", "enabled", "preset", "amountX", "amountY", "frequencyHz"],
+          "properties": {
+            "id": true,
+            "type": { "const": "jump" },
+            "enabled": true,
+            "preset": true,
+            "amountX": { "type": "number", "minimum": -60, "maximum": 60 },
+            "amountY": { "type": "number", "minimum": 0, "maximum": 120 },
+            "frequencyHz": { "type": "number", "minimum": 0.1, "maximum": 8 }
+          }
+        }
+      ]
+    },
+    "waveRotate": {
+      "allOf": [
+        { "$ref": "#/$defs/effectBase" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "type",
+            "enabled",
+            "preset",
+            "amountDegrees",
+            "periodSeconds",
+            "phaseOffset"
+          ],
+          "properties": {
+            "id": true,
+            "type": { "const": "waveRotate" },
+            "enabled": true,
+            "preset": true,
+            "amountDegrees": { "type": "number", "minimum": -25, "maximum": 25 },
+            "periodSeconds": { "type": "number", "minimum": 0.25, "maximum": 30 },
+            "phaseOffset": { "type": "number", "minimum": -6.2832, "maximum": 6.2832 }
+          }
+        }
+      ]
+    },
+    "darken": {
+      "allOf": [
+        { "$ref": "#/$defs/effectBase" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "type", "enabled", "preset", "amount"],
+          "properties": {
+            "id": true,
+            "type": { "const": "darken" },
+            "enabled": true,
+            "preset": true,
+            "amount": { "type": "number", "minimum": 0, "maximum": 0.85 }
+          }
+        }
+      ]
+    },
+    "squashStretch": {
+      "allOf": [
+        { "$ref": "#/$defs/effectBase" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "type", "enabled", "preset", "amount", "frequencyHz", "axisBalance"],
+          "properties": {
+            "id": true,
+            "type": { "const": "squashStretch" },
+            "enabled": true,
+            "preset": true,
+            "amount": { "type": "number", "minimum": 0, "maximum": 0.25 },
+            "frequencyHz": { "type": "number", "minimum": 0.1, "maximum": 8 },
+            "axisBalance": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        }
+      ]
+    },
+    "emphasis": {
+      "allOf": [
+        { "$ref": "#/$defs/effectBase" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "type",
+            "enabled",
+            "preset",
+            "amount",
+            "durationMilliseconds",
+            "cooldownMilliseconds"
+          ],
+          "properties": {
+            "id": true,
+            "type": { "const": "emphasis" },
+            "enabled": true,
+            "preset": true,
+            "amount": { "type": "number", "minimum": 0, "maximum": 2 },
+            "durationMilliseconds": { "type": "number", "minimum": 50, "maximum": 2000 },
+            "cooldownMilliseconds": { "type": "number", "minimum": 0, "maximum": 10000 }
+          }
+        }
+      ]
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "enabled", "amount", "durationMilliseconds"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "type": { "enum": ["jump", "stateEnter"] },
+        "enabled": { "type": "boolean" },
+        "amount": { "type": "number", "minimum": 0, "maximum": 150 },
+        "durationMilliseconds": { "type": "number", "minimum": 50, "maximum": 2000 }
       }
     }
   }

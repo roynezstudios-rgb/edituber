@@ -43,9 +43,15 @@
       "additionalProperties": false,
       "required": ["backgroundType", "backgroundColor"],
       "properties": {
-        "backgroundType": { "const": "solid" },
-        "backgroundColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
-      }
+        "backgroundType": { "enum": ["solid", "transparent", "image"] },
+        "backgroundColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "backgroundImage": { "type": "string", "minLength": 1 }
+      },
+      "if": {
+        "properties": { "backgroundType": { "const": "image" } },
+        "required": ["backgroundType"]
+      },
+      "then": { "properties": { "backgroundImage": true }, "required": ["backgroundImage"] }
     },
     "avatar": {
       "type": "object",
@@ -87,7 +93,8 @@
         "talkBounceEnabled": { "type": "boolean" },
         "mouthSensitivity": { "type": "number", "minimum": 0, "maximum": 1 },
         "transitionFrames": { "type": "integer", "minimum": 0, "maximum": 60 },
-        "bouncePreset": { "enum": ["soft", "normal", "emphasis"] }
+        "bouncePreset": { "enum": ["soft", "normal", "emphasis"] },
+        "motionScale": { "type": "number", "minimum": 0, "maximum": 2 }
       }
     }
   }

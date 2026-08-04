@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "projectId": "59eb3e0d-5fbf-40d8-9c04-3c7db750aa25",
+  "title": "Demo de una imagen",
+  "fps": 30,
+  "width": 1080,
+  "height": 1080,
+  "durationInFrames": 180,
+  "seed": 7302026,
+  "audio": {
+    "source": "audio/demo.wav",
+    "durationSeconds": 6,
+    "envelope": "audio/demo-envelope.json"
+  },
+  "stage": { "backgroundType": "solid", "backgroundColor": "#00FF00" },
+  "avatar": {
+    "manifest": "avatars/robot/avatar.json",
+    "defaultStateId": "ba1ef770-0f9c-4a62-a358-c39653e9ec42",
+    "positionX": 0.5,
+    "positionY": 0.52,
+    "scale": 1
+  },
+  "stateEvents": [{ "frame": 0, "stateId": "ba1ef770-0f9c-4a62-a358-c39653e9ec42" }],
+  "settings": {
+    "blinkEnabled": true,
+    "talkBounceEnabled": true,
+    "mouthSensitivity": 0.55,
+    "transitionFrames": 8,
+    "bouncePreset": "normal",
+    "motionScale": 1
+  }
+}

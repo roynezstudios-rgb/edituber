@@ -103,6 +103,10 @@ const mimeFor = (filePath: string): string => {
       return "image/svg+xml";
     case ".png":
       return "image/png";
+    case ".apng":
+      return "image/apng";
+    case ".gif":
+      return "image/gif";
     case ".webp":
       return "image/webp";
     case ".jpg":
@@ -134,19 +138,17 @@ const embedImages = async (
     DATA_URI.test(reference)
       ? reference
       : toDataUri(await resolveContainedAsset(assetRoot, reference, manifestDirectory));
+  const mouthClosed = await embed(images.eyesOpen.mouthClosed);
+  const mouthOpen = images.eyesOpen.mouthOpen ? await embed(images.eyesOpen.mouthOpen) : undefined;
+  if (!mouthOpen) return { eyesOpen: { mouthClosed } };
+  const eyesOpen = { mouthClosed, mouthOpen };
+  if (!images.eyesClosed) return { eyesOpen };
   return {
-    eyesOpen: {
-      mouthClosed: await embed(images.eyesOpen.mouthClosed),
-      mouthOpen: await embed(images.eyesOpen.mouthOpen),
+    eyesOpen,
+    eyesClosed: {
+      mouthClosed: await embed(images.eyesClosed.mouthClosed),
+      mouthOpen: await embed(images.eyesClosed.mouthOpen),
     },
-    ...(images.eyesClosed
-      ? {
-          eyesClosed: {
-            mouthClosed: await embed(images.eyesClosed.mouthClosed),
-            mouthOpen: await embed(images.eyesClosed.mouthOpen),
-          },
-        }
-      : {}),
   };
 };
 
@@ -233,12 +235,20 @@ export const loadProjectBundle = async (
   const manifestReference = projectDocument.avatar.manifest;
   const avatarPath = await resolveContainedAsset(assetRoot, manifestReference, referenceBase);
   const avatar = await loadAvatar(avatarPath, assetRoot);
-  const project: EdituberProjectV2 =
+  let project: EdituberProjectV2 =
     projectDocument.schemaVersion === 1
       ? migrateProjectV1(projectDocument as EdituberProjectV1, avatar)
       : (projectDocument as EdituberProjectV2);
   const validation = validateProject(project);
   if (!validation.valid) throw new Error(`Invalid project:\n${validation.errors.join("\n")}`);
+  if (project.stage.backgroundType === "image" && project.stage.backgroundImage) {
+    const backgroundImage = DATA_URI.test(project.stage.backgroundImage)
+      ? project.stage.backgroundImage
+      : await toDataUri(
+          await resolveContainedAsset(assetRoot, project.stage.backgroundImage, referenceBase),
+        );
+    project = { ...project, stage: { ...project.stage, backgroundImage } };
+  }
   const audioPath = await resolveContainedAsset(assetRoot, project.audio.source, referenceBase);
   const envelopePath = await resolveOptionalContainedAsset(
     assetRoot,

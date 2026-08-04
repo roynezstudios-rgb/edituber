@@ -76,4 +76,39 @@ describe("bundle", () => {
     expect(state.avatar.currentFace).toBeTruthy();
     expect(state.avatar.currentOpacity + state.avatar.previousOpacity).toBe(1);
   });
+
+  it("returns identical shared Web Lab and renderer samples for the same frames", () => {
+    const effects = {
+      mouthClosed: [
+        {
+          id: "18518776-1336-4e22-85fa-6784945ae28c",
+          type: "randomMove" as const,
+          enabled: true,
+          preset: "shaking" as const,
+          amount: 10,
+          velocity: 3,
+        },
+      ],
+      mouthOpen: [],
+      closedToOpen: [],
+      openToClosed: [],
+      stateEnter: [],
+    };
+    const frame = bundle.envelope.frames[0];
+    const avatarState = bundle.avatar.states[0];
+    if (!frame || !avatarState) throw new Error("Test fixture is incomplete");
+    const sharedBundle: EdituberBundle = {
+      ...bundle,
+      avatar: {
+        ...bundle.avatar,
+        states: [{ ...avatarState, effects }],
+      },
+      project: { ...bundle.project, durationInFrames: 4 },
+      envelope: { ...bundle.envelope, frames: [frame, frame, frame, frame] },
+    };
+    const webSamples = [0, 1, 2, 3].map((sample) => resolveFrameState(sharedBundle, sample));
+    const rendererSamples = [0, 1, 2, 3].map((sample) => resolveFrameState(sharedBundle, sample));
+    expect(rendererSamples).toEqual(webSamples);
+    expect(webSamples[3]?.avatar.transform.translateX).not.toBe(0);
+  });
 });
