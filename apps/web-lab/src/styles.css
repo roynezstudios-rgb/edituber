@@ -1991,6 +1991,10 @@ select:focus-visible,
 }
 
 @media (min-width: 901px) {
+  .workspace-grid {
+    grid-template-columns: minmax(0, 1.06fr) minmax(420px, 0.94fr);
+  }
+
   .stage-wrap {
     width: 100%;
     max-width: calc(100vh - 250px);
