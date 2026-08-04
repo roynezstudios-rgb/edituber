@@ -74,7 +74,10 @@ const effectsForRecording = (project: EdituberProjectV2, avatar: AvatarManifestV
   );
 const withoutPerStateBlinkSettings = (avatar: AvatarManifestV2): AvatarManifestV2 => ({
   ...clone(avatar),
-  shell: shellAfterAvatarLoad(avatar.shell, avatar.states, fixtureBundle.avatar.shell),
+  shell:
+    avatar.avatarId === fixtureBundle.avatar.avatarId
+      ? fixtureBundle.avatar.shell
+      : shellAfterAvatarLoad(avatar.shell, avatar.states, fixtureBundle.avatar.shell),
   states: avatar.states.map((state) => {
     const next = clone(state);
     delete next.blink;
@@ -346,8 +349,12 @@ export const App = () => {
         if (cancelled) return;
         let currentAvatar = withoutPerStateBlinkSettings(fixtureBundle.avatar);
         if (document) {
-          setProject(withRecordingEffects(document.project, document.avatar));
-          currentAvatar = withoutPerStateBlinkSettings(document.avatar);
+          currentAvatar = withoutPerStateBlinkSettings(
+            document.avatar.avatarId === fixtureBundle.avatar.avatarId
+              ? fixtureBundle.avatar
+              : document.avatar,
+          );
+          setProject(withRecordingEffects(document.project, currentAvatar));
           setAvatar(currentAvatar);
           setEnvelope(document.envelope);
           setAudioSource(document.audioSource ?? "");

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "avatarId": "9223eae6-96a7-4cab-8906-e5cf35cf0f19",
-  "name": "Robot Cyan Fixture",
+  "name": "Personaje de ejemplo",
   "canvas": { "width": 800, "height": 800 },
   "shell": "shell.svg",
   "defaultStateId": "2522cfb9-01e1-47c6-9e61-e6e5a4ae3ef0",
