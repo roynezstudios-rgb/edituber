@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type {
@@ -49,9 +49,9 @@ const portable: PortableEdituberDocumentV1 = {
   audioSource: "data:audio/wav;base64,AA==",
 };
 
-const startServer = async (token?: string) => {
-  const directory = await mkdtemp(join(tmpdir(), "edituber-server-"));
-  temporaryDirectories.push(directory);
+const startServer = async (token?: string, existingDirectory?: string) => {
+  const directory = existingDirectory ?? (await mkdtemp(join(tmpdir(), "edituber-server-")));
+  if (!existingDirectory) temporaryDirectories.push(directory);
   await writeFile(join(directory, "index.html"), "EDITuber test");
   const server = createEdituberServer({
     host: "127.0.0.1",
@@ -126,6 +126,62 @@ describe("EDITuber local API", () => {
       );
     } finally {
       await app.close();
+    }
+  });
+
+  it("recovers a completed render after the server restarts", async () => {
+    const first = await startServer();
+    const directory = temporaryDirectories.at(-1) ?? "";
+    const created = await fetch(`${first.baseUrl}/api/v1/renders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(portable),
+    });
+    const { id } = (await created.json()) as { id: string };
+    let state = "queued";
+    for (let attempt = 0; attempt < 20 && state !== "completed"; attempt += 1) {
+      await new Promise((resolveWait) => setTimeout(resolveWait, 5));
+      state = await fetch(`${first.baseUrl}/api/v1/renders/${id}`)
+        .then((response) => response.json())
+        .then((job: { state: string }) => job.state);
+    }
+    expect(state).toBe("completed");
+    await first.close();
+
+    const restarted = await startServer(undefined, directory);
+    try {
+      const recovered = await fetch(`${restarted.baseUrl}/api/v1/renders/${id}`);
+      expect(recovered.status).toBe(200);
+      expect(await recovered.json()).toMatchObject({ id, state: "completed" });
+      const download = await fetch(`${restarted.baseUrl}/api/v1/renders/${id}/file`);
+      expect(download.status).toBe(200);
+      expect(await download.text()).toBe("video");
+    } finally {
+      await restarted.close();
+    }
+  });
+
+  it("reports an interrupted partial render as failed after restart", async () => {
+    const first = await startServer();
+    const directory = temporaryDirectories.at(-1) ?? "";
+    await first.close();
+    const id = "123e4567-e89b-42d3-a456-426614174000";
+    const outputDirectory = join(directory, "outputs");
+    await mkdir(outputDirectory, { recursive: true });
+    await writeFile(join(outputDirectory, `${id}.part.mp4`), "incomplete");
+
+    const restarted = await startServer(undefined, directory);
+    try {
+      const recovered = await fetch(`${restarted.baseUrl}/api/v1/renders/${id}`);
+      expect(recovered.status).toBe(200);
+      expect(await recovered.json()).toMatchObject({
+        id,
+        state: "failed",
+        error: "El servidor se reinició antes de completar el render",
+      });
+      expect((await fetch(`${restarted.baseUrl}/api/v1/renders/${id}/file`)).status).toBe(409);
+    } finally {
+      await restarted.close();
     }
   });
 });

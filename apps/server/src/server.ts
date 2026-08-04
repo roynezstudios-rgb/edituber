@@ -1,6 +1,6 @@
 import { randomUUID, timingSafeEqual } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { access, mkdir, readFile, stat } from "node:fs/promises";
+import { access, mkdir, readFile, rename, rm, stat } from "node:fs/promises";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { extname, resolve, sep } from "node:path";
 import {
@@ -16,6 +16,8 @@ const DEFAULT_BODY_LIMIT = 180 * 1024 * 1024;
 const DEFAULT_MAX_DURATION_SECONDS = 600;
 const AUDIO_DATA_URI = /^data:audio\/[a-z0-9.+-]+;base64,[a-z0-9+/=\r\n]+$/i;
 const IMAGE_DATA_URI = /^data:image\/[a-z0-9.+-]+(?:;charset=[^;,]+)?;base64,[a-z0-9+/=\r\n]+$/i;
+const RENDER_ROUTE =
+  /^\/api\/v1\/renders\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})(\/file)?$/i;
 
 type JobState = "queued" | "rendering" | "completed" | "failed";
 
@@ -152,6 +154,43 @@ export const createEdituberServer = (options: EdituberServerOptions): Server => 
     (async (bundle, outputPath) => void (await engine.render(bundle, outputPath)));
   let queue = Promise.resolve();
 
+  const recoverPersistedJob = async (id: string): Promise<RenderJob | undefined> => {
+    const outputPath = resolve(options.outputRoot, `${id}.mp4`);
+    try {
+      const info = await stat(outputPath);
+      if (!info.isFile()) return undefined;
+      const createdAt = (info.birthtimeMs > 0 ? info.birthtime : info.mtime).toISOString();
+      const job: RenderJob = {
+        id,
+        state: "completed",
+        createdAt,
+        completedAt: info.mtime.toISOString(),
+        outputPath,
+      };
+      jobs.set(id, job);
+      return job;
+    } catch {
+      const partialOutputPath = resolve(options.outputRoot, `${id}.part.mp4`);
+      try {
+        const info = await stat(partialOutputPath);
+        if (!info.isFile()) return undefined;
+        const createdAt = (info.birthtimeMs > 0 ? info.birthtime : info.mtime).toISOString();
+        const job: RenderJob = {
+          id,
+          state: "failed",
+          createdAt,
+          completedAt: info.mtime.toISOString(),
+          error: "El servidor se reinició antes de completar el render",
+          outputPath,
+        };
+        jobs.set(id, job);
+        return job;
+      } catch {
+        return undefined;
+      }
+    }
+  };
+
   const authorized = (request: IncomingMessage): boolean => {
     if (!options.apiToken) return true;
     const header = request.headers.authorization ?? "";
@@ -222,17 +261,20 @@ export const createEdituberServer = (options: EdituberServerOptions): Server => 
           createdAt: new Date().toISOString(),
           outputPath: resolve(options.outputRoot, `${id}.mp4`),
         };
+        const partialOutputPath = resolve(options.outputRoot, `${id}.part.mp4`);
         jobs.set(id, job);
         queue = queue
           .catch(() => undefined)
           .then(async () => {
             job.state = "rendering";
             try {
-              await render(bundle, job.outputPath);
+              await render(bundle, partialOutputPath);
+              await rename(partialOutputPath, job.outputPath);
               job.state = "completed";
             } catch (error) {
               job.state = "failed";
               job.error = error instanceof Error ? error.message : String(error);
+              await rm(partialOutputPath, { force: true }).catch(() => undefined);
             } finally {
               job.completedAt = new Date().toISOString();
             }
@@ -245,9 +287,10 @@ export const createEdituberServer = (options: EdituberServerOptions): Server => 
         });
         return;
       }
-      const jobMatch = /^\/api\/v1\/renders\/([0-9a-f-]+)(\/file)?$/.exec(url.pathname);
+      const jobMatch = RENDER_ROUTE.exec(url.pathname);
       if (jobMatch && request.method === "GET") {
-        const job = jobs.get(jobMatch[1] ?? "");
+        const id = jobMatch[1] ?? "";
+        const job = jobs.get(id) ?? (await recoverPersistedJob(id));
         if (!job) {
           sendJson(response, 404, { ok: false, error: "Render no encontrado" });
           return;
