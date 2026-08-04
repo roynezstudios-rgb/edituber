@@ -10,6 +10,8 @@ interface RenderOptions {
   avatar?: string;
   background: string;
   output: string;
+  assetRoot?: string;
+  cacheRoot?: string;
 }
 
 const program = new Command()
@@ -24,6 +26,8 @@ program
   .option("--audio <path>", "audio source for direct mode")
   .option("--avatar <path>", "avatar manifest for direct mode")
   .option("--background <hex>", "solid background", "#00FF00")
+  .option("--asset-root <path>", "trusted root for project assets")
+  .option("--cache-root <path>", "trusted directory for generated envelopes")
   .requiredOption("--output <path>", "output MP4")
   .action(async (options: RenderOptions) => {
     if (!options.project && !(options.audio && options.avatar)) {
@@ -37,11 +41,15 @@ program
     }
 
     const bundle = options.project
-      ? await loadProjectBundle(options.project)
+      ? await loadProjectBundle(options.project, {
+          assetRoot: options.assetRoot,
+          cacheRoot: options.cacheRoot,
+        })
       : await loadDirectBundle({
           audioPath: options.audio as string,
           avatarPath: options.avatar as string,
           background: options.background,
+          cacheRoot: options.cacheRoot,
         });
     const engine = new RemotionRenderEngine();
     const result = await engine.render(bundle, resolve(options.output));
@@ -52,12 +60,24 @@ program
   .command("validate")
   .description("Validate a project and all referenced local assets")
   .requiredOption("--project <path>", "EDITuber project JSON")
-  .action(async ({ project }: { project: string }) => {
-    const bundle = await loadProjectBundle(project);
-    const result = new RemotionRenderEngine().validate(bundle);
-    if (!result.valid) throw new Error(result.errors.join("\n"));
-    process.stdout.write(`${JSON.stringify({ ok: true, project: resolve(project) }, null, 2)}\n`);
-  });
+  .option("--asset-root <path>", "trusted root for project assets")
+  .option("--cache-root <path>", "trusted directory for generated envelopes")
+  .action(
+    async ({
+      project,
+      assetRoot,
+      cacheRoot,
+    }: {
+      project: string;
+      assetRoot?: string;
+      cacheRoot?: string;
+    }) => {
+      const bundle = await loadProjectBundle(project, { assetRoot, cacheRoot });
+      const result = new RemotionRenderEngine().validate(bundle);
+      if (!result.valid) throw new Error(result.errors.join("\n"));
+      process.stdout.write(`${JSON.stringify({ ok: true, project: resolve(project) }, null, 2)}\n`);
+    },
+  );
 
 program.parseAsync().catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);

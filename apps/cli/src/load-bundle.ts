@@ -1,47 +1,104 @@
 import { randomUUID } from "node:crypto";
-import { access, readFile, stat, writeFile } from "node:fs/promises";
-import { extname, resolve } from "node:path";
+import { access, mkdir, readFile, realpath, stat, writeFile } from "node:fs/promises";
+import path, { dirname, extname, resolve } from "node:path";
 import { analyzeAudioFile, hashFile, probeAudioDuration } from "@edituber/audio-engine/node";
-import type {
-  AudioEnvelopeV1,
-  AvatarFaceStates,
-  AvatarManifestV1,
-  EdituberProjectV1,
+import {
+  type AudioEnvelopeV1,
+  type AvatarManifestDocument,
+  type AvatarManifestV1,
+  type AvatarManifestV2,
+  type AvatarStateImages,
+  type EdituberProjectDocument,
+  type EdituberProjectV1,
+  type EdituberProjectV2,
+  migrateAvatarManifestV1,
+  migrateProjectV1,
+  validateAvatarManifest,
+  validateProject,
 } from "@edituber/contracts";
-import { validateProject } from "@edituber/contracts";
 import type { EdituberBundle } from "@edituber/core";
 
 const MAX_JSON_BYTES = 1_000_000;
 const MAX_ASSET_BYTES = 20_000_000;
 const DEFAULT_MAX_DURATION_SECONDS = 600;
+const DATA_URI = /^data:[^;,]+(?:;base64)?,/i;
 
-const readLimited = async (path: string, maxBytes: number): Promise<Buffer> => {
-  const info = await stat(path);
-  if (!info.isFile()) throw new Error(`Expected a file: ${path}`);
-  if (info.size > maxBytes) throw new Error(`File exceeds ${maxBytes} bytes: ${path}`);
-  return readFile(path);
+const readLimited = async (filePath: string, maxBytes: number): Promise<Buffer> => {
+  const info = await stat(filePath);
+  if (!info.isFile()) throw new Error(`Expected a file: ${filePath}`);
+  if (info.size > maxBytes) throw new Error(`File exceeds ${maxBytes} bytes: ${filePath}`);
+  return readFile(filePath);
 };
 
-const readJson = async <T>(path: string): Promise<T> => {
-  const contents = await readLimited(path, MAX_JSON_BYTES);
+const readJson = async <T>(filePath: string): Promise<T> => {
+  const contents = await readLimited(filePath, MAX_JSON_BYTES);
   try {
     return JSON.parse(contents.toString("utf8")) as T;
   } catch {
-    throw new Error(`Invalid JSON: ${path}`);
+    throw new Error(`Invalid JSON: ${filePath}`);
   }
 };
 
-const exists = async (path: string): Promise<boolean> => {
+const exists = async (filePath: string): Promise<boolean> => {
   try {
-    await access(path);
+    await access(filePath);
     return true;
   } catch {
     return false;
   }
 };
 
-const mimeFor = (path: string): string => {
-  switch (extname(path).toLowerCase()) {
+export const isUnsafeAssetReference = (reference: string): boolean => {
+  const value = reference.trim();
+  return (
+    value.length === 0 ||
+    value.includes("\0") ||
+    path.posix.isAbsolute(value) ||
+    path.win32.isAbsolute(value) ||
+    /^[a-zA-Z][a-zA-Z\d+.-]*:/.test(value)
+  );
+};
+
+const isInside = (root: string, candidate: string): boolean => {
+  const relative = path.relative(root, candidate);
+  return (
+    relative === "" ||
+    (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative))
+  );
+};
+
+export const resolveContainedAsset = async (
+  assetRoot: string,
+  reference: string,
+  baseDirectory = assetRoot,
+): Promise<string> => {
+  if (isUnsafeAssetReference(reference)) throw new Error(`Unsafe asset reference: ${reference}`);
+  const [canonicalRoot, canonicalBase] = await Promise.all([
+    realpath(assetRoot),
+    realpath(baseDirectory),
+  ]);
+  if (!isInside(canonicalRoot, canonicalBase)) throw new Error("Asset base escapes the asset root");
+  const candidate = await realpath(resolve(canonicalBase, reference));
+  if (!isInside(canonicalRoot, candidate))
+    throw new Error(`Asset escapes the asset root: ${reference}`);
+  return candidate;
+};
+
+const resolveOptionalContainedAsset = async (
+  assetRoot: string,
+  reference: string,
+  baseDirectory = assetRoot,
+): Promise<string | null> => {
+  try {
+    return await resolveContainedAsset(assetRoot, reference, baseDirectory);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
+};
+
+const mimeFor = (filePath: string): string => {
+  switch (extname(filePath).toLowerCase()) {
     case ".svg":
       return "image/svg+xml";
     case ".png":
@@ -62,35 +119,56 @@ const mimeFor = (path: string): string => {
   }
 };
 
-const toDataUri = async (path: string): Promise<string> => {
-  const content = await readLimited(path, MAX_ASSET_BYTES);
-  return `data:${mimeFor(path)};base64,${content.toString("base64")}`;
+const toDataUri = async (filePathOrDataUri: string): Promise<string> => {
+  if (DATA_URI.test(filePathOrDataUri)) return filePathOrDataUri;
+  const content = await readLimited(filePathOrDataUri, MAX_ASSET_BYTES);
+  return `data:${mimeFor(filePathOrDataUri)};base64,${content.toString("base64")}`;
 };
 
-const embedStates = async (states: AvatarFaceStates, base: string): Promise<AvatarFaceStates> => ({
-  eyesOpenMouthClosed: await toDataUri(resolve(base, states.eyesOpenMouthClosed)),
-  eyesOpenMouthOpen: await toDataUri(resolve(base, states.eyesOpenMouthOpen)),
-  ...(states.eyesClosedMouthClosed
-    ? { eyesClosedMouthClosed: await toDataUri(resolve(base, states.eyesClosedMouthClosed)) }
-    : {}),
-  ...(states.eyesClosedMouthOpen
-    ? { eyesClosedMouthOpen: await toDataUri(resolve(base, states.eyesClosedMouthOpen)) }
-    : {}),
-});
+const embedImages = async (
+  images: AvatarStateImages,
+  assetRoot: string,
+  manifestDirectory: string,
+): Promise<AvatarStateImages> => {
+  const embed = async (reference: string) =>
+    DATA_URI.test(reference)
+      ? reference
+      : toDataUri(await resolveContainedAsset(assetRoot, reference, manifestDirectory));
+  return {
+    eyesOpen: {
+      mouthClosed: await embed(images.eyesOpen.mouthClosed),
+      mouthOpen: await embed(images.eyesOpen.mouthOpen),
+    },
+    ...(images.eyesClosed
+      ? {
+          eyesClosed: {
+            mouthClosed: await embed(images.eyesClosed.mouthClosed),
+            mouthOpen: await embed(images.eyesClosed.mouthOpen),
+          },
+        }
+      : {}),
+  };
+};
 
-const loadAvatar = async (manifestPath: string): Promise<AvatarManifestV1> => {
-  const manifest = await readJson<AvatarManifestV1>(manifestPath);
-  if (manifest.schemaVersion !== 1 || !Array.isArray(manifest.expressions)) {
-    throw new Error("Unsupported or invalid avatar manifest");
-  }
-  const base = resolve(manifestPath, "..");
+const loadAvatar = async (manifestPath: string, assetRoot: string): Promise<AvatarManifestV2> => {
+  const document = await readJson<AvatarManifestDocument>(manifestPath);
+  const manifest =
+    document.schemaVersion === 1
+      ? migrateAvatarManifestV1(document as AvatarManifestV1)
+      : (document as AvatarManifestV2);
+  const validation = validateAvatarManifest(manifest);
+  if (!validation.valid) throw new Error(`Invalid avatar:\n${validation.errors.join("\n")}`);
+  const base = dirname(manifestPath);
+  const shell = DATA_URI.test(manifest.shell)
+    ? manifest.shell
+    : await toDataUri(await resolveContainedAsset(assetRoot, manifest.shell, base));
   return {
     ...manifest,
-    shell: await toDataUri(resolve(base, manifest.shell)),
-    expressions: await Promise.all(
-      manifest.expressions.map(async (expression) => ({
-        ...expression,
-        states: await embedStates(expression.states, base),
+    shell,
+    states: await Promise.all(
+      manifest.states.map(async (state) => ({
+        ...state,
+        images: await embedImages(state.images, assetRoot, base),
       })),
     ),
   };
@@ -103,68 +181,103 @@ const maxDuration = (): number => {
 
 const analyzeOrLoadEnvelope = async (
   audioPath: string,
-  envelopePath: string | null,
+  declaredEnvelopePath: string | null,
+  cacheRoot: string,
   fps: number,
 ): Promise<AudioEnvelopeV1> => {
   const currentHash = await hashFile(audioPath);
-  if (envelopePath && (await exists(envelopePath))) {
-    const cached = await readJson<AudioEnvelopeV1>(envelopePath);
+  if (declaredEnvelopePath && (await exists(declaredEnvelopePath))) {
+    const declared = await readJson<AudioEnvelopeV1>(declaredEnvelopePath);
+    if (declared.version === 1 && declared.fps === fps && declared.sourceHash === currentHash)
+      return declared;
+  }
+  await mkdir(cacheRoot, { recursive: true });
+  const canonicalCache = await realpath(cacheRoot);
+  const cachePath = resolve(canonicalCache, `${currentHash}-${fps}.envelope.json`);
+  if (!isInside(canonicalCache, cachePath)) throw new Error("Invalid cache path");
+  if (await exists(cachePath)) {
+    const cached = await readJson<AudioEnvelopeV1>(cachePath);
     if (cached.version === 1 && cached.fps === fps && cached.sourceHash === currentHash)
       return cached;
   }
   const envelope = await analyzeAudioFile(audioPath, fps);
-  if (envelopePath) await writeFile(envelopePath, `${JSON.stringify(envelope, null, 2)}\n`, "utf8");
+  await writeFile(cachePath, `${JSON.stringify(envelope, null, 2)}\n`, {
+    encoding: "utf8",
+    flag: "wx",
+  }).catch(async (error: NodeJS.ErrnoException) => {
+    if (error.code !== "EEXIST") throw error;
+  });
   return envelope;
 };
+
+export interface ProjectBundleOptions {
+  assetRoot?: string;
+  cacheRoot?: string;
+}
 
 export interface DirectBundleOptions {
   audioPath: string;
   avatarPath: string;
   background: string;
+  cacheRoot?: string;
 }
 
-export const loadProjectBundle = async (projectPath: string): Promise<EdituberBundle> => {
-  const absoluteProject = resolve(projectPath);
-  const project = await readJson<EdituberProjectV1>(absoluteProject);
+export const loadProjectBundle = async (
+  projectPath: string,
+  options: ProjectBundleOptions = {},
+): Promise<EdituberBundle> => {
+  const absoluteProject = await realpath(resolve(projectPath));
+  const assetRoot = await realpath(resolve(options.assetRoot ?? dirname(absoluteProject)));
+  const projectDocument = await readJson<EdituberProjectDocument>(absoluteProject);
+  const referenceBase = projectDocument.schemaVersion === 1 ? dirname(absoluteProject) : assetRoot;
+  const manifestReference = projectDocument.avatar.manifest;
+  const avatarPath = await resolveContainedAsset(assetRoot, manifestReference, referenceBase);
+  const avatar = await loadAvatar(avatarPath, assetRoot);
+  const project: EdituberProjectV2 =
+    projectDocument.schemaVersion === 1
+      ? migrateProjectV1(projectDocument as EdituberProjectV1, avatar)
+      : (projectDocument as EdituberProjectV2);
   const validation = validateProject(project);
   if (!validation.valid) throw new Error(`Invalid project:\n${validation.errors.join("\n")}`);
-  const base = resolve(absoluteProject, "..");
-  const audioPath = resolve(base, project.audio.source);
-  const avatarPath = resolve(base, project.avatar.manifest);
-  const envelopePath = resolve(base, project.audio.envelope);
+  const audioPath = await resolveContainedAsset(assetRoot, project.audio.source, referenceBase);
+  const envelopePath = await resolveOptionalContainedAsset(
+    assetRoot,
+    project.audio.envelope,
+    referenceBase,
+  );
   const actualDuration = await probeAudioDuration(audioPath);
-  if (actualDuration > maxDuration()) {
+  if (actualDuration > maxDuration())
     throw new Error(
       `Audio is ${actualDuration.toFixed(2)}s; limit is ${maxDuration()}s. It was not cut.`,
     );
-  }
-  if (Math.abs(actualDuration - project.audio.durationSeconds) > 0.08) {
+  if (Math.abs(actualDuration - project.audio.durationSeconds) > 0.08)
     throw new Error("Declared audio duration does not match the source file");
-  }
-  const [avatar, envelope, audioSource] = await Promise.all([
-    loadAvatar(avatarPath),
-    analyzeOrLoadEnvelope(audioPath, envelopePath, project.fps),
+  const cacheRoot = resolve(
+    options.cacheRoot ?? assetRoot,
+    options.cacheRoot ? "" : ".edituber-cache",
+  );
+  const [envelope, audioSource] = await Promise.all([
+    analyzeOrLoadEnvelope(audioPath, envelopePath, cacheRoot, project.fps),
     toDataUri(audioPath),
   ]);
   return { project, avatar, envelope, audioSource };
 };
 
 export const loadDirectBundle = async (options: DirectBundleOptions): Promise<EdituberBundle> => {
-  const audioPath = resolve(options.audioPath);
-  const avatarPath = resolve(options.avatarPath);
+  const audioPath = await realpath(resolve(options.audioPath));
+  const avatarPath = await realpath(resolve(options.avatarPath));
   const duration = await probeAudioDuration(audioPath);
-  if (duration > maxDuration()) {
+  if (duration > maxDuration())
     throw new Error(
       `Audio is ${duration.toFixed(2)}s; limit is ${maxDuration()}s. It was not cut.`,
     );
-  }
   const fps = 30;
-  const avatar = await loadAvatar(avatarPath);
+  const avatar = await loadAvatar(avatarPath, dirname(avatarPath));
   const sourceHash = await hashFile(audioPath);
   const seed = Number.parseInt(sourceHash.slice(0, 8), 16) >>> 0;
   const durationInFrames = Math.max(1, Math.floor(duration * fps));
-  const project: EdituberProjectV1 = {
-    schemaVersion: 1,
+  const project: EdituberProjectV2 = {
+    schemaVersion: 2,
     projectId: randomUUID(),
     title: "Direct audio render",
     fps,
@@ -176,12 +289,12 @@ export const loadDirectBundle = async (options: DirectBundleOptions): Promise<Ed
     stage: { backgroundType: "solid", backgroundColor: options.background },
     avatar: {
       manifest: avatarPath,
-      defaultExpression: avatar.defaultExpression,
+      defaultStateId: avatar.defaultStateId,
       positionX: 0.5,
       positionY: 0.52,
       scale: 1,
     },
-    expressionEvents: [{ frame: 0, emoji: avatar.defaultExpression }],
+    stateEvents: [{ frame: 0, stateId: avatar.defaultStateId }],
     settings: {
       blinkEnabled: true,
       talkBounceEnabled: true,
@@ -190,8 +303,12 @@ export const loadDirectBundle = async (options: DirectBundleOptions): Promise<Ed
       bouncePreset: "normal",
     },
   };
+  const cacheRoot = resolve(
+    options.cacheRoot ?? dirname(audioPath),
+    options.cacheRoot ? "" : ".edituber-cache",
+  );
   const [envelope, audioSource] = await Promise.all([
-    analyzeOrLoadEnvelope(audioPath, null, fps),
+    analyzeOrLoadEnvelope(audioPath, null, cacheRoot, fps),
     toDataUri(audioPath),
   ]);
   return { project, avatar, envelope, audioSource };
