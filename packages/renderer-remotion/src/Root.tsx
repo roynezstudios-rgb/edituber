@@ -17,7 +17,7 @@ export const RemotionRoot = () => (
     height={1080}
     schema={schema}
     defaultProps={{ bundle: emptyBundle }}
-    calculateMetadata={({ props }) => ({
+    calculateMetadata={({ props }: { props: AvatarStageProps }) => ({
       durationInFrames: props.bundle.project.durationInFrames,
       fps: props.bundle.project.fps,
       width: props.bundle.project.width,
