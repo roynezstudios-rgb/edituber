@@ -52,7 +52,7 @@ Si una IA ya tiene las imágenes sueltas de un personaje, debe organizarlas ante
 
 Los nombres de carpetas usan identificadores breves sin espacios, como `neutral`, `feliz` o `triste`. El nombre visible y el emoji se guardan en `personaje.json`; el emoji no se usa como nombre de archivo. Una IA nunca debe adivinar una asignación dudosa ni modificar, recortar o comprimir las imágenes para completar el paquete.
 
-El formato ZIP y su importador todavía están planeados y no forman parte del Web Lab actual. El archivo [PROMPT-ORGANIZAR-IMAGENES-AVATAR.txt](docs/PROMPT-ORGANIZAR-IMAGENES-AVATAR.txt) contiene las instrucciones completas y un prompt listo para entregar a una IA.
+En **Mis personajes**, arrastra el ZIP sobre **Aquí va tu personaje ZIP** o toca el recuadro para seleccionarlo. El Web Lab valida `personaje.json`, las carpetas y los modos 1/2/4 antes de guardarlo localmente. Cada ZIP añade un personaje completo a la biblioteca; puedes importar varios y cambiar entre ellos con **Usar** sin perder el audio ni la timeline. El archivo [PROMPT-ORGANIZAR-IMAGENES-AVATAR.txt](docs/PROMPT-ORGANIZAR-IMAGENES-AVATAR.txt) contiene las instrucciones completas y un prompt listo para entregar a una IA.
 
 La escena admite fondo `solid`, `transparent` o `image`. Posición, escala del avatar y
 `motionScale` se guardan en el proyecto y se aplican igual en Web Lab y Remotion; `motionScale`

@@ -108,6 +108,9 @@ importers:
       '@edituber/timeline-engine':
         specifier: workspace:*
         version: link:../../packages/timeline-engine
+      fflate:
+        specifier: 0.8.2
+        version: 0.8.2
       react:
         specifier: 19.1.1
         version: 19.1.1
@@ -1166,6 +1169,9 @@ packages:
     peerDependenciesMeta:
       picomatch:
         optional: true
+
+  fflate@0.8.2:
+    resolution: {integrity: sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A==}
 
   fs-monkey@1.0.3:
     resolution: {integrity: sha512-cybjIfiiE+pTWicSCLFHSrXZ6EilF30oh91FDP9S2B051prEa7QWfrVTQm10/dDpswBDXZugPa1Ogu8Yh+HV0Q==}
@@ -2689,6 +2695,8 @@ snapshots:
   fdir@6.5.0(picomatch@4.0.5):
     optionalDependencies:
       picomatch: 4.0.5
+
+  fflate@0.8.2: {}
 
   fs-monkey@1.0.3: {}
 

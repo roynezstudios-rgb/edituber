@@ -18,15 +18,31 @@ import {
   removeStateEvent,
   upsertStateEvent,
 } from "@edituber/timeline-engine";
-import { type ChangeEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  type ChangeEvent,
+  type DragEvent,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   decodeAndAppendAudio,
   decodeAndRemoveAudioRange,
   remapStateTimelineAfterDelete,
 } from "./audio-edit";
+import { type ImportedCharacter, parseCharacterPackageFile } from "./character-package";
 import { EffectEditor } from "./EffectEditor";
 import { fixtureBundle } from "./fixture";
-import { loadLocalProject, saveLocalProject } from "./local-project";
+import {
+  deleteLocalCharacter,
+  loadLocalCharacters,
+  loadLocalProject,
+  saveLocalCharacter,
+  saveLocalProject,
+} from "./local-project";
 import { parsePortableDocument, serializePortableDocument } from "./portable";
 import { WEB_LAB_AUDIO_POLICY } from "./product-policy";
 import {
@@ -260,12 +276,15 @@ const BlinkLoopPreview = ({
 
 export const App = () => {
   const mouthSensitivityId = useId();
+  const characterStockTitleId = useId();
   const stockTitleId = useId();
   const pickerTitleId = useId();
   const deleteTitleId = useId();
   const audioRef = useRef<HTMLAudioElement>(null);
   const animationRef = useRef<number | null>(null);
   const importRef = useRef<HTMLInputElement>(null);
+  const characterImportRef = useRef<HTMLInputElement>(null);
+  const characterDatesRef = useRef(new Map<string, string>());
   const timelineViewportRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordingStreamRef = useRef<MediaStream | null>(null);
@@ -303,6 +322,9 @@ export const App = () => {
   const [audioEditUndo, setAudioEditUndo] = useState<AudioEditSnapshot | null>(null);
   const [localSaveReady, setLocalSaveReady] = useState(false);
   const [localSaveState, setLocalSaveState] = useState<LocalSaveState>("loading");
+  const [characters, setCharacters] = useState<ImportedCharacter[]>([]);
+  const [characterLibraryReady, setCharacterLibraryReady] = useState(false);
+  const [importingCharacter, setImportingCharacter] = useState(false);
 
   const canRecord =
     typeof MediaRecorder !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
@@ -319,17 +341,36 @@ export const App = () => {
   useEffect(() => {
     let cancelled = false;
     if (navigator.storage?.persist) void navigator.storage.persist().catch(() => undefined);
-    void loadLocalProject()
-      .then((document) => {
+    void Promise.all([loadLocalProject(), loadLocalCharacters()])
+      .then(([document, savedCharacters]) => {
         if (cancelled) return;
+        let currentAvatar = withoutPerStateBlinkSettings(fixtureBundle.avatar);
         if (document) {
           setProject(withRecordingEffects(document.project, document.avatar));
-          setAvatar(withoutPerStateBlinkSettings(document.avatar));
+          currentAvatar = withoutPerStateBlinkSettings(document.avatar);
+          setAvatar(currentAvatar);
           setEnvelope(document.envelope);
           setAudioSource(document.audioSource ?? "");
           setFrame(0);
           setStatus("Proyecto recuperado de este dispositivo");
         }
+        const currentCharacter: ImportedCharacter = {
+          id: currentAvatar.avatarId,
+          name: currentAvatar.name,
+          avatar: currentAvatar,
+          importedAt:
+            savedCharacters.find((character) => character.id === currentAvatar.avatarId)
+              ?.importedAt ?? new Date().toISOString(),
+        };
+        const mergedCharacters = [
+          currentCharacter,
+          ...savedCharacters.filter((character) => character.id !== currentCharacter.id),
+        ];
+        characterDatesRef.current = new Map(
+          mergedCharacters.map((character) => [character.id, character.importedAt]),
+        );
+        setCharacters(mergedCharacters);
+        setCharacterLibraryReady(true);
         setLocalSaveReady(true);
         setLocalSaveState(document ? "saved" : "saving");
       })
@@ -360,6 +401,24 @@ export const App = () => {
     }, 600);
     return () => window.clearTimeout(timeout);
   }, [audioSource, avatar, envelope, localSaveReady, project]);
+
+  useEffect(() => {
+    if (!characterLibraryReady) return;
+    const importedAt = characterDatesRef.current.get(avatar.avatarId) ?? new Date().toISOString();
+    characterDatesRef.current.set(avatar.avatarId, importedAt);
+    const character: ImportedCharacter = {
+      id: avatar.avatarId,
+      name: avatar.name,
+      avatar: clone(avatar),
+      importedAt,
+    };
+    setCharacters((current) => [
+      character,
+      ...current.filter((candidate) => candidate.id !== character.id),
+    ]);
+    const timeout = window.setTimeout(() => void saveLocalCharacter(character), 600);
+    return () => window.clearTimeout(timeout);
+  }, [avatar, characterLibraryReady]);
 
   const bundle: EdituberBundle = useMemo(
     () => ({ project, avatar, envelope, audioSource }),
@@ -858,6 +917,73 @@ export const App = () => {
       );
     } catch (error) {
       setStatus(`No se pudo importar: ${String(error)}`);
+    }
+  };
+
+  const activateCharacter = (character: ImportedCharacter) => {
+    const nextAvatar = withoutPerStateBlinkSettings(character.avatar);
+    const nextByEmoji = new Map(nextAvatar.states.map((item) => [item.emoji, item.id]));
+    const currentById = new Map(avatar.states.map((item) => [item.id, item]));
+    const nextDefaultStateId =
+      nextByEmoji.get(currentById.get(project.avatar.defaultStateId)?.emoji ?? "") ??
+      nextAvatar.defaultStateId;
+    setProject((current) => ({
+      ...current,
+      avatar: {
+        ...current.avatar,
+        defaultStateId: nextDefaultStateId,
+        visible: true,
+      },
+      stateEvents: current.stateEvents.map((event) => ({
+        ...event,
+        stateId: nextByEmoji.get(currentById.get(event.stateId)?.emoji ?? "") ?? nextDefaultStateId,
+      })),
+    }));
+    setAvatar(nextAvatar);
+    setFrame(0);
+    setPickerFrame(null);
+    setDeleteStateId(null);
+    setStatus(`${character.name} activado · la timeline conservó los emojis compatibles`);
+  };
+
+  const importCharacter = async (file?: File) => {
+    if (!file || importingCharacter) return;
+    setImportingCharacter(true);
+    setStatus(`Revisando ${file.name}…`);
+    try {
+      const character = await parseCharacterPackageFile(file);
+      characterDatesRef.current.set(character.id, character.importedAt);
+      await saveLocalCharacter(character);
+      setCharacters((current) => [
+        character,
+        ...current.filter((candidate) => candidate.id !== character.id),
+      ]);
+      activateCharacter(character);
+      setStatus(
+        `${character.name} importado · ${character.avatar.states.length} emociones guardadas`,
+      );
+    } catch (error) {
+      setStatus(
+        `No se pudo importar el personaje: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    } finally {
+      setImportingCharacter(false);
+      if (characterImportRef.current) characterImportRef.current.value = "";
+    }
+  };
+
+  const removeCharacter = async (character: ImportedCharacter) => {
+    if (character.id === avatar.avatarId) {
+      setStatus("Activa otro personaje antes de eliminar este");
+      return;
+    }
+    try {
+      await deleteLocalCharacter(character.id);
+      characterDatesRef.current.delete(character.id);
+      setCharacters((current) => current.filter((candidate) => candidate.id !== character.id));
+      setStatus(`${character.name} eliminado de este dispositivo`);
+    } catch (error) {
+      setStatus(`No se pudo eliminar el personaje: ${String(error)}`);
     }
   };
 
@@ -1371,6 +1497,90 @@ export const App = () => {
               </label>
             </fieldset>
           </div>
+
+          <section className="character-library" aria-labelledby={characterStockTitleId}>
+            <div className="character-library-heading">
+              <div>
+                <span id={characterStockTitleId}>Mis personajes</span>
+                <small>
+                  {characterLibraryReady
+                    ? `${characters.length} guardados · cada ZIP añade un personaje con sus emociones`
+                    : "Cargando personajes guardados…"}
+                </small>
+              </div>
+            </div>
+            <label
+              className={`character-drop-zone ${importingCharacter ? "loading" : ""}`}
+              onDragOver={(event: DragEvent<HTMLLabelElement>) => {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "copy";
+              }}
+              onDrop={(event: DragEvent<HTMLLabelElement>) => {
+                event.preventDefault();
+                void importCharacter(event.dataTransfer.files[0]);
+              }}
+            >
+              <input
+                ref={characterImportRef}
+                type="file"
+                accept="application/zip,.zip"
+                disabled={importingCharacter}
+                onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                  void importCharacter(event.currentTarget.files?.[0])
+                }
+              />
+              <span className="character-drop-icon" aria-hidden="true">
+                {importingCharacter ? "…" : "+"}
+              </span>
+              <span>
+                <b>{importingCharacter ? "Revisando personaje…" : "Aquí va tu personaje ZIP"}</b>
+                <small>
+                  Arrástralo o toca para elegirlo · puedes agregar todos los que quieras
+                </small>
+              </span>
+            </label>
+            <div className="character-list">
+              {characters.map((character) => {
+                const previewState = character.avatar.states[0];
+                const active = character.id === avatar.avatarId;
+                return (
+                  <article
+                    className={active ? "character-card active" : "character-card"}
+                    key={character.id}
+                  >
+                    <div className="character-thumbnail" aria-hidden="true">
+                      <img src={character.avatar.shell} alt="" />
+                      {previewState ? (
+                        <img src={previewState.images.eyesOpen.mouthClosed} alt="" />
+                      ) : null}
+                    </div>
+                    <div className="character-card-copy">
+                      <b>{character.name}</b>
+                      <small>{character.avatar.states.length} emociones</small>
+                    </div>
+                    <div className="character-card-actions">
+                      <button
+                        type="button"
+                        disabled={active}
+                        onClick={() => activateCharacter(character)}
+                      >
+                        {active ? "Activo" : "Usar"}
+                      </button>
+                      <button
+                        type="button"
+                        className="character-delete"
+                        disabled={active}
+                        aria-label={`Eliminar ${character.name}`}
+                        onClick={() => void removeCharacter(character)}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
 
           <section className="state-stock" aria-labelledby={stockTitleId}>
             <div className="stock-heading">

@@ -5,7 +5,7 @@ OBJETIVO
 
 Organiza las imágenes adjuntas como un paquete de un solo personaje para EDITuber.
 El resultado debe contener todas las emociones disponibles y quedar preparado para
-el futuro importador ZIP de personajes.
+el importador ZIP de personajes.
 
 REGLAS OBLIGATORIAS
 
@@ -127,5 +127,7 @@ si reutilizaste una imagen para dos puestos o si existe una asignación sin conf
 
 NOTA DE COMPATIBILIDAD
 
-Este documento define el formato de preparación acordado para el futuro importador ZIP.
-La versión actual del Web Lab todavía requiere agregar los estados desde la interfaz.
+Este documento define el formato que acepta el importador ZIP del Web Lab.
+Para usarlo, abre Mis personajes y arrastra el archivo sobre Aquí va tu personaje ZIP,
+o toca el recuadro para seleccionarlo. Cada ZIP agrega un personaje completo a la
+biblioteca local y permite cambiar de personaje sin perder el audio ni la timeline.

@@ -1,9 +1,11 @@
 import type { PortableEdituberDocumentV1 } from "@edituber/contracts";
+import type { ImportedCharacter } from "./character-package";
 import { validatePortableDocument } from "./portable";
 
 const DATABASE_NAME = "edituber-web-lab";
-const DATABASE_VERSION = 1;
+const DATABASE_VERSION = 2;
 const PROJECT_STORE = "projects";
+const CHARACTER_STORE = "characters";
 const CURRENT_PROJECT_KEY = "current";
 
 const openDatabase = (): Promise<IDBDatabase> =>
@@ -13,6 +15,8 @@ const openDatabase = (): Promise<IDBDatabase> =>
       const database = request.result;
       if (!database.objectStoreNames.contains(PROJECT_STORE))
         database.createObjectStore(PROJECT_STORE);
+      if (!database.objectStoreNames.contains(CHARACTER_STORE))
+        database.createObjectStore(CHARACTER_STORE);
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error ?? new Error("No se pudo abrir IndexedDB"));
@@ -51,6 +55,48 @@ export const saveLocalProject = async (document: PortableEdituberDocumentV1): Pr
     const transaction = database.transaction(PROJECT_STORE, "readwrite");
     const done = transactionDone(transaction);
     transaction.objectStore(PROJECT_STORE).put(document, CURRENT_PROJECT_KEY);
+    await done;
+  } finally {
+    database.close();
+  }
+};
+
+export const loadLocalCharacters = async (): Promise<ImportedCharacter[]> => {
+  const database = await openDatabase();
+  try {
+    const transaction = database.transaction(CHARACTER_STORE, "readonly");
+    const done = transactionDone(transaction);
+    const request = transaction.objectStore(CHARACTER_STORE).getAll();
+    const value = await new Promise<ImportedCharacter[]>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result as ImportedCharacter[]);
+      request.onerror = () =>
+        reject(request.error ?? new Error("No se pudieron leer los personajes"));
+    });
+    await done;
+    return value.sort((left, right) => right.importedAt.localeCompare(left.importedAt));
+  } finally {
+    database.close();
+  }
+};
+
+export const saveLocalCharacter = async (character: ImportedCharacter): Promise<void> => {
+  const database = await openDatabase();
+  try {
+    const transaction = database.transaction(CHARACTER_STORE, "readwrite");
+    const done = transactionDone(transaction);
+    transaction.objectStore(CHARACTER_STORE).put(character, character.id);
+    await done;
+  } finally {
+    database.close();
+  }
+};
+
+export const deleteLocalCharacter = async (characterId: string): Promise<void> => {
+  const database = await openDatabase();
+  try {
+    const transaction = database.transaction(CHARACTER_STORE, "readwrite");
+    const done = transactionDone(transaction);
+    transaction.objectStore(CHARACTER_STORE).delete(characterId);
     await done;
   } finally {
     database.close();
