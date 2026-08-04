@@ -30,13 +30,40 @@ const effectNames: Record<AvatarEffect["type"], string> = {
 };
 
 const descriptions: Record<AvatarEffect["type"], string> = {
-  randomMove: "Ruido continuo determinista.",
-  waveMove: "Recorrido suave con seno y coseno.",
-  jump: "Rebote parabólico repetido.",
-  waveRotate: "Balanceo sinusoidal.",
-  darken: "Reduce el brillo del avatar.",
-  squashStretch: "Deforma ambos ejes sin separar capas.",
-  emphasis: "Reacciona a emphasisPulse.",
+  randomMove: "Añade pequeños movimientos naturales para que el personaje no se vea estático.",
+  waveMove: "Desplaza suavemente al personaje de lado a lado o de arriba abajo.",
+  jump: "Hace que el personaje dé saltos repetidos.",
+  waveRotate: "Balancea al personaje suavemente hacia ambos lados.",
+  darken: "Reduce el brillo del personaje.",
+  squashStretch: "Estira y comprime el personaje manteniendo sus piezas unidas.",
+  emphasis: "Aumenta el movimiento cuando detecta énfasis en la voz.",
+};
+
+const presetLabels: Record<AvatarEffect["preset"], string> = {
+  custom: "Personalizado",
+  relaxed: "Relajado",
+  shaking: "Temblor",
+  shakingHard: "Temblor fuerte",
+  breathing: "Respiración suave",
+  circling: "Movimiento circular",
+  bouncy: "Salto suave",
+  happy: "Salto alegre",
+  agitated: "Salto rápido",
+  swaying: "Balanceo suave",
+  swayingHard: "Balanceo fuerte",
+};
+
+const waveSpeeds = [
+  { value: 4, label: "Lenta" },
+  { value: 3, label: "Suave" },
+  { value: 2.4, label: "Normal" },
+  { value: 1.2, label: "Rápida" },
+  { value: 0.6, label: "Muy rápida" },
+] as const;
+
+export const roundEffectValue = (value: number, step: number): number => {
+  const decimals = Math.max(0, (String(step).split(".")[1] ?? "").length);
+  return Number((Math.round(value / step) * step).toFixed(decimals));
 };
 
 type NumericKey =
@@ -160,6 +187,133 @@ const presetsFor = (effect: AvatarEffect): AvatarEffect["preset"][] => {
   if (effect.type === "jump") return ["bouncy", "happy", "agitated", "custom"];
   if (effect.type === "waveRotate") return ["swaying", "swayingHard", "custom"];
   return ["custom"];
+};
+
+type WaveMoveEffect = Extract<AvatarEffect, { type: "waveMove" }>;
+
+const WaveMoveControls = ({
+  item,
+  onChange,
+}: {
+  item: WaveMoveEffect;
+  onChange: (item: WaveMoveEffect) => void;
+}) => {
+  const knownSpeed = waveSpeeds.find(
+    (candidate) => Math.abs(candidate.value - item.periodSeconds) < 0.01,
+  );
+  const phasePercent = Math.round(
+    ((((item.phaseOffset % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) / (Math.PI * 2)) * 100,
+  );
+  const change = (values: Partial<WaveMoveEffect>) =>
+    onChange({ ...item, ...values, preset: "custom" });
+  return (
+    <div className="wave-controls">
+      <div className="wave-basic-grid">
+        <label>
+          <span>
+            Distancia horizontal <output>{Math.round(Math.abs(item.amountX))} px</output>
+          </span>
+          <input
+            type="range"
+            min="0"
+            max="80"
+            step="1"
+            value={Math.abs(item.amountX)}
+            onChange={(event) =>
+              change({
+                amountX: Number(event.currentTarget.value) * (item.amountX < 0 ? -1 : 1),
+              })
+            }
+          />
+          <small>Quieto</small>
+          <small>Recorrido amplio</small>
+        </label>
+        <label>
+          <span>
+            Distancia vertical <output>{Math.round(Math.abs(item.amountY))} px</output>
+          </span>
+          <input
+            type="range"
+            min="0"
+            max="80"
+            step="1"
+            value={Math.abs(item.amountY)}
+            onChange={(event) =>
+              change({
+                amountY: Number(event.currentTarget.value) * (item.amountY < 0 ? -1 : 1),
+              })
+            }
+          />
+          <small>Quieto</small>
+          <small>Recorrido amplio</small>
+        </label>
+      </div>
+      <div className="wave-choice-grid">
+        <label>
+          Velocidad
+          <select
+            value={knownSpeed ? String(knownSpeed.value) : "custom"}
+            onChange={(event) => {
+              if (event.currentTarget.value === "custom") return;
+              change({ periodSeconds: Number(event.currentTarget.value) });
+            }}
+          >
+            {waveSpeeds.map((speed) => (
+              <option value={speed.value} key={speed.value}>
+                {speed.label}
+              </option>
+            ))}
+            {!knownSpeed ? (
+              <option value="custom">
+                Personalizada · {roundEffectValue(item.periodSeconds, 0.1)} s
+              </option>
+            ) : null}
+          </select>
+        </label>
+        <label>
+          Sentido del recorrido
+          <select
+            value={item.amountX * item.amountY < 0 ? "reverse" : "normal"}
+            disabled={item.amountX === 0 || item.amountY === 0}
+            onChange={(event) =>
+              change({
+                amountX:
+                  Math.abs(item.amountX) * (event.currentTarget.value === "reverse" ? -1 : 1),
+                amountY: Math.abs(item.amountY),
+              })
+            }
+          >
+            <option value="normal">Horario</option>
+            <option value="reverse">Antihorario</option>
+          </select>
+        </label>
+      </div>
+      <details className="advanced-effect-settings">
+        <summary>Ajuste avanzado</summary>
+        <label>
+          <span>
+            Punto inicial del recorrido <output>{phasePercent}%</output>
+          </span>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            value={phasePercent}
+            onChange={(event) =>
+              change({
+                phaseOffset: roundEffectValue(
+                  (Number(event.currentTarget.value) / 100) * Math.PI * 2,
+                  0.0001,
+                ),
+              })
+            }
+          />
+          <small>Solo cambia dónde comienza el movimiento.</small>
+        </label>
+      </details>
+    </div>
+  );
 };
 
 export const EffectEditor = ({
@@ -320,7 +474,7 @@ export const EffectEditor = ({
                 <>
                   <p>{descriptions[item.type]}</p>
                   <label className="preset-field">
-                    Preset
+                    Estilo rápido
                     <select
                       value={item.preset}
                       onChange={(event) =>
@@ -332,48 +486,55 @@ export const EffectEditor = ({
                     >
                       {presetsFor(item).map((preset) => (
                         <option key={preset} value={preset}>
-                          {preset}
+                          {presetLabels[preset]}
                         </option>
                       ))}
                     </select>
                   </label>
                 </>
               ) : null}
-              <div className="parameter-grid">
-                {parameters(item).map((parameter) => {
-                  const numericItem = item as unknown as Record<NumericKey, number>;
-                  const setValue = (next: number) => {
-                    if (!Number.isFinite(next)) return;
-                    const safe = Math.min(parameter.max, Math.max(parameter.min, next));
-                    update(index, {
-                      ...item,
-                      [parameter.key]: safe,
-                      ...(isContinuous ? { preset: "custom" } : {}),
-                    } as ClipboardValue);
-                  };
-                  return (
-                    <label key={parameter.key}>
-                      <span>{parameter.label}</span>
-                      <input
-                        type="range"
-                        min={parameter.min}
-                        max={parameter.max}
-                        step={parameter.step}
-                        value={numericItem[parameter.key]}
-                        onChange={(event) => setValue(Number(event.currentTarget.value))}
-                      />
-                      <input
-                        type="number"
-                        min={parameter.min}
-                        max={parameter.max}
-                        step={parameter.step}
-                        value={numericItem[parameter.key]}
-                        onChange={(event) => setValue(Number(event.currentTarget.value))}
-                      />
-                    </label>
-                  );
-                })}
-              </div>
+              {isContinuous && item.type === "waveMove" ? (
+                <WaveMoveControls item={item} onChange={(next) => update(index, next)} />
+              ) : (
+                <div className="parameter-grid">
+                  {parameters(item).map((parameter) => {
+                    const numericItem = item as unknown as Record<NumericKey, number>;
+                    const setValue = (next: number) => {
+                      if (!Number.isFinite(next)) return;
+                      const safe = roundEffectValue(
+                        Math.min(parameter.max, Math.max(parameter.min, next)),
+                        parameter.step,
+                      );
+                      update(index, {
+                        ...item,
+                        [parameter.key]: safe,
+                        ...(isContinuous ? { preset: "custom" } : {}),
+                      } as ClipboardValue);
+                    };
+                    return (
+                      <label key={parameter.key}>
+                        <span>{parameter.label}</span>
+                        <input
+                          type="range"
+                          min={parameter.min}
+                          max={parameter.max}
+                          step={parameter.step}
+                          value={roundEffectValue(numericItem[parameter.key], parameter.step)}
+                          onChange={(event) => setValue(Number(event.currentTarget.value))}
+                        />
+                        <input
+                          type="number"
+                          min={parameter.min}
+                          max={parameter.max}
+                          step={parameter.step}
+                          value={roundEffectValue(numericItem[parameter.key], parameter.step)}
+                          onChange={(event) => setValue(Number(event.currentTarget.value))}
+                        />
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
               <button
                 type="button"
                 className="reset-effect"

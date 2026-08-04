@@ -1503,6 +1503,78 @@ input[type="range"]::-webkit-slider-thumb {
   color: #8fa9ba;
   font-size: 9px;
 }
+.wave-controls {
+  display: grid;
+  gap: 11px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #193d50;
+  border-radius: 10px;
+  background: #06131d;
+}
+.wave-basic-grid,
+.wave-choice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.wave-basic-grid label {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  color: #8fa9ba;
+  font-size: 9px;
+}
+.wave-basic-grid label > span,
+.advanced-effect-settings label > span {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.wave-basic-grid output,
+.advanced-effect-settings output {
+  color: #64e9f2;
+  font:
+    9px ui-monospace,
+    monospace;
+}
+.wave-basic-grid input {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+.wave-basic-grid small:last-child {
+  text-align: right;
+}
+.wave-choice-grid label {
+  display: grid;
+  gap: 5px;
+  color: #8fa9ba;
+  font-size: 9px;
+}
+.wave-choice-grid select {
+  width: 100%;
+  padding-inline: 8px;
+}
+.advanced-effect-settings {
+  padding-top: 9px;
+  border-top: 1px solid #173549;
+  color: #7895a7;
+  font-size: 9px;
+}
+.advanced-effect-settings summary {
+  width: fit-content;
+  cursor: pointer;
+  color: #86a6b8;
+}
+.advanced-effect-settings label {
+  display: grid;
+  gap: 7px;
+  margin-top: 10px;
+}
+.advanced-effect-settings input {
+  width: 100%;
+}
 .parameter-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1899,6 +1971,10 @@ select:focus-visible,
     align-items: flex-start;
   }
   .parameter-grid {
+    grid-template-columns: 1fr;
+  }
+  .wave-basic-grid,
+  .wave-choice-grid {
     grid-template-columns: 1fr;
   }
   .asset-grid {
