@@ -93,6 +93,9 @@
       ],
       "properties": {
         "blinkEnabled": { "type": "boolean" },
+        "blink": {
+          "$ref": "https://edituber.dev/schemas/avatar-manifest-v2.json#/$defs/blink"
+        },
         "talkBounceEnabled": { "type": "boolean" },
         "mouthSensitivity": { "type": "number", "minimum": 0, "maximum": 1 },
         "transitionFrames": { "type": "integer", "minimum": 0, "maximum": 60 },

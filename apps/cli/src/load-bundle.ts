@@ -307,6 +307,13 @@ export const loadDirectBundle = async (options: DirectBundleOptions): Promise<Ed
     stateEvents: [{ frame: 0, stateId: avatar.defaultStateId }],
     settings: {
       blinkEnabled: true,
+      blink: {
+        intervalMinSeconds: 2.3,
+        intervalMaxSeconds: 5,
+        durationMilliseconds: 130,
+        syncAnimatedImages: true,
+        playAnimationToEnd: false,
+      },
       talkBounceEnabled: true,
       mouthSensitivity: 0.55,
       transitionFrames: 8,

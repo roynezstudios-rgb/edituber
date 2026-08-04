@@ -44,3 +44,7 @@ La CLI separa `assetRoot` de `cacheRoot`. Las referencias del JSON solo pueden l
 ## ADR-010 — Animación raster portable, sincronización aplazada
 
 GIF, APNG y WebP animado son referencias válidas y pueden viajar como data URI. El contrato conserva `syncAnimatedImages`, `playAnimationToEnd` y `resetAnimationOnEnter`, pero la reproducción frame-exacta de esas animaciones dentro de Remotion se documenta como pendiente. Los modos estáticos 1/2/4 no dependen de ella.
+
+## ADR-011 — Un solo parpadeo para toda la grabación
+
+El interruptor, intervalo y duración viven en `project.settings.blink`. El motor usa la semilla del proyecto para mantener un calendario continuo aunque cambie el estado en la timeline. `blinkPolicy` y `blink` dentro de `AvatarState` quedan únicamente como compatibilidad de lectura para documentos anteriores; el Web Lab los promueve al proyecto y deja de exportarlos por estado.

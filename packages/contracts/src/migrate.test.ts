@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { defaultBlinkSettings } from "./defaults";
 import { migrateAvatarManifestV1, migrateProjectV1 } from "./migrate";
 import type { AvatarManifestV1, EdituberProjectV1 } from "./types";
 import { validateAvatarManifest, validateProject } from "./validate";
@@ -61,7 +62,17 @@ describe("v1 migration", () => {
     expect(validateAvatarManifest(avatar).valid).toBe(true);
     const project = migrateProjectV1(legacyProject, avatar);
     expect(project.stateEvents).toEqual([{ frame: 0, stateId }]);
+    expect(project.settings.blink).toEqual(defaultBlinkSettings());
     expect(validateProject(project).valid).toBe(true);
+    expect(
+      validateProject({
+        ...project,
+        settings: {
+          ...project.settings,
+          blink: { ...defaultBlinkSettings(), intervalMinSeconds: 6, intervalMaxSeconds: 2 },
+        },
+      }).errors,
+    ).toContain("/settings/blink minimum interval must not exceed maximum");
   });
 
   it("rejects duplicate, unsorted, or mismatched frame-zero events", () => {

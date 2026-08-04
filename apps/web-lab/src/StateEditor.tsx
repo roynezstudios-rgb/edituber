@@ -1,5 +1,4 @@
 import {
-  deriveStateSeed,
   isBlinkClosedAtFrame,
   resolveAvatarEffects,
   resolveStateImage,
@@ -7,7 +6,7 @@ import {
 import {
   type AvatarEffects,
   type AvatarState,
-  defaultBlinkSettings,
+  type BlinkSettings,
   defaultEffect,
   emptyAvatarEffects,
 } from "@edituber/contracts";
@@ -102,8 +101,6 @@ export interface StateDraft {
   id?: string;
   name: string;
   emoji: string;
-  blinkPolicy: "auto" | "disabled";
-  blink: ReturnType<typeof defaultBlinkSettings>;
   imageMode: "smooth" | "pixel";
   resetAnimationOnEnter: boolean;
   effects: AvatarEffects;
@@ -119,8 +116,6 @@ export const draftFromState = (state?: AvatarState): StateDraft => ({
   id: state?.id,
   name: state?.name ?? "Nuevo estado",
   emoji: state?.emoji ?? "🙂",
-  blinkPolicy: state?.blinkPolicy ?? "disabled",
-  blink: structuredClone(state?.blink ?? defaultBlinkSettings()),
   imageMode: state?.imageMode ?? "smooth",
   resetAnimationOnEnter: state?.resetAnimationOnEnter ?? false,
   effects: legacyEffects(state),
@@ -141,25 +136,10 @@ export const stateFromDraft = (
     throw new Error("El modo de boca necesita la imagen al hablar");
   if (draft.blinkEnabled && (!draft.mouthEnabled || !draft.closedClosed || !draft.closedOpen))
     throw new Error("El modo de parpadeo necesita exactamente cuatro imágenes");
-  if (
-    !Number.isFinite(draft.blink.intervalMinSeconds) ||
-    draft.blink.intervalMinSeconds < 0.8 ||
-    draft.blink.intervalMinSeconds > 30 ||
-    !Number.isFinite(draft.blink.intervalMaxSeconds) ||
-    draft.blink.intervalMaxSeconds < 0.8 ||
-    draft.blink.intervalMaxSeconds > 60 ||
-    draft.blink.intervalMinSeconds > draft.blink.intervalMaxSeconds ||
-    !Number.isFinite(draft.blink.durationMilliseconds) ||
-    draft.blink.durationMilliseconds < 60 ||
-    draft.blink.durationMilliseconds > 1000
-  )
-    throw new Error("La configuración de parpadeo está fuera de rango");
   const shared = {
     id,
     name: draft.name.trim(),
     emoji: draft.emoji.trim(),
-    blinkPolicy: draft.blinkEnabled ? draft.blinkPolicy : ("disabled" as const),
-    blink: structuredClone(draft.blink),
     imageMode: draft.imageMode,
     resetAnimationOnEnter: draft.resetAnimationOnEnter,
     effects: structuredClone(draft.effects),
@@ -189,7 +169,6 @@ export const draftWithoutMouthImages = (
     openOpen: "",
     closedClosed: "",
     closedOpen: "",
-    blinkPolicy: "disabled",
   };
 };
 
@@ -203,7 +182,6 @@ export const draftWithoutBlinkImages = (
     blinkEnabled: false,
     closedClosed: "",
     closedOpen: "",
-    blinkPolicy: "disabled",
   };
 };
 
@@ -219,12 +197,16 @@ export const StateEditor = ({
   onCancel,
   onSave,
   seed,
+  blinkSettings,
+  globalBlinkEnabled,
 }: {
   draft: StateDraft;
   onChange: (draft: StateDraft) => void;
   onCancel: () => void;
   onSave: () => void;
   seed: number;
+  blinkSettings: BlinkSettings;
+  globalBlinkEnabled: boolean;
 }) => {
   const titleId = useId();
   const dialogRef = useRef<HTMLElement>(null);
@@ -311,24 +293,12 @@ export const StateEditor = ({
   };
 
   const blinkComplete = Boolean(draft.closedClosed && draft.closedOpen);
-  const blinkValuesValid =
-    Number.isFinite(draft.blink.intervalMinSeconds) &&
-    draft.blink.intervalMinSeconds >= 0.8 &&
-    draft.blink.intervalMinSeconds <= 30 &&
-    Number.isFinite(draft.blink.intervalMaxSeconds) &&
-    draft.blink.intervalMaxSeconds >= 0.8 &&
-    draft.blink.intervalMaxSeconds <= 60 &&
-    draft.blink.intervalMinSeconds <= draft.blink.intervalMaxSeconds &&
-    Number.isFinite(draft.blink.durationMilliseconds) &&
-    draft.blink.durationMilliseconds >= 60 &&
-    draft.blink.durationMilliseconds <= 1000;
   const canSave = Boolean(
     draft.name.trim() &&
       draft.emoji.trim() &&
       draft.openClosed &&
       (!draft.mouthEnabled || draft.openOpen) &&
-      (!draft.blinkEnabled || blinkComplete) &&
-      blinkValuesValid,
+      (!draft.blinkEnabled || blinkComplete),
   );
   const previewState = stateFromDraft(
     {
@@ -345,12 +315,11 @@ export const StateEditor = ({
     },
     draft.id ?? "2522cfb9-01e1-47c6-9e61-e6e5a4ae3ef0",
   );
-  const previewSeed = deriveStateSeed(seed, previewState.id);
   const simulation = resolvePreviewSimulation(previewFrame);
   const blinking =
+    globalBlinkEnabled &&
     draft.blinkEnabled &&
-    draft.blinkPolicy === "auto" &&
-    (simulation.forceBlink || isBlinkClosedAtFrame(previewFrame, 30, previewSeed, draft.blink));
+    (simulation.forceBlink || isBlinkClosedAtFrame(previewFrame, 30, seed, blinkSettings));
   const transform = resolveAvatarEffects({
     state: previewState,
     frame: previewFrame,
@@ -361,7 +330,7 @@ export const StateEditor = ({
     stateEnterFrame: simulation.cycleStartFrame,
     emphasisPulse: simulation.emphasisPulse,
     emphasisFrames: simulation.emphasisFrames,
-    seed: previewSeed,
+    seed,
     motionScale: 1,
   });
   const previewImage = resolveStateImage(previewState, simulation.speaking, blinking);
@@ -518,125 +487,9 @@ export const StateEditor = ({
                   {imageInput("closedClosed")}
                   {imageInput("closedOpen")}
                 </div>
-                <fieldset className="blink-settings">
-                  <legend>Parpadeo por estado</legend>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={draft.blinkPolicy === "auto"}
-                      onChange={(event) =>
-                        onChange({
-                          ...draft,
-                          blinkPolicy: event.currentTarget.checked ? "auto" : "disabled",
-                        })
-                      }
-                    />
-                    Automático
-                  </label>
-                  <label>
-                    Intervalo mínimo (s)
-                    <input
-                      type="number"
-                      min="0.8"
-                      max="30"
-                      step="0.1"
-                      value={draft.blink.intervalMinSeconds}
-                      onChange={(event) =>
-                        onChange({
-                          ...draft,
-                          blink: {
-                            ...draft.blink,
-                            intervalMinSeconds: Number(event.currentTarget.value),
-                          },
-                        })
-                      }
-                    />
-                  </label>
-                  <label>
-                    Intervalo máximo (s)
-                    <input
-                      type="number"
-                      min="0.8"
-                      max="60"
-                      step="0.1"
-                      value={draft.blink.intervalMaxSeconds}
-                      onChange={(event) =>
-                        onChange({
-                          ...draft,
-                          blink: {
-                            ...draft.blink,
-                            intervalMaxSeconds: Number(event.currentTarget.value),
-                          },
-                        })
-                      }
-                    />
-                  </label>
-                  <label>
-                    Duración (ms)
-                    <input
-                      type="number"
-                      min="60"
-                      max="1000"
-                      step="10"
-                      value={draft.blink.durationMilliseconds}
-                      onChange={(event) =>
-                        onChange({
-                          ...draft,
-                          blink: {
-                            ...draft.blink,
-                            durationMilliseconds: Number(event.currentTarget.value),
-                          },
-                        })
-                      }
-                    />
-                  </label>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={draft.blink.syncAnimatedImages}
-                      onChange={(event) =>
-                        onChange({
-                          ...draft,
-                          blink: {
-                            ...draft.blink,
-                            syncAnimatedImages: event.currentTarget.checked,
-                          },
-                        })
-                      }
-                    />
-                    Sincronizar imágenes animadas
-                  </label>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={draft.blink.playAnimationToEnd}
-                      onChange={(event) =>
-                        onChange({
-                          ...draft,
-                          blink: {
-                            ...draft.blink,
-                            playAnimationToEnd: event.currentTarget.checked,
-                          },
-                        })
-                      }
-                    />
-                    Reproducir animación hasta el final
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      let target = previewFrame + 1;
-                      while (
-                        target < previewFrame + 180 &&
-                        !isBlinkClosedAtFrame(target, 30, previewSeed, draft.blink)
-                      )
-                        target += 1;
-                      setPreviewFrame(target);
-                    }}
-                  >
-                    Probar parpadeo
-                  </button>
-                </fieldset>
+                <p className="field-help">
+                  El ritmo del parpadeo se configura una sola vez en Parpadeo general.
+                </p>
               </>
             ) : (
               <p className="field-help">
@@ -646,13 +499,6 @@ export const StateEditor = ({
             )}
             {draft.blinkEnabled && !blinkComplete ? (
               <p className="form-error">Completa juntas las dos imágenes de ojos cerrados.</p>
-            ) : null}
-            {draft.blink.intervalMinSeconds > draft.blink.intervalMaxSeconds ? (
-              <p className="form-error">El intervalo mínimo no puede superar al máximo.</p>
-            ) : null}
-            {!blinkValuesValid &&
-            draft.blink.intervalMinSeconds <= draft.blink.intervalMaxSeconds ? (
-              <p className="form-error">Revisa los límites de intervalo y duración.</p>
             ) : null}
             {assetError ? <p className="form-error">{assetError}</p> : null}
           </div>

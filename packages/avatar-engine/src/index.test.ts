@@ -101,18 +101,41 @@ describe("avatar image modes", () => {
     expect(resolveStateImage(two, true, true)).toBe("open.svg");
   });
 
-  it("resolves all four combinations and honors disabled blink", () => {
+  it("resolves all four combinations from the recording-wide blink signal", () => {
     expect(resolveStateImage(fourImageState, false, false)).toBe("closed.svg");
     expect(resolveStateImage(fourImageState, true, false)).toBe("open.svg");
     expect(resolveStateImage(fourImageState, false, true)).toBe("blink.svg");
     expect(resolveStateImage(fourImageState, true, true)).toBe("blink-open.svg");
     expect(resolveStateImage({ ...fourImageState, blinkPolicy: "disabled" }, false, true)).toBe(
-      "closed.svg",
+      "blink.svg",
     );
   });
 });
 
 describe("deterministic blink, effects, and transitions", () => {
+  it("uses one project blink configuration across every state", () => {
+    const globalBlink = {
+      intervalMinSeconds: 1,
+      intervalMaxSeconds: 1,
+      durationMilliseconds: 300,
+      syncAnimatedImages: true,
+      playAnimationToEnd: false,
+    };
+    const stateWithLegacyOverride = {
+      ...fourImageState,
+      blinkPolicy: "disabled" as const,
+      blink: { ...globalBlink, intervalMinSeconds: 10, intervalMaxSeconds: 10 },
+    };
+    const result = resolveAvatarAtFrame(
+      { ...project, settings: { ...project.settings, blink: globalBlink } },
+      { ...manifest, states: [stateWithLegacyOverride] },
+      undefined,
+      30,
+    );
+    expect(result.eyesClosed).toBe(true);
+    expect(result.currentFace).toBe("blink.svg");
+  });
+
   it("gives recording-wide project effects priority over state-specific effects", () => {
     const stateEffects = emptyAvatarEffects();
     stateEffects.mouthClosed = [

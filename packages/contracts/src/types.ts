@@ -34,6 +34,8 @@ export interface ProjectAudio {
 
 export interface ProjectSettings {
   blinkEnabled: boolean;
+  /** Global blink behavior for the complete recording. */
+  blink?: BlinkSettings;
   talkBounceEnabled: boolean;
   mouthSensitivity: number;
   transitionFrames: number;
@@ -210,7 +212,9 @@ export interface AvatarState {
   name: string;
   emoji: string;
   images: AvatarStateImages;
+  /** @deprecated v2 compatibility only. Blink behavior now lives in project.settings. */
   blinkPolicy?: BlinkPolicy;
+  /** @deprecated v2 compatibility only. Blink behavior now lives in project.settings. */
   blink?: BlinkSettings;
   imageMode?: ImageMode;
   resetAnimationOnEnter?: boolean;

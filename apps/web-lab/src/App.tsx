@@ -3,6 +3,8 @@ import {
   type AvatarEffects,
   type AvatarManifestV2,
   type AvatarState,
+  type BlinkSettings,
+  defaultBlinkSettings,
   type EdituberProjectV2,
   emptyAvatarEffects,
   type PortableEdituberDocumentV1,
@@ -39,10 +41,30 @@ const effectsForRecording = (project: EdituberProjectV2, avatar: AvatarManifestV
       avatar.states.find((state) => state.effects)?.effects ??
       emptyAvatarEffects(),
   );
+const withoutPerStateBlinkSettings = (avatar: AvatarManifestV2): AvatarManifestV2 => ({
+  ...clone(avatar),
+  states: avatar.states.map((state) => {
+    const next = clone(state);
+    delete next.blink;
+    delete next.blinkPolicy;
+    return next;
+  }),
+});
 const withRecordingEffects = (
   project: EdituberProjectV2,
   avatar: AvatarManifestV2,
-): EdituberProjectV2 => ({ ...project, effects: effectsForRecording(project, avatar) });
+): EdituberProjectV2 => ({
+  ...project,
+  effects: effectsForRecording(project, avatar),
+  settings: {
+    ...project.settings,
+    blink: clone(
+      project.settings.blink ??
+        avatar.states.find((state) => state.blink)?.blink ??
+        defaultBlinkSettings(),
+    ),
+  },
+});
 const formatTime = (seconds: number) =>
   `${Math.floor(Math.max(0, seconds) / 60)}:${String(Math.floor(Math.max(0, seconds) % 60)).padStart(2, "0")}`;
 
@@ -91,7 +113,9 @@ export const App = () => {
   const [project, setProject] = useState<EdituberProjectV2>(() =>
     withRecordingEffects(clone(fixtureBundle.project), fixtureBundle.avatar),
   );
-  const [avatar, setAvatar] = useState<AvatarManifestV2>(() => clone(fixtureBundle.avatar));
+  const [avatar, setAvatar] = useState<AvatarManifestV2>(() =>
+    withoutPerStateBlinkSettings(fixtureBundle.avatar),
+  );
   const [envelope, setEnvelope] = useState(fixtureBundle.envelope);
   const [audioSource, setAudioSource] = useState(fixtureBundle.audioSource);
   const [frame, setFrame] = useState(0);
@@ -210,6 +234,14 @@ export const App = () => {
     key: K,
     value: EdituberProjectV2["settings"][K],
   ) => setProject((current) => ({ ...current, settings: { ...current.settings, [key]: value } }));
+  const updateBlinkSetting = <K extends keyof BlinkSettings>(key: K, value: BlinkSettings[K]) =>
+    setProject((current) => ({
+      ...current,
+      settings: {
+        ...current.settings,
+        blink: { ...(current.settings.blink ?? defaultBlinkSettings()), [key]: value },
+      },
+    }));
 
   const chooseState = (stateId: string) => {
     const target = pickerFrame ?? frame;
@@ -459,7 +491,7 @@ export const App = () => {
     try {
       const document = parsePortableDocument(await file.text());
       setProject(withRecordingEffects(document.project, document.avatar));
-      setAvatar(document.avatar);
+      setAvatar(withoutPerStateBlinkSettings(document.avatar));
       setEnvelope(document.envelope);
       setAudioSource(document.audioSource ?? "");
       setFrame(0);
@@ -878,6 +910,74 @@ export const App = () => {
               />
             </label>
           </div>
+          <fieldset className="blink-settings global-blink-settings">
+            <legend>Parpadeo general</legend>
+            <p>Una sola configuración para todos los estados durante toda la grabación.</p>
+            <label>
+              Intervalo mínimo (s)
+              <input
+                type="number"
+                min="0.8"
+                max="30"
+                step="0.1"
+                disabled={!project.settings.blinkEnabled}
+                value={(project.settings.blink ?? defaultBlinkSettings()).intervalMinSeconds}
+                onChange={(event) =>
+                  updateBlinkSetting("intervalMinSeconds", Number(event.currentTarget.value))
+                }
+              />
+            </label>
+            <label>
+              Intervalo máximo (s)
+              <input
+                type="number"
+                min="0.8"
+                max="60"
+                step="0.1"
+                disabled={!project.settings.blinkEnabled}
+                value={(project.settings.blink ?? defaultBlinkSettings()).intervalMaxSeconds}
+                onChange={(event) =>
+                  updateBlinkSetting("intervalMaxSeconds", Number(event.currentTarget.value))
+                }
+              />
+            </label>
+            <label>
+              Duración (ms)
+              <input
+                type="number"
+                min="60"
+                max="1000"
+                step="10"
+                disabled={!project.settings.blinkEnabled}
+                value={(project.settings.blink ?? defaultBlinkSettings()).durationMilliseconds}
+                onChange={(event) =>
+                  updateBlinkSetting("durationMilliseconds", Number(event.currentTarget.value))
+                }
+              />
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                disabled={!project.settings.blinkEnabled}
+                checked={(project.settings.blink ?? defaultBlinkSettings()).syncAnimatedImages}
+                onChange={(event) =>
+                  updateBlinkSetting("syncAnimatedImages", event.currentTarget.checked)
+                }
+              />
+              Sincronizar imágenes animadas
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                disabled={!project.settings.blinkEnabled}
+                checked={(project.settings.blink ?? defaultBlinkSettings()).playAnimationToEnd}
+                onChange={(event) =>
+                  updateBlinkSetting("playAnimationToEnd", event.currentTarget.checked)
+                }
+              />
+              Reproducir animación hasta el final
+            </label>
+          </fieldset>
 
           <section className="state-stock" aria-labelledby={stockTitleId}>
             <div className="stock-heading">
@@ -1066,6 +1166,8 @@ export const App = () => {
         <StateEditor
           draft={stateDraft}
           seed={project.seed}
+          blinkSettings={project.settings.blink ?? defaultBlinkSettings()}
+          globalBlinkEnabled={project.settings.blinkEnabled}
           onChange={setStateDraft}
           onCancel={() => setStateDraft(null)}
           onSave={saveState}

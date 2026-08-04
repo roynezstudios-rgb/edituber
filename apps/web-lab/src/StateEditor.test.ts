@@ -38,7 +38,6 @@ describe("progressive state editor model", () => {
       ...simpleDraft,
       mouthEnabled: true,
       blinkEnabled: true,
-      blinkPolicy: "auto",
       openOpen: "talk.png",
       closedClosed: "blink.png",
       closedOpen: "blink-talk.png",
@@ -93,19 +92,10 @@ describe("progressive state editor model", () => {
     });
   });
 
-  it("refuses non-finite and out-of-range blink settings", () => {
+  it("keeps global blink behavior out of individual states", () => {
     const base = { ...draftFromState(), id: stateId, openClosed: "base.png" };
-    expect(() =>
-      stateFromDraft({
-        ...base,
-        blink: { ...base.blink, durationMilliseconds: Number.POSITIVE_INFINITY },
-      }),
-    ).toThrow("fuera de rango");
-    expect(() =>
-      stateFromDraft({
-        ...base,
-        blink: { ...base.blink, intervalMinSeconds: 0.1 },
-      }),
-    ).toThrow("fuera de rango");
+    const state = stateFromDraft(base);
+    expect(state.blink).toBeUndefined();
+    expect(state.blinkPolicy).toBeUndefined();
   });
 });

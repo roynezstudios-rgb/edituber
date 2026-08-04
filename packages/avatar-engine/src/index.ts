@@ -119,7 +119,7 @@ export const resolveStateImage = (
   isSpeaking: boolean,
   isBlinking: boolean,
 ): string => {
-  const canBlink = state.blinkPolicy !== "disabled" && Boolean(state.images.eyesClosed);
+  const canBlink = Boolean(state.images.eyesClosed);
   const eyePair = canBlink && isBlinking ? state.images.eyesClosed : state.images.eyesOpen;
   if (!eyePair) return state.images.eyesOpen.mouthClosed;
   return isSpeaking && eyePair.mouthOpen
@@ -310,12 +310,11 @@ export const resolveAvatarAtFrame = (
   const inferredChange =
     previousSpeaking === mouthOpen ? null : mouthOpen ? "closedToOpen" : "openToClosed";
   const voiceChange = context.voiceChange === undefined ? inferredChange : context.voiceChange;
-  const blinkSeed = deriveStateSeed(project.seed, current.id);
+  const blinkSettings = project.settings.blink ?? current.blink ?? defaultBlinkSettings();
   const eyesClosed =
     project.settings.blinkEnabled &&
-    (current.blinkPolicy ?? "auto") === "auto" &&
     Boolean(current.images.eyesClosed) &&
-    isBlinkClosedAtFrame(frame, project.fps, blinkSeed, current.blink ?? defaultBlinkSettings());
+    isBlinkClosedAtFrame(frame, project.fps, project.seed, blinkSettings);
   const previous = timeline.previousStateId ? stateById(manifest, timeline.previousStateId) : null;
   const activeEffects = project.effects ?? current.effects;
   const transform = activeEffects

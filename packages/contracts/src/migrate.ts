@@ -84,6 +84,6 @@ export const migrateProjectV1 = (
       frame: event.frame,
       stateId: stateIdForEmoji(event.emoji),
     })),
-    settings: project.settings,
+    settings: { ...project.settings, blink: defaultBlinkSettings() },
   };
 };

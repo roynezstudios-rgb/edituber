@@ -44,6 +44,11 @@ export const validateProject = (candidate: unknown): ValidationResult => {
       errors.push("/durationInFrames cannot exceed the declared audio duration");
     if (project.stage.backgroundType === "image" && !project.stage.backgroundImage)
       errors.push("/stage/backgroundImage is required for image backgrounds");
+    if (
+      project.settings.blink &&
+      project.settings.blink.intervalMinSeconds > project.settings.blink.intervalMaxSeconds
+    )
+      errors.push("/settings/blink minimum interval must not exceed maximum");
   }
   return { valid: errors.length === 0, errors };
 };
