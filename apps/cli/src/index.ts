@@ -17,7 +17,7 @@ interface RenderOptions {
 const program = new Command()
   .name("edituber")
   .description("Deterministic headless avatar performance renderer")
-  .version("0.1.0");
+  .version("0.2.0");
 
 program
   .command("render")

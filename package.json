@@ -1,9 +1,10 @@
 {
   "name": "edituber",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Deterministic 2D avatar performance engine and responsive Web Lab",
+  "license": "AGPL-3.0-only",
   "packageManager": "pnpm@11.7.0",
   "engines": {
     "node": ">=22"
@@ -13,6 +14,9 @@
     "check": "biome check . && tsc -b --pretty false",
     "dev:web": "pnpm --filter @edituber/web-lab dev",
     "edituber": "node --import tsx apps/cli/src/index.ts",
+    "start": "pnpm build:web && node --import tsx apps/server/src/index.ts",
+    "start:server": "node --import tsx apps/server/src/index.ts",
+    "build:web": "pnpm --filter @edituber/web-lab build",
     "format": "biome format --write .",
     "lint": "biome lint .",
     "render:demo": "node --import tsx apps/cli/src/index.ts render --project fixtures/projects/demo.edituber.json --asset-root fixtures --output outputs/edituber-demo.mp4",
@@ -30,6 +34,7 @@
     "react": "19.1.1",
     "react-dom": "19.1.1",
     "remotion": "4.0.410",
+    "tsx": "4.20.5",
     "zod": "3.22.3"
   },
   "devDependencies": {
@@ -38,7 +43,6 @@
     "@types/react": "19.1.16",
     "@types/react-dom": "19.1.9",
     "@vitejs/plugin-react": "5.0.4",
-    "tsx": "4.20.5",
     "typescript": "5.9.2",
     "vite": "7.3.5",
     "vitest": "3.2.6"

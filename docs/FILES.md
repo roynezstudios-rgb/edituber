@@ -1,4 +1,4 @@
-# Inventario de la primera entrega
+# Inventario de EDITuber Core + Studio Local
 
 ## Raíz
 
@@ -6,25 +6,29 @@
 - `tsconfig.base.json`, `tsconfig.json`: TypeScript estricto y referencias de proyecto.
 - `biome.json`: formato y lint.
 - `README.md`: instalación, comandos, alcance y límites.
+- `Dockerfile`, `compose.yml`: distribución reproducible para VPS.
+- `AGENTS.md`: reglas duras para automatizaciones y guiones.
+- `.github/workflows`: calidad, render de humo, Pages y archivos de release.
 
 ## Aplicaciones
 
 - `apps/cli/src/index.ts`: comandos `render` y `validate`.
 - `apps/cli/src/load-bundle.ts`: validación de rutas/tamaños, caché y assets embebidos.
+- `apps/server/src`: API autenticada, cola de render, descargas y servidor estático.
 - `apps/web-lab/src/App.tsx`: preview, parpadeo global, stock de estados y timeline responsive.
 - `apps/web-lab/src/audio-edit.ts`: corte PCM local y remapeo de eventos después de eliminar audio.
 - `apps/web-lab/src/StateEditor.tsx`, `EffectEditor.tsx`: editor progresivo 1/2/4 y cinco grupos de efectos.
 - `apps/web-lab/src/portable.ts`: importación/exportación del documento portable.
 - `apps/web-lab/src/fixture.ts`: adaptación del fixture al navegador.
 - `apps/web-lab/src/styles.css`: diseño desktop/móvil.
-- `apps/web-lab/vite.config.ts`: servidor de desarrollo y puente local de render.
+- `apps/web-lab/vite.config.ts`: servidor de desarrollo y proxy hacia la API local.
 
 ## Paquetes
 
 - `packages/contracts/schema`: proyecto y manifiesto v2.
 - `packages/contracts/src`: tipos, validación y migración v1→v2.
 - `packages/audio-engine/src`: análisis puro, caché y decodificación FFmpeg.
-- `packages/timeline-engine/src`: eventos y transición por frame.
+- `packages/timeline-engine/src`: eventos, transición por frame y guion directivo.
 - `packages/avatar-engine/src`: selección 1/2/4, blink y composición determinista de efectos/transiciones.
 - `packages/core/src`: bundle compartido y estado visual por frame.
 - `packages/renderer-contract/src`: interfaz `RenderEngine`.
@@ -43,4 +47,5 @@
 ## Documentación
 
 - `docs/PRD.md`, `ARCHITECTURE.md`, `DECISIONS.md`, `ROADMAP.md`.
-- `docs/LICENSE-REVIEW.md`: dependencias, assets y revisión comercial pendiente.
+- `docs/API.md`, `DEPLOYMENT.md`, `SCRIPT-DIRECTIVES.md`, `RELEASE-CHECKLIST.md`.
+- `docs/LICENSE-REVIEW.md`: dependencias, assets y condiciones revisadas para Remotion.

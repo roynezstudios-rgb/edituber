@@ -22,7 +22,7 @@ desde una CLI y desde un Web Lab responsive, y producir un MP4 reproducible.
 
 ## Fuera de alcance
 
-Flutter, anuncios, compras, cuentas, nube, TTS, búsqueda visual, colaboración y render remoto.
+Clientes externos, monetización, cuentas, nube, TTS, búsqueda visual, colaboración y render remoto.
 
 ## Criterio de éxito
 

@@ -1,6 +1,6 @@
-import { mkdir } from "node:fs/promises";
+import { access, mkdir } from "node:fs/promises";
 import os from "node:os";
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { type EdituberBundle, validateBundle } from "@edituber/core";
 import type { PreviewHandle, RenderEngine, RenderResult } from "@edituber/renderer-contract";
@@ -30,6 +30,43 @@ const ensureLoopbackIsDiscoverable = (): void => {
   }
 };
 
+export const resolveBrowserExecutable = async (): Promise<string> => {
+  if (process.env.EDITUBER_BROWSER_EXECUTABLE) {
+    await access(process.env.EDITUBER_BROWSER_EXECUTABLE);
+    return process.env.EDITUBER_BROWSER_EXECUTABLE;
+  }
+  if (process.platform !== "win32") return chromium.executablePath();
+  const candidates = [
+    process.env.LOCALAPPDATA
+      ? join(process.env.LOCALAPPDATA, "Google", "Chrome", "Application", "chrome.exe")
+      : null,
+    process.env.ProgramFiles
+      ? join(process.env.ProgramFiles, "Google", "Chrome", "Application", "chrome.exe")
+      : null,
+    process.env["ProgramFiles(x86)"]
+      ? join(process.env["ProgramFiles(x86)"], "Google", "Chrome", "Application", "chrome.exe")
+      : null,
+    process.env.ProgramFiles
+      ? join(process.env.ProgramFiles, "Microsoft", "Edge", "Application", "msedge.exe")
+      : null,
+    process.env["ProgramFiles(x86)"]
+      ? join(process.env["ProgramFiles(x86)"], "Microsoft", "Edge", "Application", "msedge.exe")
+      : null,
+  ];
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    try {
+      await access(candidate);
+      return candidate;
+    } catch {
+      // Continue through the known Chrome and Edge locations.
+    }
+  }
+  throw new Error(
+    "No se encontró Chrome o Edge. Define EDITUBER_BROWSER_EXECUTABLE con la ruta del navegador.",
+  );
+};
+
 export class RemotionRenderEngine implements RenderEngine {
   validate(bundle: EdituberBundle) {
     return validateBundle(bundle);
@@ -49,7 +86,7 @@ export class RemotionRenderEngine implements RenderEngine {
     const entryPoint = fileURLToPath(new URL("./entry.tsx", import.meta.url));
     const serveUrl = await bundleRemotion({ entryPoint, webpackOverride: (config) => config });
     const inputProps = { bundle };
-    const browserExecutable = await chromium.executablePath();
+    const browserExecutable = await resolveBrowserExecutable();
     const composition = await selectComposition({
       serveUrl,
       id: "EdituberPerformance",

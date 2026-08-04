@@ -15,6 +15,7 @@ import {
 import { type EdituberBundle, resolveFrameState } from "@edituber/core";
 import {
   frameFromTimelinePosition,
+  parseScriptDirectives,
   removeStateEvent,
   upsertStateEvent,
 } from "@edituber/timeline-engine";
@@ -37,13 +38,14 @@ import { type ImportedCharacter, parseCharacterPackageFile } from "./character-p
 import { EffectEditor } from "./EffectEditor";
 import { fixtureBundle } from "./fixture";
 import {
+  commitLocalProjectUpdate,
   deleteLocalCharacter,
   loadLocalCharacters,
   loadLocalProject,
   saveLocalCharacter,
   saveLocalProject,
 } from "./local-project";
-import { parsePortableDocument, serializePortableDocument } from "./portable";
+import { embedPortableAssets, parsePortableDocument, serializePortableDocument } from "./portable";
 import { WEB_LAB_AUDIO_POLICY } from "./product-policy";
 import {
   deleteStateAndReferences,
@@ -66,7 +68,6 @@ const BACKGROUND_IMAGE_TYPES = new Set([
   "image/webp",
   "image/gif",
 ]);
-const localRenderAvailable = import.meta.env.DEV;
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 const effectsForRecording = (project: EdituberProjectV2, avatar: AvatarManifestV2): AvatarEffects =>
   clone(
@@ -288,6 +289,7 @@ export const App = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const animationRef = useRef<number | null>(null);
   const importRef = useRef<HTMLInputElement>(null);
+  const directivesImportRef = useRef<HTMLInputElement>(null);
   const characterImportRef = useRef<HTMLInputElement>(null);
   const characterDatesRef = useRef(new Map<string, string>());
   const timelineViewportRef = useRef<HTMLDivElement>(null);
@@ -308,10 +310,9 @@ export const App = () => {
   const [frame, setFrame] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [status, setStatus] = useState(
-    localRenderAvailable
-      ? "Fixture listo · misma lógica que la CLI"
-      : "Web Lab público · el render MP4 se ejecuta mediante la CLI local",
+    "Proyecto listo · los cambios se guardan en este dispositivo",
   );
+  const [apiAvailable, setApiAvailable] = useState(false);
   const [rendering, setRendering] = useState(false);
   const [stateDraft, setStateDraft] = useState<StateDraft | null>(null);
   const [pickerFrame, setPickerFrame] = useState<number | null>(null);
@@ -342,6 +343,14 @@ export const App = () => {
     update();
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch("/api/health", { signal: controller.signal })
+      .then((response) => setApiAvailable(response.ok))
+      .catch(() => setApiAvailable(false));
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
@@ -738,44 +747,83 @@ export const App = () => {
         selectionBounds.start,
         selectionBounds.end,
       );
-      setAudioEditUndo({ project: clone(project), envelope: clone(envelope), audioSource });
-      setAudioSource(nextAudioSource);
-      setEnvelope(nextEnvelope);
-      setProject((current) => ({
-        ...current,
+      const nextProject: EdituberProjectV2 = {
+        ...project,
         durationInFrames: nextEnvelope.frames.length,
         audio: {
-          ...current.audio,
+          ...project.audio,
           source: "audio-editado.wav",
-          durationSeconds: nextEnvelope.frames.length / current.fps,
+          durationSeconds: nextEnvelope.frames.length / project.fps,
         },
-        avatar: { ...current.avatar, defaultStateId: timeline.defaultStateId },
+        avatar: { ...project.avatar, defaultStateId: timeline.defaultStateId },
         stateEvents: timeline.events.filter((event) => event.frame < nextEnvelope.frames.length),
-      }));
-      setFrame(Math.min(selectionBounds.start, nextEnvelope.frames.length - 1));
-      setSelectionStartFrame(null);
-      setSelectionEndFrame(null);
+      };
+      const undo = { project: clone(project), envelope: clone(envelope), audioSource };
+      setLocalSaveState("saving");
+      await commitLocalProjectUpdate(
+        {
+          format: "edituber-portable",
+          version: 1,
+          project: nextProject,
+          avatar,
+          envelope: nextEnvelope,
+          audioSource: nextAudioSource,
+        },
+        () => {
+          setAudioEditUndo(undo);
+          setAudioSource(nextAudioSource);
+          setEnvelope(nextEnvelope);
+          setProject(nextProject);
+          setFrame(Math.min(selectionBounds.start, nextEnvelope.frames.length - 1));
+          setSelectionStartFrame(null);
+          setSelectionEndFrame(null);
+          setLocalSaveState("saved");
+        },
+      );
       setStatus(`${formatTime(endSeconds - startSeconds)} eliminados · A y C quedaron unidos`);
     } catch (error) {
+      setLocalSaveState("error");
       setStatus(`No se pudo editar el audio: ${String(error)}`);
     } finally {
       setEditingAudio(false);
     }
   };
 
-  const undoAudioEdit = () => {
+  const undoAudioEdit = async () => {
     if (!audioEditUndo || editingAudio) return;
     audioRef.current?.pause();
     setPlaying(false);
     stopDriver();
-    setProject(audioEditUndo.project);
-    setEnvelope(audioEditUndo.envelope);
-    setAudioSource(audioEditUndo.audioSource);
-    setFrame(0);
-    setSelectionStartFrame(null);
-    setSelectionEndFrame(null);
-    setAudioEditUndo(null);
-    setStatus("Última edición de audio deshecha");
+    setEditingAudio(true);
+    setLocalSaveState("saving");
+    try {
+      await commitLocalProjectUpdate(
+        {
+          format: "edituber-portable",
+          version: 1,
+          project: audioEditUndo.project,
+          avatar,
+          envelope: audioEditUndo.envelope,
+          audioSource: audioEditUndo.audioSource,
+        },
+        () => {
+          setProject(audioEditUndo.project);
+          setEnvelope(audioEditUndo.envelope);
+          setAudioSource(audioEditUndo.audioSource);
+          setFrame(0);
+          setSelectionStartFrame(null);
+          setSelectionEndFrame(null);
+          setAudioEditUndo(null);
+          setLocalSaveState("saved");
+        },
+      );
+      setStatus("Última edición de audio deshecha");
+    } catch (error) {
+      setLocalSaveState("error");
+      setStatus(`No se pudo deshacer la edición: ${String(error)}`);
+    } finally {
+      setEditingAudio(false);
+    }
   };
 
   const startRecording = async () => {
@@ -886,15 +934,17 @@ export const App = () => {
     }
   };
 
-  const exportProject = () => {
-    const portable: PortableEdituberDocumentV1 = {
-      format: "edituber-portable",
-      version: 1,
-      project,
-      avatar,
-      envelope,
-      audioSource: audioSource || undefined,
-    };
+  const createPortableProject = (): PortableEdituberDocumentV1 => ({
+    format: "edituber-portable",
+    version: 1,
+    project,
+    avatar,
+    envelope,
+    audioSource: audioSource || undefined,
+  });
+
+  const exportProject = async () => {
+    const portable = await embedPortableAssets(createPortableProject());
     const url = URL.createObjectURL(
       new Blob([serializePortableDocument(portable)], { type: "application/json" }),
     );
@@ -903,6 +953,34 @@ export const App = () => {
     link.download = "proyecto.edituber.json";
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  const importScriptDirectives = async (file?: File) => {
+    if (!file) return;
+    try {
+      const result = parseScriptDirectives(
+        await file.text(),
+        avatar,
+        project.fps,
+        project.durationInFrames,
+      );
+      if (!result.valid) throw new Error(result.errors.join(" · "));
+      setProject((current) => ({
+        ...current,
+        avatar: {
+          ...current.avatar,
+          defaultStateId: result.events[0]?.stateId ?? current.avatar.defaultStateId,
+        },
+        stateEvents: result.events,
+      }));
+      setTimelineTool("emotions");
+      setFrame(0);
+      setStatus(`${result.events.length} cambios de emoción importados desde ${file.name}`);
+    } catch (error) {
+      setStatus(`El guion directivo no puede pasar a producción: ${String(error)}`);
+    } finally {
+      if (directivesImportRef.current) directivesImportRef.current.value = "";
+    }
   };
   const importProject = async (file?: File) => {
     if (!file) return;
@@ -997,16 +1075,65 @@ export const App = () => {
     }
   };
 
+  const requestLocalApi = async (path: string, init?: RequestInit): Promise<Response> => {
+    const send = (token: string | null) =>
+      fetch(path, {
+        ...init,
+        headers: {
+          ...init?.headers,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+    const savedToken = sessionStorage.getItem("edituber-api-token");
+    let response = await send(savedToken);
+    if (response.status !== 401) return response;
+    const token = window.prompt("Este servidor requiere el token de API de EDITuber");
+    if (!token) return response;
+    sessionStorage.setItem("edituber-api-token", token);
+    response = await send(token);
+    return response;
+  };
+
   const renderDemo = async () => {
     setRendering(true);
     setStatus("Render local 1080 × 1080 en proceso…");
     try {
-      const response = await fetch("/api/render-demo", { method: "POST" });
-      const result = (await response.json()) as { ok: boolean; download?: string; error?: string };
-      if (!response.ok || !result.ok || !result.download)
-        throw new Error(result.error ?? "Render failed");
+      if (!audioSource) throw new Error("Sube o graba audio antes de renderizar");
+      const response = await requestLocalApi("/api/v1/renders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: serializePortableDocument(await embedPortableAssets(createPortableProject())),
+      });
+      const result = (await response.json()) as { ok: boolean; id?: string; error?: string };
+      if (!response.ok || !result.ok || !result.id)
+        throw new Error(result.error ?? "No se pudo iniciar el render");
+      let download = "";
+      for (let attempt = 0; attempt < 1200; attempt += 1) {
+        await new Promise((resolveWait) => window.setTimeout(resolveWait, 1000));
+        const statusResponse = await requestLocalApi(`/api/v1/renders/${result.id}`);
+        const job = (await statusResponse.json()) as {
+          state?: "queued" | "rendering" | "completed" | "failed";
+          download?: string;
+          error?: string;
+        };
+        if (!statusResponse.ok || job.state === "failed")
+          throw new Error(job.error ?? "El render falló");
+        if (job.state === "completed" && job.download) {
+          download = job.download;
+          break;
+        }
+        setStatus(job.state === "queued" ? "Render en cola…" : "Renderizando MP4…");
+      }
+      if (!download) throw new Error("El render agotó el tiempo máximo de espera");
+      const fileResponse = await requestLocalApi(download);
+      if (!fileResponse.ok) throw new Error("No se pudo descargar el MP4 terminado");
+      const url = URL.createObjectURL(await fileResponse.blob());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "edituber-render.mp4";
+      link.click();
+      URL.revokeObjectURL(url);
       setStatus("MP4 terminado y listo para descargar");
-      window.location.href = result.download;
     } catch (error) {
       setStatus(`Render no disponible: ${String(error)}`);
     } finally {
@@ -1671,20 +1798,20 @@ export const App = () => {
                 void importProject(event.currentTarget.files?.[0])
               }
             />
-            <button type="button" className="secondary-action" onClick={exportProject}>
+            <button type="button" className="secondary-action" onClick={() => void exportProject()}>
               Exportar JSON
             </button>
             <button
               type="button"
               className="primary-action wide"
-              disabled={rendering || !localRenderAvailable}
+              disabled={rendering || !apiAvailable}
               onClick={() => void renderDemo()}
             >
-              {localRenderAvailable
+              {apiAvailable
                 ? rendering
                   ? "Renderizando…"
-                  : "Renderizar demo"
-                : "MP4 mediante CLI local"}
+                  : "Renderizar MP4"
+                : "MP4 mediante servidor local"}
             </button>
           </div>
           <p className={`local-save-line ${localSaveState}`} aria-live="polite">
@@ -1707,6 +1834,22 @@ export const App = () => {
               </small>
             </div>
             <div className="timeline-heading-actions">
+              <button
+                type="button"
+                className="secondary-action"
+                onClick={() => directivesImportRef.current?.click()}
+              >
+                Importar guion directivo
+              </button>
+              <input
+                ref={directivesImportRef}
+                className="sr-only"
+                type="file"
+                accept="text/plain,.txt,.edituber-script"
+                onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                  void importScriptDirectives(event.currentTarget.files?.[0])
+                }
+              />
               <fieldset className="timeline-tool-switch" aria-label="Herramienta de la timeline">
                 <button
                   type="button"

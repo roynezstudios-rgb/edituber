@@ -1,0 +1,4 @@
+# edituber-directives v1
+00:00.000 | 🙂 | Presentamos el tema.
+00:02.000 | 🤔 | Pensamos en la explicación.
+00:04.000 | 😮 | Cerramos con una sorpresa.
