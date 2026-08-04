@@ -446,7 +446,7 @@ export const resolveAvatarAtFrame = (
     currentFace: resolveStateImage(current, mouthOpen, eyesClosed),
     previousFace: previous ? resolveStateImage(previous, mouthOpen, false) : null,
     currentOpacity: timeline.transitionProgress,
-    previousOpacity: timeline.previousStateId ? 1 - timeline.transitionProgress : 0,
+    previousOpacity: timeline.previousStateId ? 1 : 0,
     mouthOpen,
     eyesClosed,
     transform,

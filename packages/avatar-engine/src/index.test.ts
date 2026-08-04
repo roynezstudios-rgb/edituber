@@ -394,4 +394,30 @@ describe("deterministic blink, effects, and transitions", () => {
 
     expect(withAudioBounce.transform).toEqual(withoutAudioBounce.transform);
   });
+
+  it("keeps the avatar fully opaque while a new emotion fades in", () => {
+    const nextState = {
+      ...fourImageState,
+      id: "c114b68a-1653-4186-ad11-f380d2ea9379",
+      name: "Thinking",
+      emoji: "🤔",
+    };
+    const transitioned = resolveAvatarAtFrame(
+      {
+        ...project,
+        stateEvents: [
+          { frame: 0, stateId },
+          { frame: 10, stateId: nextState.id },
+        ],
+      },
+      { ...manifest, states: [fourImageState, nextState] },
+      undefined,
+      10,
+    );
+    const compositedOpacity =
+      1 - (1 - transitioned.previousOpacity) * (1 - transitioned.currentOpacity);
+
+    expect(transitioned.previousOpacity).toBe(1);
+    expect(compositedOpacity).toBe(1);
+  });
 });
