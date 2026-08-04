@@ -214,7 +214,7 @@ export const createEdituberServer = (options: EdituberServerOptions): Server => 
 
     try {
       if (url.pathname === "/api/health" && request.method === "GET") {
-        sendJson(response, 200, { ok: true, version: "0.2.0-rc.1" });
+        sendJson(response, 200, { ok: true, version: "0.2.0" });
         return;
       }
       if (url.pathname.startsWith("/api/") && !authorized(request)) {

@@ -11,4 +11,4 @@
 
 ## Reportes
 
-Mientras el proyecto permanezca en etapa privada de pruebas, informa vulnerabilidades directamente al propietario del repositorio. No abras un issue público que incluya secretos, datos de usuarios o instrucciones de explotación.
+Informa vulnerabilidades mediante **Security → Report a vulnerability** en GitHub para abrir un aviso privado. No abras un issue público que incluya secretos, datos de usuarios o instrucciones de explotación.

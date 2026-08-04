@@ -80,6 +80,17 @@ const startServer = async (
 };
 
 describe("EDITuber local API", () => {
+  it("reports the stable release version", async () => {
+    const app = await startServer();
+    try {
+      const response = await fetch(`${app.baseUrl}/api/health`);
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ ok: true, version: "0.2.0" });
+    } finally {
+      await app.close();
+    }
+  });
+
   it("validates, queues, reports, and downloads a portable render", async () => {
     const app = await startServer();
     try {

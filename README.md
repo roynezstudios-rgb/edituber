@@ -1,8 +1,8 @@
 # EDITuber
 
-Motor determinista y servidor local para convertir audio, un avatar 2D y eventos de estado en una actuación lista para chroma key. La CLI, API, Remotion y el Web Lab comparten el mismo contrato y la misma resolución por frame. Este repositorio contiene **EDITuber Core + Studio Local**; las aplicaciones Android/iOS vivirán en un repositorio separado.
+Motor determinista y servidor local para convertir audio, un avatar 2D y eventos de estado en una actuación lista para chroma key. La CLI, API, Remotion y el Web Lab comparten el mismo contrato y la misma resolución por frame. Este repositorio contiene únicamente **EDITuber Core + Studio Local**.
 
-> Estado: `0.2.0-rc.1`, candidato para pruebas de instalación limpia. No debe anunciarse como versión estable hasta completar [la lista de aceptación](docs/RELEASE-CHECKLIST.md).
+> Estado: `0.2.0`, versión estable. Consulta la [lista de aceptación](docs/RELEASE-CHECKLIST.md) y las [notas de cambios](CHANGELOG.md).
 
 ## Qué funciona
 
@@ -154,4 +154,4 @@ Consulta [Arquitectura](docs/ARCHITECTURE.md), [Decisiones](docs/DECISIONS.md),
 
 ## Licencia
 
-EDITuber Core + Studio Local se distribuye bajo [GNU Affero General Public License v3.0](LICENSE), identificador SPDX `AGPL-3.0-only`. Si se ofrece una versión modificada a través de una red, sus usuarios deben poder obtener el código fuente correspondiente conforme a la licencia. EDITuber Mobile se desarrollará en otro repositorio y no forma parte de esta concesión.
+EDITuber Core + Studio Local se distribuye bajo [GNU Affero General Public License v3.0](LICENSE), identificador SPDX `AGPL-3.0-only`. Si se ofrece una versión modificada a través de una red, sus usuarios deben poder obtener el código fuente correspondiente conforme a la licencia.

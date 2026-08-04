@@ -1,4 +1,4 @@
-name: Release candidate archive
+name: Release archive
 
 on:
   push:

@@ -48,4 +48,4 @@
 
 - `docs/PRD.md`, `ARCHITECTURE.md`, `DECISIONS.md`, `ROADMAP.md`.
 - `docs/API.md`, `DEPLOYMENT.md`, `SCRIPT-DIRECTIVES.md`, `RELEASE-CHECKLIST.md`.
-- `docs/LICENSE-REVIEW.md`: dependencias, assets y revisión comercial pendiente.
+- `docs/LICENSE-REVIEW.md`: dependencias, assets y condiciones revisadas para Remotion.

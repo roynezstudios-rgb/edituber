@@ -1,7 +1,6 @@
 packages:
   - "apps/*"
   - "packages/*"
-  - "flutter-packages/*"
 
 allowBuilds:
   esbuild: true
