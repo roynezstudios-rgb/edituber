@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://edituber.dev/schemas/avatar-manifest-v2.json",
+  "title": "EDITuber Avatar Manifest v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "avatarId", "name", "canvas", "shell", "defaultStateId", "states"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "avatarId": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "canvas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "shell": { "type": "string", "minLength": 1 },
+    "defaultStateId": { "type": "string", "format": "uuid" },
+    "states": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "emoji", "images"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "emoji": { "type": "string", "minLength": 1 },
+          "blinkPolicy": { "enum": ["auto", "disabled"] },
+          "motionPreset": { "enum": ["idle", "surprise", "emphasis", "kiss"] },
+          "images": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["eyesOpen"],
+            "properties": {
+              "eyesOpen": { "$ref": "#/$defs/mouthPair" },
+              "eyesClosed": { "$ref": "#/$defs/mouthPair" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "mouthPair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mouthClosed", "mouthOpen"],
+      "properties": {
+        "mouthClosed": { "type": "string", "minLength": 1 },
+        "mouthOpen": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -1,12 +1,19 @@
 import type {
   AudioEnvelopeFrame,
-  AvatarExpression,
-  AvatarFaceStates,
-  AvatarManifestV1,
+  AvatarManifestV2,
+  AvatarState,
   BouncePreset,
-  EdituberProjectV1,
+  EdituberProjectV2,
+  MotionPreset,
 } from "@edituber/contracts";
-import { resolveExpressionAtFrame } from "@edituber/timeline-engine";
+import { resolveStateAtFrame } from "@edituber/timeline-engine";
+
+export interface AvatarTransform {
+  translateY: number;
+  scaleX: number;
+  scaleY: number;
+  rotation: number;
+}
 
 export interface AvatarLayerState {
   shell: string;
@@ -16,7 +23,8 @@ export interface AvatarLayerState {
   previousOpacity: number;
   mouthOpen: boolean;
   eyesClosed: boolean;
-  bouncePixels: number;
+  transform: AvatarTransform;
+  stateId: string;
   emoji: string;
 }
 
@@ -40,57 +48,92 @@ export const isBlinkClosedAtFrame = (frame: number, fps: number, seed: number): 
   return false;
 };
 
-const expressionByEmoji = (manifest: AvatarManifestV1, emoji: string): AvatarExpression => {
-  const expression = manifest.expressions.find((candidate) => candidate.emoji === emoji);
-  if (!expression) throw new Error(`Avatar does not define expression ${emoji}`);
-  return expression;
+export const resolveStateImage = (
+  state: AvatarState,
+  isSpeaking: boolean,
+  isBlinking: boolean,
+): string => {
+  const eyePair =
+    isBlinking && state.images.eyesClosed ? state.images.eyesClosed : state.images.eyesOpen;
+  return isSpeaking ? eyePair.mouthOpen : eyePair.mouthClosed;
 };
 
-const selectFace = (states: AvatarFaceStates, eyesClosed: boolean, mouthOpen: boolean): string => {
-  if (eyesClosed && mouthOpen) return states.eyesClosedMouthOpen ?? states.eyesOpenMouthOpen;
-  if (eyesClosed) return states.eyesClosedMouthClosed ?? states.eyesOpenMouthClosed;
-  if (mouthOpen) return states.eyesOpenMouthOpen;
-  return states.eyesOpenMouthClosed;
+const stateById = (manifest: AvatarManifestV2, stateId: string): AvatarState => {
+  const state = manifest.states.find((candidate) => candidate.id === stateId);
+  if (!state) throw new Error(`Avatar does not define state ${stateId}`);
+  return state;
+};
+
+const presetStrength: Record<MotionPreset, { idle: number; squash: number; emphasis: number }> = {
+  idle: { idle: 1, squash: 1, emphasis: 0.25 },
+  surprise: { idle: 0.45, squash: 1.15, emphasis: 1.3 },
+  emphasis: { idle: 0.7, squash: 1.25, emphasis: 1.6 },
+  kiss: { idle: 0.7, squash: 0.7, emphasis: 0.65 },
+};
+
+export const resolveAvatarTransform = (
+  frame: number,
+  fps: number,
+  seed: number,
+  preset: MotionPreset,
+  bouncePreset: BouncePreset,
+  talkBounceEnabled: boolean,
+  envelope: AudioEnvelopeFrame | undefined,
+): AvatarTransform => {
+  const strength = presetStrength[preset];
+  const phase = seededUnit(seed, 71) * Math.PI * 2;
+  const idle = Math.sin((frame / fps) * Math.PI * 2 * 0.42 + phase) * strength.idle;
+  const bounce = talkBounceEnabled ? (envelope?.bounceAmount ?? 0) * bouncePixels[bouncePreset] : 0;
+  const squash = Math.min(0.045, (envelope?.bounceAmount ?? 0) * 0.045 * strength.squash);
+  const emphasis = Math.min(1, envelope?.emphasisPulse ?? 0) * strength.emphasis;
+  return {
+    translateY: -bounce + idle * 1.8 - emphasis * 3.5,
+    scaleX: 1 + squash + emphasis * 0.018,
+    scaleY: 1 - squash + emphasis * 0.035,
+    rotation: idle * 0.35 + (preset === "kiss" ? Math.sin((frame / fps) * 2.2) * 0.45 : 0),
+  };
 };
 
 export const resolveAvatarAtFrame = (
-  project: EdituberProjectV1,
-  manifest: AvatarManifestV1,
+  project: EdituberProjectV2,
+  manifest: AvatarManifestV2,
   envelopeFrame: AudioEnvelopeFrame | undefined,
   frame: number,
 ): AvatarLayerState => {
-  const timeline = resolveExpressionAtFrame(
+  const timeline = resolveStateAtFrame(
     frame,
-    project.expressionEvents,
-    project.avatar.defaultExpression,
+    project.stateEvents,
+    project.avatar.defaultStateId,
     project.settings.transitionFrames,
   );
-  const expression = expressionByEmoji(manifest, timeline.currentEmoji);
+  const current = stateById(manifest, timeline.currentStateId);
   const adjustedMouth =
     (envelopeFrame?.mouthOpenAmount ?? 0) * (0.55 + project.settings.mouthSensitivity);
   const mouthOpen = Boolean(envelopeFrame?.voiceActive) && adjustedMouth >= 0.16;
   const eyesClosed =
     project.settings.blinkEnabled &&
-    expression.blinkPolicy === "auto" &&
+    (current.blinkPolicy ?? "auto") === "auto" &&
+    Boolean(current.images.eyesClosed) &&
     isBlinkClosedAtFrame(frame, project.fps, project.seed);
-  const previousExpression = timeline.previousEmoji
-    ? expressionByEmoji(manifest, timeline.previousEmoji)
-    : null;
-  const bounce = project.settings.talkBounceEnabled
-    ? -Math.round((envelopeFrame?.bounceAmount ?? 0) * bouncePixels[project.settings.bouncePreset])
-    : 0;
-
+  const previous = timeline.previousStateId ? stateById(manifest, timeline.previousStateId) : null;
   return {
     shell: manifest.shell,
-    currentFace: selectFace(expression.states, eyesClosed, mouthOpen),
-    previousFace: previousExpression
-      ? selectFace(previousExpression.states, false, mouthOpen)
-      : null,
+    currentFace: resolveStateImage(current, mouthOpen, eyesClosed),
+    previousFace: previous ? resolveStateImage(previous, mouthOpen, false) : null,
     currentOpacity: timeline.transitionProgress,
-    previousOpacity: timeline.previousEmoji ? 1 - timeline.transitionProgress : 0,
+    previousOpacity: timeline.previousStateId ? 1 - timeline.transitionProgress : 0,
     mouthOpen,
     eyesClosed,
-    bouncePixels: bounce,
-    emoji: timeline.currentEmoji,
+    transform: resolveAvatarTransform(
+      frame,
+      project.fps,
+      project.seed,
+      current.motionPreset ?? "idle",
+      project.settings.bouncePreset,
+      project.settings.talkBounceEnabled,
+      envelopeFrame,
+    ),
+    stateId: current.id,
+    emoji: current.emoji,
   };
 };

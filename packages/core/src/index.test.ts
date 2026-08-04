@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import type { EdituberBundle } from "./index";
 import { resolveFrameState, validateBundle } from "./index";
 
+const stateId = "2522cfb9-01e1-47c6-9e61-e6e5a4ae3ef0";
 const bundle = {
   project: {
-    schemaVersion: 1,
+    schemaVersion: 2,
     projectId: "f86ff1e3-567d-4c44-97a0-71a444c8c51d",
     title: "Test",
     fps: 30,
@@ -16,12 +17,12 @@ const bundle = {
     stage: { backgroundType: "solid", backgroundColor: "#00FF00" },
     avatar: {
       manifest: "avatar.json",
-      defaultExpression: "🙂",
+      defaultStateId: stateId,
       positionX: 0.5,
       positionY: 0.5,
       scale: 1,
     },
-    expressionEvents: [{ frame: 0, emoji: "🙂" }],
+    stateEvents: [{ frame: 0, stateId }],
     settings: {
       blinkEnabled: true,
       talkBounceEnabled: true,
@@ -31,18 +32,19 @@ const bundle = {
     },
   },
   avatar: {
-    schemaVersion: 1,
+    schemaVersion: 2,
     avatarId: "robot",
     name: "Robot fixture",
     canvas: { width: 800, height: 800 },
     shell: "shell.svg",
-    defaultExpression: "🙂",
-    expressions: [
+    defaultStateId: stateId,
+    states: [
       {
-        id: "smile",
+        id: stateId,
+        name: "Smile",
         emoji: "🙂",
         blinkPolicy: "auto",
-        states: { eyesOpenMouthClosed: "closed.svg", eyesOpenMouthOpen: "open.svg" },
+        images: { eyesOpen: { mouthClosed: "closed.svg", mouthOpen: "open.svg" } },
       },
     ],
   },

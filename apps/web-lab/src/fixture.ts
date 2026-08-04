@@ -1,4 +1,4 @@
-import type { AudioEnvelopeV1, AvatarManifestV1, EdituberProjectV1 } from "@edituber/contracts";
+import type { AudioEnvelopeV1, AvatarManifestV2, EdituberProjectV2 } from "@edituber/contracts";
 import type { EdituberBundle } from "@edituber/core";
 import audioUrl from "../../../fixtures/audio/demo.wav?url";
 import envelopeJson from "../../../fixtures/audio/demo-envelope.json";
@@ -17,52 +17,52 @@ import thinkOpenOpen from "../../../fixtures/avatars/robot/faces/think-open-eyes
 import shellUrl from "../../../fixtures/avatars/robot/shell.svg?url";
 import projectJson from "../../../fixtures/projects/demo.edituber.json";
 
-const avatar: AvatarManifestV1 = {
-  schemaVersion: 1,
+const avatar: AvatarManifestV2 = {
+  schemaVersion: 2,
   avatarId: "9223eae6-96a7-4cab-8906-e5cf35cf0f19",
   name: "Robot Cyan Fixture",
   canvas: { width: 800, height: 800 },
   shell: shellUrl,
-  defaultExpression: "🙂",
-  expressions: [
+  defaultStateId: "2522cfb9-01e1-47c6-9e61-e6e5a4ae3ef0",
+  states: [
     {
       id: "2522cfb9-01e1-47c6-9e61-e6e5a4ae3ef0",
       emoji: "🙂",
+      name: "Sonrisa",
       blinkPolicy: "auto",
-      states: {
-        eyesOpenMouthClosed: smileOpenClosed,
-        eyesOpenMouthOpen: smileOpenOpen,
-        eyesClosedMouthClosed: smileClosedClosed,
-        eyesClosedMouthOpen: smileClosedOpen,
+      motionPreset: "idle",
+      images: {
+        eyesOpen: { mouthClosed: smileOpenClosed, mouthOpen: smileOpenOpen },
+        eyesClosed: { mouthClosed: smileClosedClosed, mouthOpen: smileClosedOpen },
       },
     },
     {
       id: "c114b68a-1653-4186-ad11-f380d2ea9379",
       emoji: "🤔",
+      name: "Pensando",
       blinkPolicy: "auto",
-      states: {
-        eyesOpenMouthClosed: thinkOpenClosed,
-        eyesOpenMouthOpen: thinkOpenOpen,
-        eyesClosedMouthClosed: thinkClosedClosed,
-        eyesClosedMouthOpen: thinkClosedOpen,
+      motionPreset: "idle",
+      images: {
+        eyesOpen: { mouthClosed: thinkOpenClosed, mouthOpen: thinkOpenOpen },
+        eyesClosed: { mouthClosed: thinkClosedClosed, mouthOpen: thinkClosedOpen },
       },
     },
     {
       id: "041731df-94b8-492b-a8cc-9e4300c4dc2f",
       emoji: "😮",
+      name: "Sorpresa",
       blinkPolicy: "auto",
-      states: {
-        eyesOpenMouthClosed: surpriseOpenClosed,
-        eyesOpenMouthOpen: surpriseOpenOpen,
-        eyesClosedMouthClosed: surpriseClosedClosed,
-        eyesClosedMouthOpen: surpriseClosedOpen,
+      motionPreset: "surprise",
+      images: {
+        eyesOpen: { mouthClosed: surpriseOpenClosed, mouthOpen: surpriseOpenOpen },
+        eyesClosed: { mouthClosed: surpriseClosedClosed, mouthOpen: surpriseClosedOpen },
       },
     },
   ],
 };
 
 export const fixtureBundle: EdituberBundle = {
-  project: projectJson as EdituberProjectV1,
+  project: projectJson as EdituberProjectV2,
   avatar,
   envelope: envelopeJson as AudioEnvelopeV1,
   audioSource: audioUrl,

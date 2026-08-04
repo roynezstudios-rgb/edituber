@@ -31,7 +31,7 @@ export const AvatarStage = ({ bundle }: AvatarStageProps) => {
           top: `${state.positionY * 100}%`,
           width: size,
           height: size,
-          transform: `translate(-50%, -50%) translateY(${state.avatar.bouncePixels}px) scale(${state.scale})`,
+          transform: `translate(-50%, -50%) translateY(${state.avatar.transform.translateY}px) rotate(${state.avatar.transform.rotation}deg) scale(${state.scale * state.avatar.transform.scaleX}, ${state.scale * state.avatar.transform.scaleY})`,
           transformOrigin: "center",
         }}
       >

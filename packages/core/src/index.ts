@@ -1,15 +1,15 @@
 import { type AvatarLayerState, resolveAvatarAtFrame } from "@edituber/avatar-engine";
 import type {
   AudioEnvelopeV1,
-  AvatarManifestV1,
-  EdituberProjectV1,
+  AvatarManifestV2,
+  EdituberProjectV2,
   ValidationResult,
 } from "@edituber/contracts";
-import { validateProject } from "@edituber/contracts";
+import { validateAvatarManifest, validateProject } from "@edituber/contracts";
 
 export interface EdituberBundle {
-  project: EdituberProjectV1;
-  avatar: AvatarManifestV1;
+  project: EdituberProjectV2;
+  avatar: AvatarManifestV2;
   envelope: AudioEnvelopeV1;
   audioSource: string;
 }
@@ -23,19 +23,15 @@ export interface EdituberFrameState {
   avatar: AvatarLayerState;
 }
 
-const validateManifest = (project: EdituberProjectV1, avatar: AvatarManifestV1): string[] => {
-  const errors: string[] = [];
-  const emojis = new Set(avatar.expressions.map((expression) => expression.emoji));
-  for (const event of project.expressionEvents) {
-    if (!emojis.has(event.emoji))
-      errors.push(`Avatar manifest is missing expression ${event.emoji}`);
+const validateManifest = (project: EdituberProjectV2, avatar: AvatarManifestV2): string[] => {
+  const errors = [...validateAvatarManifest(avatar).errors];
+  const stateIds = new Set(avatar.states.map((state) => state.id));
+  for (const event of project.stateEvents) {
+    if (!stateIds.has(event.stateId))
+      errors.push(`Avatar manifest is missing state ${event.stateId}`);
   }
-  if (!emojis.has(project.avatar.defaultExpression)) {
-    errors.push(
-      `Avatar manifest is missing default expression ${project.avatar.defaultExpression}`,
-    );
-  }
-  if (avatar.expressions.length === 0) errors.push("Avatar manifest has no expressions");
+  if (!stateIds.has(project.avatar.defaultStateId))
+    errors.push(`Avatar manifest is missing default state ${project.avatar.defaultStateId}`);
   return errors;
 };
 

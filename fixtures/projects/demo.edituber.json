@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "projectId": "e21622fd-6f57-4c6d-a1cc-123b92652674",
   "title": "Demostración EDITuber",
   "fps": 30,
@@ -8,25 +8,22 @@
   "durationInFrames": 180,
   "seed": 7302026,
   "audio": {
-    "source": "../audio/demo.wav",
+    "source": "audio/demo.wav",
     "durationSeconds": 6,
-    "envelope": "../audio/demo-envelope.json"
+    "envelope": "audio/demo-envelope.json"
   },
-  "stage": {
-    "backgroundType": "solid",
-    "backgroundColor": "#00FF00"
-  },
+  "stage": { "backgroundType": "solid", "backgroundColor": "#00FF00" },
   "avatar": {
-    "manifest": "../avatars/robot/avatar.json",
-    "defaultExpression": "🙂",
+    "manifest": "avatars/robot/avatar.json",
+    "defaultStateId": "2522cfb9-01e1-47c6-9e61-e6e5a4ae3ef0",
     "positionX": 0.5,
     "positionY": 0.52,
     "scale": 1
   },
-  "expressionEvents": [
-    { "frame": 0, "emoji": "🙂" },
-    { "frame": 60, "emoji": "🤔" },
-    { "frame": 120, "emoji": "😮" }
+  "stateEvents": [
+    { "frame": 0, "stateId": "2522cfb9-01e1-47c6-9e61-e6e5a4ae3ef0" },
+    { "frame": 60, "stateId": "c114b68a-1653-4186-ad11-f380d2ea9379" },
+    { "frame": 120, "stateId": "041731df-94b8-492b-a8cc-9e4300c4dc2f" }
   ],
   "settings": {
     "blinkEnabled": true,
