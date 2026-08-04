@@ -121,12 +121,18 @@ interface AudioEditSnapshot {
   audioSource: string;
 }
 
-const MouthLoopPreview = ({ settings }: { settings: MouthLoopSettings }) => {
+const MouthLoopPreview = ({
+  settings,
+  onToggle,
+}: {
+  settings: MouthLoopSettings;
+  onToggle: () => void;
+}) => {
   const [mouthOpen, setMouthOpen] = useState(false);
 
   useEffect(() => {
     if (!settings.enabled) {
-      setMouthOpen(false);
+      setMouthOpen(true);
       return;
     }
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -150,14 +156,12 @@ const MouthLoopPreview = ({ settings }: { settings: MouthLoopSettings }) => {
   }, [settings.enabled, settings.openMilliseconds, settings.closedMilliseconds]);
 
   return (
-    <div
+    <button
+      type="button"
       className={`mouth-loop-preview${settings.enabled ? " is-active" : ""}`}
-      role="img"
-      aria-label={
-        settings.enabled
-          ? "Vista previa: la boca se abre y se cierra mientras hay voz"
-          : "Vista previa del ciclo de boca desactivado"
-      }
+      aria-label={settings.enabled ? "Desactivar movimiento de boca" : "Activar movimiento de boca"}
+      aria-pressed={settings.enabled}
+      onClick={onToggle}
     >
       <span className={`face-guide eyes-open ${mouthOpen ? "mouth-open" : ""}`} aria-hidden="true">
         <span className="guide-eyes">
@@ -168,20 +172,29 @@ const MouthLoopPreview = ({ settings }: { settings: MouthLoopSettings }) => {
       </span>
       <span>
         <b>{settings.enabled ? (mouthOpen ? "Hablando" : "Pausa breve") : "Desactivado"}</b>
-        <small>Vista del ciclo</small>
+        <small>{settings.enabled ? "Toca para desactivar" : "Toca para activar"}</small>
       </span>
-    </div>
+    </button>
   );
 };
 
-const BlinkLoopPreview = ({ enabled, settings }: { enabled: boolean; settings: BlinkSettings }) => {
+const BlinkLoopPreview = ({
+  enabled,
+  settings,
+  onToggle,
+}: {
+  enabled: boolean;
+  settings: BlinkSettings;
+  onToggle: () => void;
+}) => {
   const [eyesClosed, setEyesClosed] = useState(false);
 
   useEffect(() => {
     if (!enabled || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setEyesClosed(false);
+      setEyesClosed(!enabled);
       return;
     }
+    setEyesClosed(false);
 
     let timeout = 0;
     let cancelled = false;
@@ -216,14 +229,12 @@ const BlinkLoopPreview = ({ enabled, settings }: { enabled: boolean; settings: B
   ]);
 
   return (
-    <div
+    <button
+      type="button"
       className={`mouth-loop-preview blink-loop-preview${enabled ? " is-active" : ""}`}
-      role="img"
-      aria-label={
-        enabled
-          ? "Vista previa: el personaje parpadea con la configuración general"
-          : "Vista previa del parpadeo desactivado"
-      }
+      aria-label={enabled ? "Desactivar parpadeo" : "Activar parpadeo"}
+      aria-pressed={enabled}
+      onClick={onToggle}
     >
       <span className={`face-guide ${eyesClosed ? "eyes-closed" : "eyes-open"}`} aria-hidden="true">
         <span className="guide-eyes">
@@ -234,9 +245,9 @@ const BlinkLoopPreview = ({ enabled, settings }: { enabled: boolean; settings: B
       </span>
       <span>
         <b>{enabled ? (eyesClosed ? "Parpadeando" : "Mirando") : "Desactivado"}</b>
-        <small>Vista rápida del parpadeo</small>
+        <small>{enabled ? "Toca para desactivar" : "Toca para activar"}</small>
       </span>
-    </div>
+    </button>
   );
 };
 
@@ -1275,18 +1286,14 @@ export const App = () => {
                 <p>Mientras detecta voz.</p>
                 <MouthLoopPreview
                   settings={project.settings.mouthLoop ?? defaultMouthLoopSettings()}
-                />
-              </div>
-              <label className="mouth-loop-toggle">
-                <input
-                  type="checkbox"
-                  checked={(project.settings.mouthLoop ?? defaultMouthLoopSettings()).enabled}
-                  onChange={(event) =>
-                    updateMouthLoopSetting("enabled", event.currentTarget.checked)
+                  onToggle={() =>
+                    updateMouthLoopSetting(
+                      "enabled",
+                      !(project.settings.mouthLoop ?? defaultMouthLoopSettings()).enabled,
+                    )
                   }
                 />
-                Activar movimiento durante la voz
-              </label>
+              </div>
               <label>
                 Tiempo abierta (ms)
                 <input
@@ -1328,17 +1335,9 @@ export const App = () => {
                 <BlinkLoopPreview
                   enabled={project.settings.blinkEnabled}
                   settings={project.settings.blink ?? defaultBlinkSettings()}
+                  onToggle={() => updateSetting("blinkEnabled", !project.settings.blinkEnabled)}
                 />
               </div>
-              <label className="blink-loop-toggle">
-                <input
-                  aria-label="Activar parpadeo"
-                  type="checkbox"
-                  checked={project.settings.blinkEnabled}
-                  onChange={(event) => updateSetting("blinkEnabled", event.currentTarget.checked)}
-                />
-                Activar parpadeo
-              </label>
               <label>
                 Pausa mínima (s)
                 <input
